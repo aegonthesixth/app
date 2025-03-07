@@ -1,1188 +1,920 @@
-// Global state object
-const state = {
-    currentSpeaker: null,
-    delegateData: {},
-    attendanceData: {},
-    attendanceDates: [],
-    isCountryListLocked: false,
-    selectedCommittee: 'UNSC',
-    authenticatedUsername: null,
-    messages: [],
-    delegates: new Set(),
-    selectedDelegate: null,
-    timerIntervals: {
-        session: null,
-        caucus: null,
-        speech: null,
-        fun: null
-    },
-    timerStart: {
-        session: 0,
-        caucus: 0,
-        speech: 0,
-        fun: 0
-    },
-    timerElapsed: {
-        session: 0,
-        caucus: 0,
-        speech: 0,
-        fun: 0
-    },
-    timerRunning: {
-        session: false,
-        caucus: false,
-        speech: false,
-        fun: false
-    },
-    timerTypes: ["Session", "Caucus", "Speech"],
-    timerColors: ["var(--timer-green)", "var(--timer-blue)", "var(--timer-orange)"],
-    
-    // Committee configurations
-    committees: {
-        "UNSC": ["United States", "China", "Russian Federation", "United Kingdom", "France", 
-                "Albania", "Brazil", "Gabon", "Ghana", "India", "Ireland", "Kenya", "Mexico", 
-                "Norway", "United Arab Emirates"],
-        "UNODC": ["Germany", "Canada", "Mexico", "Brazil", "Japan", "France", "United Kingdom", 
-                "Russian Federation", "China", "United States", "Italy", "Spain", "Netherlands", 
-                "Sweden", "Australia", "New Zealand", "South Africa", "Nigeria", "Egypt", 
-                "Saudi Arabia"],
-        "UNGA": ["Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", 
-                "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", 
-                "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", 
-                "Bolivia", "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei Darussalam", 
-                "Bulgaria", "Burkina Faso", "Burundi", "Cabo Verde", "Cambodia", "Cameroon", 
-                "Canada", "Central African Republic", "Chad", "Chile", "China", "Colombia"],
-        "UNHRC": ["Argentina", "Armenia", "Bangladesh", "Benin", "Bolivia", "Brazil", "Cameroon", 
-                "China", "Côte d'Ivoire", "Croatia", "Cuba", "Czechia", "Denmark", "Eritrea", 
-                "Finland", "France", "Germany", "Honduras", "India", "Indonesia", "Japan", 
-                "Kazakhstan", "Kyrgyzstan", "Libya", "Malawi", "Malaysia"],
-        "ECOSOC": ["Afghanistan", "Argentina", "Austria", "Bangladesh", "Benin", "Bolivia", "Botswana", 
-                "Brazil", "Bulgaria", "Canada", "China", "Colombia", "Costa Rica", "Czechia", 
-                "Denmark", "Ecuador", "Finland", "France", "Germany", "Greece", "Guatemala"],
-        "WHO": ["Afghanistan", "Angola", "Argentina", "Australia", "Austria", "Bangladesh", "Barbados", 
-                "Belgium", "Brazil", "Burkina Faso", "Cameroon", "Canada", "China", "Colombia", "Croatia", 
-                "Denmark", "Egypt", "Ethiopia"]
-    }
-};
-
-// Load data from localStorage if available
-function loadStoredData() {
-    try {
-        const storedDelegateData = localStorage.getItem('mun_delegate_data');
-        if (storedDelegateData) {
-            state.delegateData = JSON.parse(storedDelegateData);
-        }
-        
-        const storedNotes = localStorage.getItem('mun_notes');
-        if (storedNotes) {
-            document.getElementById('notes-area').value = storedNotes;
-        }
-        
-        // Try to load locked country data for the current committee
-        const committee = document.getElementById('committee-select').value;
-        loadLockedCountries(committee);
-        
-        // Update frequency list if delegate data was loaded
-        if (storedDelegateData) {
-            updateSpeakerFrequency();
-        }
-    } catch (error) {
-        console.error("Error loading stored data:", error);
-    }
-}
-
-// Save data to localStorage periodically
-function saveData() {
-    try {
-        localStorage.setItem('mun_delegate_data', JSON.stringify(state.delegateData));
-        localStorage.setItem('mun_notes', document.getElementById('notes-area').value);
-        
-        // If country list is locked, save that data too
-        if (state.isCountryListLocked) {
-            saveLockedCountries();
-        }
-    } catch (error) {
-        console.error("Error saving data:", error);
-    }
-}
-
-// Set up autosave every 30 seconds
-setInterval(saveData, 30000);
-
-// DOM Elements
-const els = {
-    committeeSelect: document.getElementById('committee-select'),
-    countryList: document.getElementById('country-list'),
-    speakingList: document.getElementById('speaking-list'),
-    frequencyList: document.getElementById('frequency-list'),
-    currentSpeakerDisplay: document.getElementById('current-speaker-display'),
-    notesArea: document.getElementById('notes-area'),
-    sessionTimer: document.getElementById('session-timer'),
-    caucusTimer: document.getElementById('caucus-timer'),
-    speechTimer: document.getElementById('speech-timer'),
-    funTimer: document.getElementById('fun-timer'),
-    lockCountriesButton: document.getElementById('lock-countries-button'),
-    funModeContainer: document.getElementById('fun-mode-container'),
-    mainTab: document.getElementById('main-tab'),
-    roleCallModal: document.getElementById('role-call-modal'),
-    roleCallTable: document.getElementById('role-call-table'),
-    roleCallDate: document.getElementById('role-call-date'),
-    authUsername: document.getElementById('auth-username'),
-    messagingInterface: document.getElementById('messaging-interface'),
-    authRequiredPanel: document.getElementById('auth-required-panel'),
-    conversationList: document.getElementById('conversation-list'),
-    messageDisplay: document.getElementById('message-display'),
-    messageInput: document.getElementById('message-input'),
-    newMessageDialog: document.getElementById('new-message-dialog'),
-    recipientSelect: document.getElementById('recipient-select')
-};
-
-// Update country list based on selected committee
-function updateCountryList() {
-    const committeeValue = els.committeeSelect.value;
-    els.countryList.innerHTML = '';
-    
-    // Check if we should load locked countries first
-    if (loadLockedCountries(committeeValue)) {
-        updateCountryListAttendance();
-        return;
-    }
-    
-    // Default behavior for displaying countries
-    const countries = state.committees[committeeValue] || [];
-    countries.forEach(country => {
-        const li = document.createElement('li');
-        li.textContent = country;
-        li.className = 'list-item';
-        li.addEventListener('click', (e) => {
-            // Toggle selection
-            document.querySelectorAll('#country-list .list-item').forEach(item => {
-                item.classList.remove('selected');
-            });
-            e.target.classList.add('selected');
-        });
-        els.countryList.appendChild(li);
-    });
-}
-
-// Initialize country list
-updateCountryList();
-
-// Committee select change event
-els.committeeSelect.addEventListener('change', () => {
-    state.selectedCommittee = els.committeeSelect.value;
-    updateCountryList();
-});
-
-// Add to speaking list
-document.getElementById('add-to-list-button').addEventListener('click', () => {
-    const selectedCountry = document.querySelector('#country-list .list-item.selected');
-    
-    if (!selectedCountry) {
-        showMessage('Selection Required', 'Please select a country first');
-        return;
-    }
-    
-    const country = selectedCountry.textContent;
-    
-    // Check if already in list
-    let isDuplicate = false;
-    document.querySelectorAll('#speaking-list .list-item').forEach(item => {
-        if (item.textContent === country) {
-            isDuplicate = true;
-        }
-    });
-    
-    if (isDuplicate) {
-        if (!confirm(`${country} is already in the speaking list. Add anyway?`)) {
-            return;
-        }
-    }
-    
-    // Add to speaking list
-    const li = document.createElement('li');
-    li.textContent = country;
-    li.className = 'list-item';
-    li.addEventListener('click', (e) => {
-        // Toggle selection
-        document.querySelectorAll('#speaking-list .list-item').forEach(item => {
-            item.classList.remove('selected');
-        });
-        e.target.classList.add('selected');
-    });
-    els.speakingList.appendChild(li);
-    
-    // Switch to speaking list tab
-    document.querySelector('.tab[data-tab="speaking-list"]').click();
-});
-
-// Next speaker button
-document.getElementById('next-speaker-button').addEventListener('click', () => {
-    if (els.speakingList.children.length === 0) {
-        showMessage('Empty List', 'No speakers in the queue');
-        return;
-    }
-    
-    // Get the next speaker
-    const nextSpeaker = els.speakingList.children[0].textContent;
-    els.speakingList.removeChild(els.speakingList.children[0]);
-    
-    // Update current speaker
-    state.currentSpeaker = nextSpeaker;
-    els.currentSpeakerDisplay.textContent = nextSpeaker;
-    
-    // Reset and start speech timer
-    resetTimer('speech');
-    startTimer('speech');
-});
-
-// Skip speaker button
-document.getElementById('skip-speaker-button').addEventListener('click', () => {
-    if (els.speakingList.children.length === 0) {
-        showMessage('Empty List', 'No speakers in the queue');
-        return;
-    }
-    
-    // Move first speaker to end of list
-    const speaker = els.speakingList.children[0];
-    els.speakingList.removeChild(speaker);
-    els.speakingList.appendChild(speaker);
-    
-    // Move to next speaker
-    document.getElementById('next-speaker-button').click();
-});
-
-// Move up in list
-document.getElementById('move-up-button').addEventListener('click', () => {
-    const selected = document.querySelector('#speaking-list .list-item.selected');
-    
-    if (!selected || selected === els.speakingList.firstChild) {
-        return;
-    }
-    
-    const previousSibling = selected.previousElementSibling;
-    els.speakingList.insertBefore(selected, previousSibling);
-});
-
-// Move down in list
-document.getElementById('move-down-button').addEventListener('click', () => {
-    const selected = document.querySelector('#speaking-list .list-item.selected');
-    
-    if (!selected || selected === els.speakingList.lastChild) {
-        return;
-    }
-    
-    const nextSibling = selected.nextElementSibling;
-    if (nextSibling.nextElementSibling) {
-        els.speakingList.insertBefore(selected, nextSibling.nextElementSibling);
-    } else {
-        els.speakingList.appendChild(selected);
-    }
-});
-
-// Remove from list
-document.getElementById('remove-button').addEventListener('click', () => {
-    const selected = document.querySelector('#speaking-list .list-item.selected');
-    
-    if (!selected) {
-        showMessage('Selection Required', 'Please select a speaker first');
-        return;
-    }
-    
-    els.speakingList.removeChild(selected);
-});
-
-// Clear list
-document.getElementById('clear-list-button').addEventListener('click', () => {
-    if (els.speakingList.children.length === 0) {
-        return;
-    }
-    
-    if (confirm('Are you sure you want to clear the entire speaking list?')) {
-        els.speakingList.innerHTML = '';
-    }
-});
-
-// Timer functions
-function formatTime(seconds) {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    
-    if (mins >= 60) {
-        const hours = Math.floor(mins / 60);
-        const remainingMins = mins % 60;
-        return `${hours.toString().padStart(2, '0')}:${remainingMins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    }
-    
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-}
-
-function startTimer(timerType) {
-    if (state.timerRunning[timerType]) return;
-    
-    state.timerStart[timerType] = Date.now() - state.timerElapsed[timerType] * 1000;
-    state.timerRunning[timerType] = true;
-    
-    // Update display every second
-    state.timerIntervals[timerType] = setInterval(() => {
-        const elapsed = (Date.now() - state.timerStart[timerType]) / 1000;
-        state.timerElapsed[timerType] = elapsed;
-        
-        // Update display
-        document.getElementById(`${timerType}-timer`).textContent = formatTime(elapsed);
-    }, 1000);
-}
-
-function stopTimer(timerType) {
-    if (!state.timerRunning[timerType]) return;
-    
-    clearInterval(state.timerIntervals[timerType]);
-    state.timerRunning[timerType] = false;
-    
-    // Special handling for speech timer
-    if (timerType === 'speech' && state.currentSpeaker) {
-        recordSpeakerTime(state.currentSpeaker, state.timerElapsed[timerType]);
-    }
-}
-
-function resetTimer(timerType) {
-    if (state.timerRunning[timerType]) {
-        stopTimer(timerType);
-    }
-    
-    state.timerElapsed[timerType] = 0;
-    document.getElementById(`${timerType}-timer`).textContent = '00:00';
-}
-
-// Record speaker time and update frequency list
-function recordSpeakerTime(speaker, duration) {
-    if (!state.delegateData[speaker]) {
-        state.delegateData[speaker] = {
-            totalSpeakingTime: 0,
-            speeches: []
-        };
-    }
-    
-    state.delegateData[speaker].speeches.push(duration);
-    state.delegateData[speaker].totalSpeakingTime += duration;
-    
-    updateSpeakerFrequency();
-    saveData(); // Save data after recording speech
-}
-
-function updateSpeakerFrequency() {
-    els.frequencyList.innerHTML = '';
-    
-    // Sort delegates by frequency
-    const sortedDelegates = Object.entries(state.delegateData)
-        .sort((a, b) => b[1].speeches.length - a[1].speeches.length);
-    
-    // Find max frequency for color scaling
-    const maxSpeeches = sortedDelegates.length > 0 
-        ? Math.max(...sortedDelegates.map(([_, data]) => data.speeches.length)) 
-        : 1;
-    
-    sortedDelegates.forEach(([delegate, data]) => {
-        const speechCount = data.speeches.length;
-        
-        // Calculate color gradient (red to green)
-        const intensity = speechCount / maxSpeeches;
-        const red = Math.floor(255 * (1 - intensity));
-        const green = Math.floor(200 * intensity);
-        const blue = 100;
-        const color = `rgb(${red}, ${green}, ${blue})`;
-        
-        const li = document.createElement('li');
-        li.className = 'list-item';
-        
-        const indicator = document.createElement('span');
-        indicator.className = 'frequency-indicator';
-        indicator.style.backgroundColor = color;
-        
-        li.appendChild(indicator);
-        li.appendChild(document.createTextNode(`${delegate} (${speechCount})`));
-        els.frequencyList.appendChild(li);
-    });
-}
-
-// Timer button event handlers
-document.querySelectorAll('.timer-button').forEach(button => {
-    button.addEventListener('click', () => {
-        const timerType = button.getAttribute('data-timer');
-        const action = button.getAttribute('data-action');
-        
-        if (action === 'start') {
-            startTimer(timerType);
-        } else if (action === 'stop') {
-            stopTimer(timerType);
-        } else if (action === 'reset') {
-            resetTimer(timerType);
-        }
-    });
-});
-
-// Rearrange timers
-document.getElementById('rearrange-timers-button').addEventListener('click', () => {
-    // Cycle timer types and colors
-    state.timerTypes = [...state.timerTypes.slice(1), state.timerTypes[0]];
-    state.timerColors = [...state.timerColors.slice(1), state.timerColors[0]];
-    
-    // Update timer cards
-    const timerCards = document.querySelectorAll('.timer-card');
-    timerCards.forEach((card, i) => {
-        card.style.backgroundColor = state.timerColors[i];
-        card.querySelector('.timer-title').textContent = state.timerTypes[i];
-    });
-});
-
-// Note buttons
-document.querySelectorAll('[data-note]').forEach(button => {
-    button.addEventListener('click', () => {
-        const noteType = button.getAttribute('data-note');
-        addNote(noteType);
-    });
-});
-
-function addNote(noteType) {
-    const timestamp = new Date().toTimeString().substring(0, 8);
-    const speaker = state.currentSpeaker || 'No speaker';
-    
-    const noteText = `[${timestamp}] ${speaker}: ${noteType}\n`;
-    els.notesArea.value += noteText;
-    
-    // Auto-scroll to bottom
-    els.notesArea.scrollTop = els.notesArea.scrollHeight;
-    
-    // Save notes
-    saveData();
-}
-
-// Fun mode
-document.getElementById('fun-mode-button').addEventListener('click', () => {
-    // Hide main tab content
-    els.mainTab.querySelector('.columns').style.display = 'none';
-    els.mainTab.querySelector('.top-controls').style.display = 'none';
-    
-    // Show fun mode
-    els.funModeContainer.style.display = 'block';
-    els.mainTab.appendChild(els.funModeContainer);
-});
-
-document.getElementById('exit-fun-mode-button').addEventListener('click', () => {
-    // Clean up fun mode
-    if (state.timerRunning.fun) {
-        clearInterval(state.timerIntervals.fun);
-        state.timerRunning.fun = false;
-    }
-    
-    // Hide fun mode
-    els.funModeContainer.style.display = 'none';
-    
-    // Show main tab content
-    els.mainTab.querySelector('.columns').style.display = 'flex';
-    els.mainTab.querySelector('.top-controls').style.display = 'flex';
-});
-
-// Fun mode timer buttons
-document.querySelectorAll('[data-action^="start-fun"], [data-action^="stop-fun"], [data-action^="reset-fun"]').forEach(button => {
-    button.addEventListener('click', () => {
-        const action = button.getAttribute('data-action');
-        
-        if (action === 'start-fun') {
-            startFunTimer();
-        } else if (action === 'stop-fun') {
-            stopFunTimer();
-        } else if (action === 'reset-fun') {
-            resetFunTimer();
-        }
-    });
-});
-
-function startFunTimer() {
-    if (state.timerRunning.fun) return;
-    
-    state.timerStart.fun = Date.now() - state.timerElapsed.fun * 1000;
-    state.timerRunning.fun = true;
-    
-    state.timerIntervals.fun = setInterval(() => {
-        const elapsed = (Date.now() - state.timerStart.fun) / 1000;
-        state.timerElapsed.fun = elapsed;
-        els.funTimer.textContent = formatTime(elapsed);
-    }, 1000);
-}
-
-function stopFunTimer() {
-    if (!state.timerRunning.fun) return;
-    
-    clearInterval(state.timerIntervals.fun);
-    state.timerRunning.fun = false;
-}
-
-function resetFunTimer() {
-    if (state.timerRunning.fun) {
-        stopFunTimer();
-    }
-    
-    state.timerElapsed.fun = 0;
-    els.funTimer.textContent = '00:00';
-}
-
-// Game voting
-document.querySelectorAll('.vote-button').forEach(button => {
-    button.addEventListener('click', (e) => {
-        const gameOption = e.target.closest('.game-option');
-        const voteCount = gameOption.querySelector('.vote-count');
-        
-        voteCount.textContent = (parseInt(voteCount.textContent) + 1).toString();
-    });
-});
-
-// Lock/unlock countries
-els.lockCountriesButton.addEventListener('click', () => {
-    toggleLockCountries();
-});
-
-function toggleLockCountries() {
-    const committee = els.committeeSelect.value;
-    
-    if (state.isCountryListLocked) {
-        // Unlock the list
-        state.isCountryListLocked = false;
-        els.lockCountriesButton.textContent = 'Lock Countries';
-        showMessage('Countries Unlocked', `The country list for ${committee} has been unlocked.`);
-    } else {
-        // Lock the list
-        state.isCountryListLocked = true;
-        saveLockedCountries();
-        els.lockCountriesButton.textContent = 'Unlock Countries';
-        showMessage('Countries Locked', `The country list for ${committee} has been locked.`);
-    }
-    
-    updateCountryListAttendance();
-}
-
-function saveLockedCountries() {
-    const committee = els.committeeSelect.value;
-    const countries = Array.from(els.countryList.children).map(li => li.textContent);
-    
-    // Create data structure to save
-    const lockedData = {
-        committee: committee,
-        countries: countries,
-        attendance: state.attendanceData,
-        dates: state.attendanceDates
-    };
-    
-    // Save to localStorage
-    localStorage.setItem(`locked_countries_${committee}`, JSON.stringify(lockedData));
-}
-
-function loadLockedCountries(committee) {
-    const savedData = localStorage.getItem(`locked_countries_${committee}`);
-    
-    if (savedData) {
-        try {
-            const lockedData = JSON.parse(savedData);
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MUN Committee Speech Timer</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            /* Modern theme configuration */
+            --primary: #6750A4;
+            --secondary: #625B71;
+            --accent: #7D5260;
+            --success: #4CAF50;
+            --warning: #FFA726;
+            --danger: #F44336;
             
-            // Check if this is the same committee
-            if (lockedData.committee === committee) {
-                // Ask if user wants to load the saved data
-                if (confirm(`Locked country list found for ${committee}.\nDo you want to load it?`)) {
-                    // Update countries
-                    els.countryList.innerHTML = '';
-                    lockedData.countries.forEach(country => {
-                        const li = document.createElement('li');
-                        li.textContent = country;
-                        li.className = 'list-item';
-                        li.addEventListener('click', (e) => {
-                            document.querySelectorAll('#country-list .list-item').forEach(item => {
-                                item.classList.remove('selected');
-                            });
-                            e.target.classList.add('selected');
-                        });
-                        els.countryList.appendChild(li);
-                    });
-                    
-                    // Update attendance data
-                    state.attendanceData = lockedData.attendance || {};
-                    state.attendanceDates = lockedData.dates || [];
-                    
-                    // Set lock status
-                    state.isCountryListLocked = true;
-                    els.lockCountriesButton.textContent = 'Unlock Countries';
-                    
-                    return true;
-                }
-            }
-        } catch (e) {
-            console.error('Could not load locked countries:', e);
+            --bg-primary: #F8F8FC;
+            --bg-secondary: #F0F0F6;
+            --bg-elevated: #FFFFFF;
+            
+            --text-primary: #1C1B1F;
+            --text-secondary: #49454F;
+            --text-disabled: #9E9E9E;
+            --text-on-primary: #FFFFFF;
+            
+            --border: #E0E0E6;
+            --highlight: #E8DEF8;
+            
+            --timer-green: #4CAF50;
+            --timer-blue: #03A9F4;
+            --timer-orange: #FF9800;
+            
+            --corner-radius: 8px;
+            --border-width: 1px;
+            --padding: 10px;
+            
+            --font-family: 'Segoe UI', system-ui, sans-serif;
         }
-    }
-    
-    return false;
-}
 
-function updateCountryListAttendance() {
-    if (!state.isCountryListLocked) return;
-    
-    const today = new Date().toISOString().slice(0, 10);
-    if (!state.attendanceDates.includes(today)) return;
-    
-    Array.from(els.countryList.children).forEach(li => {
-        const country = li.textContent;
-        const isPresent = state.attendanceData[country]?.[today] || false;
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-primary);
+            margin: 0;
+            padding: 0;
+            color: var(--text-primary);
+        }
+
+        #app {
+            width: 100%;
+            max-width: 1600px;
+            margin: 0 auto;
+            min-height: 100vh;
+        }
+
+        header {
+            background-color: var(--primary);
+            color: var(--text-on-primary);
+            padding: 15px var(--padding);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 0 0 var(--corner-radius) var(--corner-radius);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+
+        .tabs {
+            display: flex;
+            background-color: var(--bg-secondary);
+            padding: 0 var(--padding);
+            margin-top: 10px;
+            border-radius: var(--corner-radius) var(--corner-radius) 0 0;
+        }
+
+        .tab {
+            padding: 12px 16px;
+            cursor: pointer;
+            background-color: var(--bg-secondary);
+            color: var(--text-secondary);
+            border: none;
+            font-family: var(--font-family);
+            font-size: 1rem;
+            transition: background-color 0.2s, color 0.2s;
+            border-radius: var(--corner-radius) var(--corner-radius) 0 0;
+        }
+
+        .tab.active {
+            background-color: var(--primary);
+            color: var(--text-on-primary);
+        }
+
+        .tab:hover:not(.active) {
+            background-color: var(--highlight);
+        }
+
+        .tab-content {
+            display: none;
+            padding: var(--padding);
+            background-color: var(--bg-elevated);
+            border-radius: 0 0 var(--corner-radius) var(--corner-radius);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .top-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .committee-selector {
+            display: flex;
+            align-items: center;
+        }
+
+        .committee-selector label {
+            margin-right: 8px;
+        }
+
+        select {
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: var(--corner-radius);
+            background-color: var(--bg-elevated);
+            font-family: var(--font-family);
+            color: var(--text-primary);
+        }
+
+        .button {
+            background-color: var(--primary);
+            color: var(--text-on-primary);
+            border: none;
+            padding: 8px 16px;
+            border-radius: var(--corner-radius);
+            cursor: pointer;
+            font-family: var(--font-family);
+            font-size: 0.9rem;
+            transition: background-color 0.2s;
+            margin: 0 5px;
+        }
+
+        .button:hover {
+            filter: brightness(1.1);
+        }
+
+        .button.success { background-color: var(--success); }
+        .button.warning { background-color: var(--warning); }
+        .button.danger { background-color: var(--danger); }
+        .button.secondary { background-color: var(--secondary); }
+        .button.accent { background-color: var(--accent); }
+
+        .columns {
+            display: flex;
+            gap: 20px;
+            margin-top: 15px;
+        }
+
+        .column {
+            flex: 1;
+        }
+
+        .card {
+            background-color: var(--bg-elevated);
+            border-radius: var(--corner-radius);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+
+        .card-header {
+            background-color: var(--primary);
+            color: var(--text-on-primary);
+            padding: 10px 15px;
+            font-weight: bold;
+        }
+
+        .card-body {
+            padding: 15px;
+        }
+
+        .list-container {
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            border-radius: var(--corner-radius);
+            background-color: var(--bg-elevated);
+        }
+
+        .list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .list-item {
+            padding: 8px 15px;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+        }
+
+        .list-item:hover {
+            background-color: var(--highlight);
+        }
+
+        .list-item.selected {
+            background-color: var(--primary);
+            color: var(--text-on-primary);
+        }
+
+        .timer-cards {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .timer-card {
+            flex: 1;
+            background-color: var(--timer-green);
+            color: var(--text-on-primary);
+            border-radius: var(--corner-radius);
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+        }
+
+        .timer-card:nth-child(2) {
+            background-color: var(--timer-blue);
+        }
+
+        .timer-card:nth-child(3) {
+            background-color: var(--timer-orange);
+        }
+
+        .timer-title {
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .timer-display {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 10px 0 15px;
+        }
+
+        .timer-controls {
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .timer-button {
+            background-color: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: var(--corner-radius);
+            cursor: pointer;
+            font-family: var(--font-family);
+            transition: background-color 0.2s;
+        }
+
+        .timer-button:hover {
+            background-color: rgba(255,255,255,0.3);
+        }
+
+        .notes-area {
+            width: 100%;
+            height: 150px;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: var(--corner-radius);
+            font-family: var(--font-family);
+            resize: vertical;
+            margin-bottom: 10px;
+        }
+
+        .note-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        /* Current speaker display */
+        .current-speaker {
+            text-align: center;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .current-speaker-label {
+            font-size: 1.2rem;
+            color: var(--primary);
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .current-speaker-name {
+            font-size: 2rem;
+            margin: 10px 0 20px;
+        }
+
+        /* Speaker list controls */
+        .list-controls {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+
+        /* For frequency list coloring */
+        .frequency-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        /* Messaging layout */
+        .messaging-container {
+            display: flex;
+            height: 500px;
+            gap: 15px;
+        }
+
+        .delegates-list {
+            flex: 1;
+            max-width: 300px;
+        }
+
+        .messages-container {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .messages-list {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 15px;
+        }
+
+        .message-compose {
+            background-color: var(--bg-elevated);
+            padding: 15px;
+            border-radius: var(--corner-radius);
+            border: 1px solid var(--border);
+        }
+
+        .message-input {
+            width: 100%;
+            min-height: 80px;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: var(--corner-radius);
+            font-family: var(--font-family);
+            margin-bottom: 10px;
+            resize: vertical;
+        }
+
+        /* Fun mode styles */
+        .fun-mode {
+            background-color: #FF5BFF;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            border-radius: var(--corner-radius);
+        }
+
+        .fun-mode-header {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+
+        .fun-timer {
+            font-size: 4rem;
+            margin: 20px 0;
+        }
+
+        .game-options {
+            margin: 30px 0;
+        }
+
+        .game-option {
+            background-color: #FFE6F7;
+            color: var(--text-primary);
+            margin: 10px auto;
+            padding: 15px;
+            border-radius: var(--corner-radius);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 500px;
+        }
+
+        /* Role call styles */
+        .role-call-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .role-call-modal {
+            background-color: var(--bg-elevated);
+            width: 80%;
+            max-width: 1000px;
+            max-height: 80vh;
+            border-radius: var(--corner-radius);
+            overflow-y: auto;
+        }
+
+        .role-call-header {
+            background-color: var(--primary);
+            color: var(--text-on-primary);
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .role-call-body {
+            padding: 15px;
+        }
+
+        .role-call-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .role-call-table th, .role-call-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .role-call-table th {
+            background-color: var(--bg-secondary);
+            font-weight: bold;
+        }
+
+        .role-call-table tr:nth-child(even) {
+            background-color: var(--bg-secondary);
+        }
+
+        .dialog {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .dialog-content {
+            background-color: var(--bg-elevated);
+            padding: 20px;
+            border-radius: var(--corner-radius);
+            min-width: 300px;
+            max-width: 500px;
+        }
+
+        .dialog-title {
+            margin-top: 0;
+            color: var(--primary);
+        }
+
+        .dialog-buttons {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 20px;
+            gap: 10px;
+        }
+
+        .tab.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
         
-        // Add visual indicator
-        if (isPresent) {
-            li.style.color = 'var(--success)';
-        } else if (country in state.attendanceData && today in state.attendanceData[country]) {
-            li.style.color = 'var(--danger)';
-        } else {
-            li.style.color = 'var(--text-primary)';
+        /* Message styling */
+        .message {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: var(--corner-radius);
+            background-color: var(--bg-secondary);
         }
-    });
-}
+        
+        .message-header {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .message-separator {
+            height: 1px;
+            background-color: var(--border);
+            margin: 10px 0;
+        }
 
-// Role call
-document.getElementById('role-call-button').addEventListener('click', () => {
-    openRoleCall();
-});
-
-function openRoleCall() {
-    if (!state.isCountryListLocked) {
-        showMessage('Lock Required', 'Please lock the country list first by clicking "Lock Countries".');
-        return;
-    }
-    
-    // Get current committee and countries
-    const committee = els.committeeSelect.value;
-    const countries = Array.from(els.countryList.children).map(li => li.textContent);
-    
-    // Set role call title
-    document.getElementById('role-call-title').textContent = `Role Call - ${committee}`;
-    
-    // Set today's date
-    const today = new Date().toISOString().slice(0, 10);
-    els.roleCallDate.value = today;
-    
-    // Add today's date if not already present
-    if (!state.attendanceDates.includes(today)) {
-        state.attendanceDates.push(today);
-    }
-    
-    // Initialize attendance data structure if needed
-    if (Object.keys(state.attendanceData).length === 0) {
-        state.attendanceData = {};
-        countries.forEach(country => {
-            state.attendanceData[country] = {};
-            state.attendanceDates.forEach(date => {
-                state.attendanceData[country][date] = false;
-            });
-        });
-    } else {
-        // Update with any new countries or dates
-        countries.forEach(country => {
-            if (!state.attendanceData[country]) {
-                state.attendanceData[country] = {};
+        @media (max-width: 768px) {
+            .columns {
+                flex-direction: column;
             }
             
-            state.attendanceDates.forEach(date => {
-                if (!(date in state.attendanceData[country])) {
-                    state.attendanceData[country][date] = false;
-                }
-            });
-        });
-    }
-    
-    // Build role call table
-    buildRoleCallTable(countries);
-    
-    // Show modal
-    els.roleCallModal.style.display = 'flex';
-}
-
-function buildRoleCallTable(countries) {
-    // Clear existing table
-    const thead = els.roleCallTable.querySelector('thead tr');
-    const tbody = els.roleCallTable.querySelector('tbody');
-    
-    // Keep only the Country column header
-    while (thead.children.length > 1) {
-        thead.removeChild(thead.lastChild);
-    }
-    
-    // Add date column headers
-    state.attendanceDates.sort().forEach(date => {
-        const th = document.createElement('th');
-        th.textContent = date;
-        thead.appendChild(th);
-    });
-    
-    // Clear tbody
-    tbody.innerHTML = '';
-    
-    // Add country rows
-    countries.sort().forEach(country => {
-        const tr = document.createElement('tr');
-        
-        // Country name cell
-        const td = document.createElement('td');
-        td.textContent = country;
-        tr.appendChild(td);
-        
-        // Attendance checkboxes for each date
-        state.attendanceDates.sort().forEach(date => {
-            const td = document.createElement('td');
-            const checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.checked = state.attendanceData[country]?.[date] || false;
-            
-            checkbox.addEventListener('change', () => {
-                if (!state.attendanceData[country]) {
-                    state.attendanceData[country] = {};
-                }
-                state.attendanceData[country][date] = checkbox.checked;
-                
-                // Update visual indicators
-                if (date === new Date().toISOString().slice(0, 10)) {
-                    updateCountryListAttendance();
-                }
-            });
-            
-            td.appendChild(checkbox);
-            tr.appendChild(td);
-        });
-        
-        tbody.appendChild(tr);
-    });
-}
-
-// Add date button
-document.getElementById('add-date-button').addEventListener('click', () => {
-    const newDate = els.roleCallDate.value.trim();
-    
-    if (!newDate) {
-        showMessage('Date Required', 'Please enter a date');
-        return;
-    }
-    
-    if (!state.attendanceDates.includes(newDate)) {
-        state.attendanceDates.push(newDate);
-        
-        // Update attendance data with new date
-        Object.keys(state.attendanceData).forEach(country => {
-            state.attendanceData[country][newDate] = false;
-        });
-        
-        // Rebuild the role call table
-        const countries = Array.from(els.countryList.children).map(li => li.textContent);
-        buildRoleCallTable(countries);
-    }
-});
-
-// Close role call
-document.getElementById('close-role-call-button').addEventListener('click', () => {
-    els.roleCallModal.style.display = 'none';
-});
-
-// Save role call
-document.getElementById('save-role-call-button').addEventListener('click', () => {
-    saveLockedCountries();
-    els.roleCallModal.style.display = 'none';
-    updateCountryListAttendance();
-});
-
-// Export data
-document.getElementById('export-button').addEventListener('click', () => {
-    exportData();
-});
-
-function exportData() {
-    try {
-        // Generate content
-        let content = "MUN Speech Timer Data Export\n";
-        content += `Generated: ${new Date().toLocaleString()}\n`;
-        content += `Committee: ${els.committeeSelect.value}\n\n`;
-        
-        // Write delegate statistics
-        content += "== Delegate Speaking Statistics ==\n";
-        
-        const sortedDelegates = Object.entries(state.delegateData)
-            .sort((a, b) => b[1].totalSpeakingTime - a[1].totalSpeakingTime);
-        
-        sortedDelegates.forEach(([delegate, data]) => {
-            const totalTime = data.totalSpeakingTime;
-            const speechCount = data.speeches.length;
-            const avgTime = speechCount > 0 ? totalTime / speechCount : 0;
-            
-            content += `${delegate}:\n`;
-            content += `  Total speaking time: ${formatTime(totalTime)}\n`;
-            content += `  Number of speeches: ${speechCount}\n`;
-            content += `  Average speech duration: ${formatTime(avgTime)}\n\n`;
-        });
-        
-        // Write attendance data if available
-        if (Object.keys(state.attendanceData).length > 0) {
-            content += "== Attendance Records ==\n";
-            
-            // Sort countries alphabetically
-            const countries = Object.keys(state.attendanceData).sort();
-            
-            countries.forEach(country => {
-                content += `${country}:\n`;
-                
-                // Sort dates chronologically
-                const dates = Object.keys(state.attendanceData[country]).sort();
-                
-                dates.forEach(date => {
-                    const status = state.attendanceData[country][date] ? 'Present' : 'Absent';
-                    content += `  ${date}: ${status}\n`;
-                });
-                
-                content += '\n';
-            });
-        }
-        
-        // Write notes
-        content += "== Session Notes ==\n";
-        content += els.notesArea.value;
-        
-        // Create download link
-        const blob = new Blob([content], { type: 'text/plain' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `MUN_Speech_Times_${new Date().toISOString().slice(0, 10)}.txt`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        
-    } catch (error) {
-        showMessage('Export Error', `Failed to export data: ${error.message}`);
-    }
-}
-
-// Helper function to show messages
-function showMessage(title, message) {
-    // Create a modal for the message
-    const modal = document.createElement('div');
-    modal.className = 'dialog';
-    modal.style.display = 'flex';
-    
-    const content = document.createElement('div');
-    content.className = 'dialog-content';
-    
-    const titleElement = document.createElement('h3');
-    titleElement.className = 'dialog-title';
-    titleElement.textContent = title;
-    
-    const messageElement = document.createElement('p');
-    messageElement.textContent = message;
-    
-    const buttons = document.createElement('div');
-    buttons.className = 'dialog-buttons';
-    
-    const okButton = document.createElement('button');
-    okButton.className = 'button primary';
-    okButton.textContent = 'OK';
-    okButton.addEventListener('click', () => {
-        document.body.removeChild(modal);
-    });
-    
-    buttons.appendChild(okButton);
-    content.appendChild(titleElement);
-    content.appendChild(messageElement);
-    content.appendChild(buttons);
-    modal.appendChild(content);
-    
-    document.body.appendChild(modal);
-}
-
-// Tab switching functionality
-document.querySelectorAll('.tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-        if (tab.classList.contains('disabled')) return;
-        
-        const tabId = tab.getAttribute('data-tab');
-        
-        // Update active tab
-        document.querySelectorAll('.tab').forEach(t => {
-            t.classList.remove('active');
-        });
-        tab.classList.add('active');
-        
-        // Show corresponding content
-        document.querySelectorAll('.tab-content').forEach(content => {
-            content.classList.remove('active');
-        });
-        document.getElementById(`${tabId}-tab`).classList.add('active');
-    });
-});
-
-// Messaging functionality
-function authenticateForMessaging() {
-    // This would typically involve OAuth with GitHub
-    // For simplicity, we'll just simulate authentication
-    
-    // Simulate successful authentication
-    setTimeout(() => {
-        state.authenticatedUsername = "DemoUser";
-        
-        // Update UI
-        els.authUsername.textContent = state.authenticatedUsername;
-        document.querySelector('.tab[data-tab="messaging"]').classList.remove('disabled');
-        
-        // Enable messaging interface
-        els.authRequiredPanel.style.display = 'none';
-        els.messagingInterface.style.display = 'block';
-        
-        // Update delegates list
-        updateDelegatesList();
-        
-        showMessage('Authentication Successful', 
-                    `Successfully authenticated as ${state.authenticatedUsername}.\n` +
-                    'You now have access to the messaging feature.');
-    }, 1000);
-}
-
-// Auth button event handler
-document.getElementById('auth-button').addEventListener('click', authenticateForMessaging);
-document.getElementById('auth-messaging-button').addEventListener('click', authenticateForMessaging);
-
-// Update delegates list in messaging tab
-function updateDelegatesList() {
-    els.conversationList.innerHTML = '';
-    
-    // Get all countries across committees
-    const allDelegates = new Set();
-    Object.values(state.committees).forEach(countries => {
-        countries.forEach(country => allDelegates.add(country));
-    });
-    
-    // Remove current user if present
-    if (allDelegates.has(state.authenticatedUsername)) {
-        allDelegates.delete(state.authenticatedUsername);
-    }
-    
-    // Add to list
-    Array.from(allDelegates).sort().forEach(delegate => {
-        // Count unread messages
-        const unreadCount = state.messages.filter(msg => 
-            msg.recipient === state.authenticatedUsername && 
-            msg.sender === delegate && 
-            !msg.read
-        ).length;
-        
-        const li = document.createElement('li');
-        li.className = 'list-item';
-        li.textContent = unreadCount > 0 ? `${delegate} (${unreadCount})` : delegate;
-        li.dataset.delegate = delegate;
-        
-        li.addEventListener('click', () => {
-            selectConversation(delegate);
-        });
-        
-        els.conversationList.appendChild(li);
-    });
-}
-
-// Select conversation
-function selectConversation(delegate) {
-    // Clear previous selection
-    document.querySelectorAll('#conversation-list .list-item').forEach(item => {
-        item.classList.remove('selected');
-    });
-    
-    // Mark current selection
-    const item = Array.from(els.conversationList.children).find(li => 
-        li.dataset.delegate === delegate
-    );
-    if (item) item.classList.add('selected');
-    
-    state.selectedDelegate = delegate;
-    
-    // Update message display
-    updateMessageDisplay();
-}
-
-// Update message display
-function updateMessageDisplay() {
-    if (!state.selectedDelegate || !state.authenticatedUsername) return;
-    
-    els.messageDisplay.innerHTML = '';
-    
-    // Filter messages for this conversation
-    const conversation = state.messages.filter(msg => 
-        (msg.sender === state.authenticatedUsername && msg.recipient === state.selectedDelegate) ||
-        (msg.sender === state.selectedDelegate && msg.recipient === state.authenticatedUsername)
-    );
-    
-    // Sort by timestamp
-    conversation.sort((a, b) => a.timestamp - b.timestamp);
-    
-    // Display messages
-    conversation.forEach(msg => {
-        const messageDiv = document.createElement('div');
-        messageDiv.className = 'message';
-        
-        const header = document.createElement('div');
-        header.className = 'message-header';
-        
-        const sender = msg.sender === state.authenticatedUsername ? 'You' : msg.sender;
-        const time = new Date(msg.timestamp).toLocaleString();
-        
-        header.textContent = `${sender} (${time}):`;
-        header.style.color = msg.sender === state.authenticatedUsername ? 
-                            'var(--primary)' : 'var(--secondary)';
-        
-        const content = document.createElement('div');
-        content.className = 'message-content';
-        content.textContent = msg.content;
-        
-        messageDiv.appendChild(header);
-        messageDiv.appendChild(content);
-        els.messageDisplay.appendChild(messageDiv);
-        
-        // Add separator
-        const separator = document.createElement('div');
-        separator.className = 'message-separator';
-        els.messageDisplay.appendChild(separator);
-        
-        // Mark as read if it's to us
-        if (msg.recipient === state.authenticatedUsername && !msg.read) {
-            msg.read = true;
-            saveData();
-        }
-    });
-    
-    // Scroll to bottom
-    els.messageDisplay.scrollTop = els.messageDisplay.scrollHeight;
-    
-    // Update delegates list to reflect read status changes
-    updateDelegatesList();
-}
-
-// Send message button
-document.getElementById('send-message-button').addEventListener('click', sendMessage);
-
-// Send message function
-function sendMessage() {
-    if (!state.selectedDelegate || !state.authenticatedUsername) {
-        showMessage('Error', 'No recipient selected');
-        return;
-    }
-    
-    const content = els.messageInput.value.trim();
-    
-    if (!content) {
-        showMessage('Error', 'Please enter a message');
-        return;
-    }
-    
-    // Create message object
-    const message = {
-        id: Date.now().toString(),
-        sender: state.authenticatedUsername,
-        recipient: state.selectedDelegate,
-        content: content,
-        timestamp: Date.now(),
-        read: false
-    };
-    
-    // Add to messages array
-    state.messages.push(message);
-    
-    // Clear input
-    els.messageInput.value = '';
-    
-    // Update UI
-    updateMessageDisplay();
-    
-    // Save data
-    saveData();
-}
-
-// New message button
-document.getElementById('new-message-button').addEventListener('click', openNewMessageDialog);
-
-// Open new message dialog
-function openNewMessageDialog() {
-    els.newMessageDialog.style.display = 'flex';
-    
-    // Clear previous inputs
-    els.recipientSelect.innerHTML = '';
-    document.getElementById('new-message-text').value = '';
-    
-    // Populate recipient dropdown
-    const allDelegates = new Set();
-    Object.values(state.committees).forEach(countries => {
-        countries.forEach(country => {
-            if (country !== state.authenticatedUsername) {
-                allDelegates.add(country);
+            .timer-cards {
+                flex-direction: column;
             }
-        });
-    });
-    
-    Array.from(allDelegates).sort().forEach(delegate => {
-        const option = document.createElement('option');
-        option.value = delegate;
-        option.textContent = delegate;
-        els.recipientSelect.appendChild(option);
-    });
-}
+            
+            .messaging-container {
+                flex-direction: column;
+            }
+            
+            .delegates-list {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <header>
+            <h1>MUN Committee Speech Timer</h1>
+            <div class="auth-status">
+                <span id="auth-username">Not logged in</span>
+                <button id="auth-button" class="button secondary">Login with GitHub</button>
+            </div>
+        </header>
 
-// Cancel new message button
-document.getElementById('cancel-message-button').addEventListener('click', () => {
-    els.newMessageDialog.style.display = 'none';
-});
+        <div class="tabs">
+            <button class="tab active" data-tab="main">Main Dashboard</button>
+            <button class="tab" data-tab="speaking-list">Speaking List</button>
+            <button class="tab" data-tab="messaging">Messaging</button>
+        </div>
 
-// Send new message button
-document.getElementById('send-new-message-button').addEventListener('click', () => {
-    const recipient = els.recipientSelect.value;
-    const content = document.getElementById('new-message-text').value.trim();
-    
-    if (!recipient) {
-        showMessage('Error', 'Please select a recipient');
-        return;
-    }
-    
-    if (!content) {
-        showMessage('Error', 'Please enter a message');
-        return;
-    }
-    
-    // Create message object
-    const message = {
-        id: Date.now().toString(),
-        sender: state.authenticatedUsername,
-        recipient: recipient,
-        content: content,
-        timestamp: Date.now(),
-        read: false
-    };
-    
-    // Add to messages array
-    state.messages.push(message);
-    
-    // Close dialog
-    els.newMessageDialog.style.display = 'none';
-    
-    // Select this conversation
-    selectConversation(recipient);
-    
-    // Save data
-    saveData();
-});
+        <!-- Main Dashboard Tab -->
+        <div id="main-tab" class="tab-content active">
+            <div class="top-controls">
+                <div class="committee-selector">
+                    <label for="committee-select">Committee:</label>
+                    <select id="committee-select">
+                        <option value="UNSC">UNSC</option>
+                        <option value="UNODC">UNODC</option>
+                        <option value="UNGA">UNGA</option>
+                        <option value="UNHRC">UNHRC</option>
+                        <option value="ECOSOC">ECOSOC</option>
+                        <option value="WHO">WHO</option>
+                    </select>
+                </div>
+                <div class="control-buttons">
+                    <button id="export-button" class="button warning">Export Data</button>
+                    <button id="role-call-button" class="button">Role Call</button>
+                    <button id="lock-countries-button" class="button secondary">Lock Countries</button>
+                </div>
+            </div>
 
-// Initialize the app by loading stored data
-document.addEventListener('DOMContentLoaded', () => {
-    loadStoredData();
-    
-    // Set up tab selection
-    document.querySelector('.tab[data-tab="main"]').click();
-    
-    // Disable messaging tab initially (until authenticated)
-    document.querySelector('.tab[data-tab="messaging"]').classList.add('disabled');
-});
-"
+            <div class="columns">
+                <div class="column">
+                    <!-- Country List Card -->
+                    <div class="card">
+                        <div class="card-header">Countries</div>
+                        <div class="card-body">
+                            <div class="list-container">
+                                <ul id="country-list" class="list"></ul>
+                            </div>
+                            <button id="add-to-list-button" class="button primary" style="width: 100%; margin-top: 10px;">Add to Speaking List</button>
+                        </div>
+                    </div>
+
+                    <!-- Frequency List Card -->
+                    <div class="card">
+                        <div class="card-header">Speaker Frequency</div>
+                        <div class="card-body">
+                            <div class="list-container">
+                                <ul id="frequency-list" class="list"></ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="column">
+                    <!-- Timers Section -->
+                    <div class="card">
+                        <div class="card-header">Timers</div>
+                        <div class="card-body">
+                            <div class="timer-cards">
+                                <div class="timer-card">
+                                    <div class="timer-title">Session</div>
+                                    <div class="timer-display" id="session-timer">00:00</div>
+                                    <div class="timer-controls">
+                                        <button class="timer-button" data-timer="session" data-action="start">Start</button>
+                                        <button class="timer-button" data-timer="session" data-action="stop">Stop</button>
+                                        <button class="timer-button" data-timer="session" data-action="reset">Reset</button>
+                                    </div>
+                                </div>
+                                <div class="timer-card">
+                                    <div class="timer-title">Caucus</div>
+                                    <div class="timer-display" id="caucus-timer">00:00</div>
+                                    <div class="timer-controls">
+                                        <button class="timer-button" data-timer="caucus" data-action="start">Start</button>
+                                        <button class="timer-button" data-timer="caucus" data-action="stop">Stop</button>
+                                        <button class="timer-button" data-timer="caucus" data-action="reset">Reset</button>
+                                    </div>
+                                </div>
+                                <div class="timer-card">
+                                    <div class="timer-title">Speech</div>
+                                    <div class="timer-display" id="speech-timer">00:00</div>
+                                    <div class="timer-controls">
+                                        <button class="timer-button" data-timer="speech" data-action="start">Start</button>
+                                        <button class="timer-button" data-timer="speech" data-action="stop">Stop</button>
+                                        <button class="timer-button" data-timer="speech" data-action="reset">Reset</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <button id="rearrange-timers-button" class="button secondary" style="width: 100%;">Rearrange Timers</button>
+                        </div>
+                    </div>
+
+                    <!-- Notes Section -->
+                    <div class="card">
+                        <div class="card-header">Notes</div>
+                        <div class="card-body">
+                            <textarea id="notes-area" class="notes-area" placeholder="Enter notes here..."></textarea>
+                            <div class="note-buttons">
+                                <button class="button success" data-note="Good Speech">Good Speech</button>
+                                <button class="button danger" data-note="Bad Speech">Bad Speech</button>
+                                <button class="button primary" data-note="Good Diplomacy">Good Diplomacy</button>
+                                <button class="button warning" data-note="Bad Diplomacy">Bad Diplomacy</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Fun Mode Button -->
+                    <button id="fun-mode-button" class="button accent" style="width: 100%;">Fun Committee Mode</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Speaking List Tab -->
+        <div id="speaking-list-tab" class="tab-content">
+            <div class="current-speaker">
+                <div class="current-speaker-label">Current Speaker</div>
+                <div class="current-speaker-name" id="current-speaker-display">None</div>
+                <div>
+                    <button id="next-speaker-button" class="button success">Next Speaker</button>
+                    <button id="skip-speaker-button" class="button danger">Skip Speaker</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">Speaking List</div>
+                <div class="card-body">
+                    <div class="list-container" style="height: 400px;">
+                        <ul id="speaking-list" class="list"></ul>
+                    </div>
+                    <div class="list-controls">
+                        <button id="move-up-button" class="button primary">Move Up</button>
+                        <button id="move-down-button" class="button primary">Move Down</button>
+                        <button id="remove-button" class="button danger">Remove</button>
+                        <button id="clear-list-button" class="button secondary">Clear List</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Messaging Tab -->
+        <div id="messaging-tab" class="tab-content">
+            <!-- Authentication Required Panel -->
+            <div id="auth-required-panel">
+                <div class="card">
+                    <div class="card-body" style="text-align: center; padding: 40px 20px;">
+                        <h2>GitHub Authentication Required</h2>
+                        <p>You need to authenticate with GitHub to access the messaging feature.</p>
+                        <button id="auth-messaging-button" class="button primary">Authenticate with GitHub</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Messaging Interface (hidden initially) -->
+            <div id="messaging-interface" style="display: none;">
+                <div class="messaging-container">
+                    <div class="delegates-list">
+                        <div class="card" style="height: 100%;">
+                            <div class="card-header">Delegates</div>
+                            <div class="card-body" style="height: calc(100% - 50px); display: flex; flex-direction: column;">
+                                <div class="list-container" style="flex: 1;">
+                                    <ul id="conversation-list" class="list"></ul>
+                                </div>
+                                <button id="new-message-button" class="button success" style="margin-top: 10px;">New Message</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="messages-container">
+                        <div class="card" style="flex: 1; margin-bottom: 10px;">
+                            <div class="card-header">Messages</div>
+                            <div class="card-body" style="height: calc(100% - 50px); overflow-y: auto;">
+                                <div id="message-display"></div>
+                            </div>
+                        </div>
+
+                        <div class="message-compose">
+                            <textarea id="message-input" class="message-input" placeholder="Type your message here..."></textarea>
+                            <div style="text-align: right;">
+                                <button id="send-message-button" class="button primary">Send Message</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Role Call Modal -->
+        <div id="role-call-modal" class="role-call-container">
+            <div class="role-call-modal">
+                <div class="role-call-header">
+                    <h2 id="role-call-title">Role Call</h2>
+                    <div>
+                        <label for="role-call-date">Date:</label>
+                        <input type="text" id="role-call-date" placeholder="YYYY-MM-DD">
+                        <button id="add-date-button" class="button primary">Add Date</button>
+                        <button id="close-role-call-button" class="button">Close</button>
+                    </div>
+                </div>
+                <div class="role-call-body">
+                    <table id="role-call-table" class="role-call-table">
+                        <thead>
+                            <tr>
+                                <th>Country</th>
+                                <!-- Dates will be inserted dynamically -->
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Countries and attendance will be inserted dynamically -->
+                        </tbody>
+                    </table>
+                    <div style="text-align: right; margin-top: 15px;">
+                        <button id="save-role-call-button" class="button success">Save Role Call</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- New Message Dialog -->
+        <div id="new-message-dialog" class="dialog">
+            <div class="dialog-content">
+                <h3 class="dialog-title">New Message</h3>
+                <div>
+                    <label for="recipient-select">To:</label>
+                    <select id="recipient-select" style="width: 100%; margin-bottom: 15px;"></select>
+                </div>
+                <div>
+                    <label for="new-message-text">Message:</label>
+                    <textarea id="new-message-text" class="message-input"></textarea>
+                </div>
+                <div class="dialog-buttons">
+                    <button id="cancel-message-button" class="button secondary">Cancel</button>
+                    <button id="send-new-message-button" class="button primary">Send</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fun Mode Container (hidden initially) -->
+        <div id="fun-mode-container" style="display: none;">
+            <div class="fun-mode">
+                <div class="fun-mode-header">Fun Committee Mode</div>
+                <div class="fun-timer" id="fun-timer">00:00</div>
+                <div>
+                    <button class="button" style="background-color: #6A0DAD;" data-action="start-fun">Start</button>
+                    <button class="button" style="background-color: #6A0DAD;" data-action="stop-fun">Stop</button>
+                    <button class="button" style="background-color: #6A0DAD;" data-action="reset-fun">Reset</button>
+                </div>
+
+                <div class="game-options">
+                    <div class="game-option">
+                        <span>UN Charades - Votes: <span class="vote-count">0</span></span>
+                        <button class="button primary vote-button">Vote</button>
+                    </div>
+                    <div class="game-option">
+                        <span>Diplomatic Trivia - Votes: <span class="vote-count">0</span></span>
+                        <button class="button primary vote-button">Vote</button>
+                    </div>
+                    <div class="game-option">
+                        <span>Resolution Writing Race - Votes: <span class="vote-count">0</span></span>
+                        <button class="button primary vote-button">Vote</button>
+                    </div>
+                    <div class="game-option">
+                        <span>Crisis Simulation - Votes: <span class="vote-count">0</span></span>
+                        <button class="button primary vote-button">Vote</button>
+                    </div>
+                </div>
+
+                <button id="exit-fun-mode-button" class="button danger">Exit Fun Mode</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Helper function to generate UUIDs
+        function generateUUID() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                const r = Math.random() * 16 | 0;
+                const v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+        
+        // Global state object
+        const state = {
+            currentSpeaker: null,
+            delegateData: {},
+            attendanceData: {},
+            attendanceDates: [],
+            isCountryListLocked: false,
+            selectedCommittee: 'UNSC',
+            authenticatedUsername: null,
+            messages: [],
+            delegates: new Set(),
+            selectedDelegate: null,
+            timerIntervals: {
+                session: null,
+                caucus: null,
+                speech: null,
+                fun: null
+            },
+            timerStart: {
+                session: 0,
+                caucus: 0,
+                speech: 0,
+                fun: 0
+            },
+            timerElapsed: {
+                session: 0,
+                caucus: 0,
+                speech: 0,
+                fun: 0
+            },
+            timerRunning: {
+                session: false,
+                caucus: false,
+                speech: false,
+                fun: false
+            },
+            timerTypes: ["Session", "Caucus", "Speech"],
+            timerColors: ["var(--timer-green)", "var(--timer-blue)", "var(--timer-orange)"],
+            
+            // DOM Elements cache
+            els: {},
+            
+            // Committee configurations
+            // Cache DOM elements for performance
+            initElements() {
+                this.els = {
+                    committeeSelect: document.getElementById('committee-select'),
+                    countryList: document.getElementById('country-list'),
+                    speakingList: document.getElementById('speaking-list'),
+                    frequencyList: document.getElementById('frequency-list'),
+                    currentSpeakerDisplay: document.getElementById('current-speaker-display'),
+                    notesArea: document.getElementById('notes-area'),
+                    sessionTimer: document.getElementById('session-timer'),
+                    caucusTimer: document.getElementById('caucus-timer'),
+                    speechTimer: document.getElementById('speech-timer'),
+                    funTimer: document.getElementById('fun-timer'),
+                    lockCountriesButton: document.getElementById('lock-countries-button'),
+                    funModeContainer: document.getElementById('fun-mode-container'),
+                    mainTab: document.getElementById('main-tab'),
+                    roleCallModal: document.getElementById('role-call-modal'),
+                    roleCallTable: document.getElementById('role-call-table'),
+                    roleCallDate: document.getElementById('role-call-date'),
+                    authUsername: document.getElementById('auth-username'),
+                    messagingInterface: document.getElementById('messaging-interface'),
+                    authRequiredPanel: document.getElementById('auth-required-panel'),
+                    conversationList: document.getElementById('conversation-list'),
+                    messageDisplay: document.getElementById('message-display'),
+                    messageInput: document.getElementById('message-input'),
+                    newMessageDialog: document.getElementById('new-message-dialog'),
+                    recipientSelect: document.getElementById('recipient-select')
+                };
+            },
+            
+            committees: {
+                "UNSC": ["United States", "China", "Russian Federation", "United Kingdom", "France", 
+                        "Albania", "Brazil", "Gabon", "Ghana", "India", "Ireland", "Kenya", "Mexico", 
+                        "Norway", "United Arab Emirates"],
+                "UNODC": ["Germany", "Canada", "Mexico", "Brazil", "Japan", "France", "United Kingdom", 
+                        "Russian Federation", "China", "United States", "Italy", "Spain", "Netherlands", 
+                        "Sweden", "Australia", "New Zealand", "South Africa", "Nigeria", "Egypt", 
+                        "Saudi Arabia"],
+                "UNGA": ["Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", 
+                        "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", 
+                        "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", 
+                        "Bolivia", "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei Darussalam", 
+                        "Bulgaria", "Burkina Faso", "Burundi", "Cabo Verde", "Cambodia", "Cameroon", 
+                        "Canada", "Central African Republic", "Chad", "Chile", "China", "Colombia"],
+                "UNHRC": ["Argentina", "Armenia", "Bangladesh", "Benin", "Bolivia", "Brazil", "Cameroon", 
+                        "China", "Côte d'Ivoire", "Croatia", "Cuba", "Czechia", "Denmark", "Eritrea", 
+                        "Finland", "France", "Germany", "Honduras", "India", "Indonesia", "Japan", 
+                        "Kazakhstan", "Kyrgyzstan", "Libya", "Malawi", "Malaysia"],
+                "ECOSOC": ["Afghanistan", "Argentina", "Austria", "Bangladesh", "Benin", "Bolivia", "Botswana", 
+                        "Brazil", "Bulgaria", "Canada", "China", "Colombia", "Costa Rica", "Czechia", 
+                        "Denmark", "Ecuador", "Finland", "France", "Germany", "Greece", "Guatemala"],
+                "WHO": ["Afghanistan", "Angola", "Argentina", "Australia", "Austria", "Bangladesh", "Barbados", 
+                        "Belgium", "Brazil", "Burkina Faso", "Cameroon", "Canada", "China", "Colombia", "Croatia", 
+                        "Denmark", "Egypt", "Ethiopia"]
