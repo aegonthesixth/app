@@ -1,3 +1,46 @@
+// Global state object
+const state = {
+    currentSpeaker: null,
+    delegateData: {},
+    attendanceData: {},
+    attendanceDates: [],
+    isCountryListLocked: false,
+    selectedCommittee: 'UNSC',
+    authenticatedUsername: null,
+    messages: [],
+    delegates: new Set(),
+    selectedDelegate: null,
+    timerIntervals: {
+        session: null,
+        caucus: null,
+        speech: null,
+        fun: null
+    },
+    timerStart: {
+        session: 0,
+        caucus: 0,
+        speech: 0,
+        fun: 0
+    },
+    timerElapsed: {
+        session: 0,
+        caucus: 0,
+        speech: 0,
+        fun: 0
+    },
+    timerRunning: {
+        session: false,
+        caucus: false,
+        speech: false,
+        fun: false
+    },
+    timerTypes: ["Session", "Caucus", "Speech"],
+    timerColors: ["var(--timer-green)", "var(--timer-blue)", "var(--timer-orange)"],
+
+
+
+
+
 committees: {
                     "UNSC": ["United States", "China", "Russian Federation", "United Kingdom", "France", 
                             "Albania", "Brazil", "Gabon", "Ghana", "India", "Ireland", "Kenya", "Mexico", 
