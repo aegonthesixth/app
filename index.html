@@ -5,434 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MUN Speech Timer</title>
     <style>
-        /* Basic reset and global styles */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f4f4f4;
-        }
-
-        #app {
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            padding: 20px;
-        }
-    </style>
-</head>
-<body>
-    <div id="app">
-        <h1>MUN Speech Timer</h1>
-        <!-- Placeholder for future content -->
-    </div>
-
-    <!-- We'll add scripts later -->
-    <script src="app.js"></script>
-</body>
-</html>
-// MUN Speech Timer - Core Application Structure
-class MUNSpeechTimerApp {
-    constructor() {
-        // Application-wide configuration
-        this.config = {
-            version: '1.0.0',
-            theme: 'default',
-            language: 'en',
-            debug: true  // Enable debug mode for more logging
-        };
-
-        // Comprehensive state management
-        this.state = {
-            // Committee management
-            currentCommittee: 'UNSC',
-            committees: {
-                "UNSC": ["United States", "China", "Russian Federation", "United Kingdom", "France", 
-                    "Albania", "Brazil", "Gabon", "Ghana", "India", "Ireland", "Kenya", "Mexico", 
-                    "Norway", "United Arab Emirates"],
-                "UNODC": ["Germany", "Canada", "Mexico", "Brazil", "Japan", "France", "United Kingdom", 
-                    "Russian Federation", "China", "United States", "Italy", "Spain", "Netherlands"]
-            },
-
-            // Speaking list management
-            speakingList: [],
-            currentSpeaker: null,
-            speakerHistory: [],
-
-            // Timer management
-            timers: {
-                session: {
-                    running: false,
-                    startTime: null,
-                    elapsedTime: 0
-                },
-                caucus: {
-                    running: false,
-                    startTime: null,
-                    elapsedTime: 0
-                },
-                speech: {
-                    running: false,
-                    startTime: null,
-                    elapsedTime: 0
-                }
-            },
-
-            // UI state
-            ui: {
-                activeTab: 'main',
-                selectedCountry: null
-            }
-        };
-
-        // Logging system
-        this.logger = {
-            logs: [],
-            log(message, type = 'info') {
-                const logEntry = {
-                    timestamp: new Date(),
-                    message,
-                    type
-                };
-                this.logs.push(logEntry);
-                
-                // Console logging for debug mode
-                if (this.config.debug) {
-                    console.log(`[${type.toUpperCase()}]`, message);
-                }
-            },
-            error(message) {
-                this.log(message, 'error');
-                console.error(message);
-            }
-        };
-
-        // Initialize the application
-        this.initializeApplication();
-    }
-
-    // Application initialization method
-    initializeApplication() {
-        try {
-            this.logger.log('Initializing MUN Speech Timer Application');
-            
-            // Setup event listeners
-            this.setupEventListeners();
-
-            // Log successful initialization
-            this.logger.log('Application initialized successfully');
-        } catch (error) {
-            this.logger.error(`Initialization failed: ${error.message}`);
-        }
-    }
-
-    // Setup global event listeners
-    setupEventListeners() {
-        // Placeholder for event listener setup
-        this.logger.log('Setting up global event listeners');
-    }
-
-    // Utility method for time formatting
-    formatTime(seconds) {
-        const mins = Math.floor(seconds / 60);
-        const secs = Math.floor(seconds % 60);
-        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    }
-}
-
-// Application Initialization
-document.addEventListener('DOMContentLoaded', () => {
-    // Create global app instance
-    window.munApp = new MUNSpeechTimerApp();
-});
-// Speaking List Manager
-class SpeakingListManager {
-    constructor(app) {
-        this.app = app;
-    }
-
-    // Add a speaker to the speaking list
-    addToSpeakingList(speaker) {
-        // Validate input
-        if (!speaker || typeof speaker !== 'string') {
-            this.app.logger.error('Invalid speaker name');
-            return false;
-        }
-
-        // Check if speaker is already in the list
-        if (!this.app.state.speakingList.includes(speaker)) {
-            // Add speaker to the list
-            this.app.state.speakingList.push(speaker);
-            
-            // Log the addition
-            this.app.logger.log(`Added ${speaker} to speaking list`);
-
-            // Trigger UI update if needed
-            this.updateUI();
-
-            return true;
-        } else {
-            // Speaker already in the list
-            this.app.logger.log(`${speaker} is already in the speaking list`);
-            return false;
-        }
-    }
-
-    // Move to the next speaker
-    nextSpeaker() {
-        // Check if there are speakers in the list
-        if (this.app.state.speakingList.length > 0) {
-            // Remove the first speaker from the list
-            const currentSpeaker = this.app.state.speakingList.shift();
-            
-            // Update current speaker
-            this.app.state.currentSpeaker = currentSpeaker;
-
-            // Add to speaker history
-            if (!this.app.state.speakerHistory) {
-                this.app.state.speakerHistory = [];
-            }
-            this.app.state.speakerHistory.push(currentSpeaker);
-
-            // Log the speaker change
-            this.app.logger.log(`Next speaker: ${currentSpeaker}`);
-
-            // Trigger UI update
-            this.updateUI();
-
-            return currentSpeaker;
-        } else {
-            // No speakers in the list
-            this.app.state.currentSpeaker = null;
-            this.app.logger.log('No more speakers in the list');
-            return null;
-        }
-    }
-
-    // Skip the current speaker
-    skipCurrentSpeaker() {
-        // Check if there's a current speaker
-        if (this.app.state.currentSpeaker) {
-            // Add current speaker back to the end of the list
-            this.app.state.speakingList.push(this.app.state.currentSpeaker);
-            
-            // Log the skip
-            this.app.logger.log(`Skipped speaker: ${this.app.state.currentSpeaker}`);
-
-            // Move to next speaker
-            this.nextSpeaker();
-        }
-    }
-
-    // Clear the entire speaking list
-    clearSpeakingList() {
-        // Reset speaking list and current speaker
-        this.app.state.speakingList = [];
-        this.app.state.currentSpeaker = null;
-        
-        // Log the action
-        this.app.logger.log('Speaking list cleared');
-
-        // Trigger UI update
-        this.updateUI();
-    }
-
-    // Get current speaking list
-    getSpeakingList() {
-        return [...this.app.state.speakingList];
-    }
-
-    // Update UI (placeholder method to be implemented later)
-    updateUI() {
-        // This will be connected to the UI manager in a later stage
-        console.log('Speaking List Updated:', this.app.state.speakingList);
-    }
-}
-
-// Extend the main application prototype to include speaking list manager
-MUNSpeechTimerApp.prototype.speakingListManager = function() {
-    return new SpeakingListManager(this);
-};
-// Timer Management System
-class TimerManager {
-    constructor(app) {
-        this.app = app;
-        
-        // Timer types to manage
-        this.timerTypes = ['session', 'caucus', 'speech'];
-    }
-
-    // Start a specific timer
-    startTimer(timerType) {
-        // Validate timer type
-        if (!this.timerTypes.includes(timerType)) {
-            this.app.logger.error(`Invalid timer type: ${timerType}`);
-            return false;
-        }
-
-        // Get the specific timer from state
-        const timer = this.app.state.timers[timerType];
-
-        // Check if timer is already running
-        if (timer.running) {
-            this.app.logger.log(`${timerType} timer is already running`);
-            return false;
-        }
-
-        // Set start time and mark as running
-        timer.startTime = Date.now();
-        timer.running = true;
-
-        // Log the timer start
-        this.app.logger.log(`${timerType} timer started`);
-
-        // Trigger timer update mechanism
-        this.startTimerUpdate(timerType);
-
-        return true;
-    }
-
-    // Stop a specific timer
-    stopTimer(timerType) {
-        // Validate timer type
-        if (!this.timerTypes.includes(timerType)) {
-            this.app.logger.error(`Invalid timer type: ${timerType}`);
-            return false;
-        }
-
-        // Get the specific timer from state
-        const timer = this.app.state.timers[timerType];
-
-        // Check if timer is running
-        if (!timer.running) {
-            this.app.logger.log(`${timerType} timer is not running`);
-            return false;
-        }
-
-        // Calculate elapsed time
-        const currentTime = Date.now();
-        timer.elapsedTime += (currentTime - timer.startTime);
-        
-        // Stop the timer
-        timer.running = false;
-        timer.startTime = null;
-
-        // Log the timer stop
-        this.app.logger.log(`${timerType} timer stopped. Total elapsed time: ${this.formatElapsedTime(timer.elapsedTime)}`);
-
-        // Stop timer update mechanism
-        this.stopTimerUpdate(timerType);
-
-        return true;
-    }
-
-    // Reset a specific timer
-    resetTimer(timerType) {
-        // Validate timer type
-        if (!this.timerTypes.includes(timerType)) {
-            this.app.logger.error(`Invalid timer type: ${timerType}`);
-            return false;
-        }
-
-        // Get the specific timer from state
-        const timer = this.app.state.timers[timerType];
-
-        // Stop the timer if it's running
-        if (timer.running) {
-            this.stopTimer(timerType);
-        }
-
-        // Reset timer properties
-        timer.elapsedTime = 0;
-        timer.startTime = null;
-        timer.running = false;
-
-        // Log the timer reset
-        this.app.logger.log(`${timerType} timer reset`);
-
-        return true;
-    }
-
-    // Start timer update mechanism
-    startTimerUpdate(timerType) {
-        // Create a timer update interval
-        this[`${timerType}TimerInterval`] = setInterval(() => {
-            this.updateTimerDisplay(timerType);
-        }, 1000);
-    }
-
-    // Stop timer update mechanism
-    stopTimerUpdate(timerType) {
-        // Clear the specific timer interval
-        if (this[`${timerType}TimerInterval`]) {
-            clearInterval(this[`${timerType}TimerInterval`]);
-            this[`${timerType}TimerInterval`] = null;
-        }
-    }
-
-    // Update timer display
-    updateTimerDisplay(timerType) {
-        const timer = this.app.state.timers[timerType];
-        
-        if (timer.running) {
-            // Calculate current elapsed time
-            const currentTime = Date.now();
-            const totalElapsedTime = timer.elapsedTime + (currentTime - timer.startTime);
-            
-            // Convert to seconds
-            const seconds = Math.floor(totalElapsedTime / 1000);
-            
-            // Format and display the time
-            const formattedTime = this.app.formatTime(seconds);
-            
-            // In a real implementation, this would update the UI
-            console.log(`${timerType.toUpperCase()} Timer: ${formattedTime}`);
-        }
-    }
-
-    // Format elapsed time
-    formatElapsedTime(milliseconds) {
-        const totalSeconds = Math.floor(milliseconds / 1000);
-        const minutes = Math.floor(totalSeconds / 60);
-        const seconds = totalSeconds % 60;
-        return `${minutes}m ${seconds}s`;
-    }
-
-    // Get current timer status
-    getTimerStatus(timerType) {
-        // Validate timer type
-        if (!this.timerTypes.includes(timerType)) {
-            this.app.logger.error(`Invalid timer type: ${timerType}`);
-            return null;
-        }
-
-        const timer = this.app.state.timers[timerType];
-        return {
-            running: timer.running,
-            elapsedTime: this.formatElapsedTime(timer.elapsedTime)
-        };
-    }
-}
-
-// Extend the main application prototype to include timer manager
-MUNSpeechTimerApp.prototype.timerManager = function() {
-    return new TimerManager(this);
-};
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MUN Speech Timer</title>
-    <style>
         :root {
             --primary-color: #6750A4;
             --secondary-color: #625B71;
@@ -643,655 +215,681 @@ MUNSpeechTimerApp.prototype.timerManager = function() {
         </div>
     </div>
 
-    <!-- Our JavaScript will be added here -->
-    <script src="app.js"></script>
-</body>
-</html>
-// UI Management System
-class UIManager {
-    constructor(app) {
-        this.app = app;
-        
-        // DOM Element References
-        this.elements = {
-            // Tabs
-            tabs: {
-                main: document.querySelector('.tab[data-tab="main"]'),
-                speakingList: document.querySelector('.tab[data-tab="speaking-list"]'),
-                timers: document.querySelector('.tab[data-tab="timers"]')
-            },
-            // Tab Contents
-            tabContents: {
-                main: document.getElementById('main-tab'),
-                speakingList: document.getElementById('speaking-list-tab'),
-                timers: document.getElementById('timers-tab')
-            },
-            // Committee Select
-            committeeSelect: document.getElementById('committee-select'),
-            
-            // Country List
-            countryList: document.getElementById('country-list'),
-            addToListBtn: document.getElementById('add-to-list-btn'),
-            
-            // Speaking List
-            speakingList: document.getElementById('speaking-list'),
-            nextSpeakerBtn: document.getElementById('next-speaker-btn'),
-            skipSpeakerBtn: document.getElementById('skip-speaker-btn'),
-            
-            // Timers
-            timers: {
-                session: {
-                    display: document.getElementById('session-timer'),
-                    startBtn: document.getElementById('session-start-btn'),
-                    stopBtn: document.getElementById('session-stop-btn'),
-                    resetBtn: document.getElementById('session-reset-btn')
-                },
-                caucus: {
-                    display: document.getElementById('caucus-timer'),
-                    startBtn: document.getElementById('caucus-start-btn'),
-                    stopBtn: document.getElementById('caucus-stop-btn'),
-                    resetBtn: document.getElementById('caucus-reset-btn')
-                },
-                speech: {
-                    display: document.getElementById('speech-timer'),
-                    startBtn: document.getElementById('speech-start-btn'),
-                    stopBtn: document.getElementById('speech-stop-btn'),
-                    resetBtn: document.getElementById('speech-reset-btn')
+    <script>
+        // MUN Speech Timer - Core Application Structure
+        class MUNSpeechTimerApp {
+            constructor() {
+                // Application-wide configuration
+                this.config = {
+                    version: '1.0.0',
+                    theme: 'default',
+                    language: 'en',
+                    debug: true  // Enable debug mode for more logging
+                };
+
+                // Comprehensive state management
+                this.state = {
+                    // Committee management
+                    currentCommittee: 'UNSC',
+                    committees: {
+                        "UNSC": ["United States", "China", "Russian Federation", "United Kingdom", "France", 
+                            "Albania", "Brazil", "Gabon", "Ghana", "India", "Ireland", "Kenya", "Mexico", 
+                            "Norway", "United Arab Emirates"],
+                        "UNODC": ["Germany", "Canada", "Mexico", "Brazil", "Japan", "France", "United Kingdom", 
+                            "Russian Federation", "China", "United States", "Italy", "Spain", "Netherlands"]
+                    },
+
+                    // Speaking list management
+                    speakingList: [],
+                    currentSpeaker: null,
+                    speakerHistory: [],
+
+                    // Timer management
+                    timers: {
+                        session: {
+                            running: false,
+                            startTime: null,
+                            elapsedTime: 0
+                        },
+                        caucus: {
+                            running: false,
+                            startTime: null,
+                            elapsedTime: 0
+                        },
+                        speech: {
+                            running: false,
+                            startTime: null,
+                            elapsedTime: 0
+                        }
+                    },
+
+                    // UI state
+                    ui: {
+                        activeTab: 'main',
+                        selectedCountry: null
+                    }
+                };
+
+                // Logging system
+                this.logger = {
+                    logs: [],
+                    log(message, type = 'info') {
+                        const logEntry = {
+                            timestamp: new Date(),
+                            message,
+                            type
+                        };
+                        this.logs.push(logEntry);
+                        
+                        // Console logging for debug mode
+                        if (this.config.debug) {
+                            console.log(`[${type.toUpperCase()}]`, message);
+                        }
+                    },
+                    error(message) {
+                        this.log(message, 'error');
+                        console.error(message);
+                    }
+                };
+
+                // Initialize the application
+                this.initializeApplication();
+            }
+
+            // Application initialization method
+            initializeApplication() {
+                try {
+                    this.logger.log('Initializing MUN Speech Timer Application');
+                    
+                    // Setup event listeners
+                    this.setupEventListeners();
+
+                    // Log successful initialization
+                    this.logger.log('Application initialized successfully');
+                } catch (error) {
+                    this.logger.error(`Initialization failed: ${error.message}`);
                 }
             }
-        };
 
-        // Initialize UI
-        this.initializeEventListeners();
-        this.updateCountryList();
-    }
+            // Setup global event listeners
+            setupEventListeners() {
+                // Placeholder for event listener setup
+                this.logger.log('Setting up global event listeners');
+            }
 
-    // Setup Event Listeners
-    initializeEventListeners() {
-        // Tab Switching
-        Object.values(this.elements.tabs).forEach(tab => {
-            tab.addEventListener('click', () => this.switchTab(tab.getAttribute('data-tab')));
-        });
+            // Utility method for time formatting
+            formatTime(seconds) {
+                const mins = Math.floor(seconds / 60);
+                const secs = Math.floor(seconds % 60);
+                return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            }
+        }
 
-        // Committee Selection
-        this.elements.committeeSelect.addEventListener('change', () => this.onCommitteeChange());
+        // Speaking List Manager
+        class SpeakingListManager {
+            constructor(app) {
+                this.app = app;
+            }
 
-        // Country List
-        this.elements.countryList.addEventListener('click', (event) => this.onCountryListClick(event));
-        this.elements.addToListBtn.addEventListener('click', () => this.addSelectedCountryToSpeakingList());
+            // Add a speaker to the speaking list
+            addToSpeakingList(speaker) {
+                // Validate input
+                if (!speaker || typeof speaker !== 'string') {
+                    this.app.logger.error('Invalid speaker name');
+                    return false;
+                }
 
-        // Speaking List
-        this.elements.nextSpeakerBtn.addEventListener('click', () => this.moveToNextSpeaker());
-        this.elements.skipSpeakerBtn.addEventListener('click', () => this.skipCurrentSpeaker());
+                // Check if speaker is already in the list
+                if (!this.app.state.speakingList.includes(speaker)) {
+                    // Add speaker to the list
+                    this.app.state.speakingList.push(speaker);
+                    
+                    // Log the addition
+                    this.app.logger.log(`Added ${speaker} to speaking list`);
 
-        // Timer Buttons
-        this.setupTimerEventListeners();
-    }
+                    // Trigger UI update if needed
+                    this.updateUI();
 
-    // Switch Active Tab
-    switchTab(tabName) {
-        // Remove active class from all tabs and tab contents
-        Object.values(this.elements.tabs).forEach(tab => 
-            tab.classList.remove('active'));
-        Object.values(this.elements.tabContents).forEach(content => 
-            content.classList.remove('active'));
+                    return true;
+                } else {
+                    // Speaker already in the list
+                    this.app.logger.log(`${speaker} is already in the speaking list`);
+                    return false;
+                }
+            }
 
-        // Add active class to selected tab and content
-        this.elements.tabs[tabName].classList.add('active');
-        this.elements.tabContents[tabName].classList.add('active');
-    }
+            // Move to the next speaker
+            nextSpeaker() {
+                // Check if there are speakers in the list
+                if (this.app.state.speakingList.length > 0) {
+                    // Remove the first speaker from the list
+                    const currentSpeaker = this.app.state.speakingList.shift();
+                    
+                    // Update current speaker
+                    this.app.state.currentSpeaker = currentSpeaker;
 
-    // Update Country List based on Selected Committee
-    updateCountryList() {
-        const currentCommittee = this.app.state.currentCommittee;
-        const countries = this.app.state.committees[currentCommittee] || [];
+                    // Add to speaker history
+                    if (!this.app.state.speakerHistory) {
+                        this.app.state.speakerHistory = [];
+                    }
+                    this.app.state.speakerHistory.push(currentSpeaker);
 
-        // Clear existing list
-        this.elements.countryList.innerHTML = '';
+                    // Log the speaker change
+                    this.app.logger.log(`Next speaker: ${currentSpeaker}`);
 
-        // Populate country list
-        countries.forEach(country => {
-            const countryElement = document.createElement('div');
-            countryElement.classList.add('list-item');
-            countryElement.textContent = country;
-            this.elements.countryList.appendChild(countryElement);
-        });
-    }
+                    // Trigger UI update
+                    this.updateUI();
 
-    // Handle Committee Change
-    onCommitteeChange() {
-        // Update current committee in app state
-        const selectedCommittee = this.elements.committeeSelect.value;
-        this.app.state.currentCommittee = selectedCommittee;
-        
-        // Update country list
-        this.updateCountryList();
-    }
+                    return currentSpeaker;
+                } else {
+                    // No speakers in the list
+                    this.app.state.currentSpeaker = null;
+                    this.app.logger.log('No more speakers in the list');
+                    return null;
+                }
+            }
 
-    // Handle Country List Click
-    onCountryListClick(event) {
-        if (event.target.classList.contains('list-item')) {
-            // Remove selection from all items
-            this.elements.countryList.querySelectorAll('.list-item')
-                .forEach(item => item.classList.remove('selected'));
+            // Skip the current speaker
+            skipCurrentSpeaker() {
+                // Check if there's a current speaker
+                if (this.app.state.currentSpeaker) {
+                    // Add current speaker back to the end of the list
+                    this.app.state.speakingList.push(this.app.state.currentSpeaker);
+                    
+                    // Log the skip
+                    this.app.logger.log(`Skipped speaker: ${this.app.state.currentSpeaker}`);
+
+                    // Move to next speaker
+                    this.nextSpeaker();
+                }
+            }
+
+            // Clear the entire speaking list
+            clearSpeakingList() {
+                // Reset speaking list and current speaker
+                this.app.state.speakingList = [];
+                this.app.state.currentSpeaker = null;
+                
+                // Log the action
+                this.app.logger.log('Speaking list cleared');
+
+                // Trigger UI update
+                this.updateUI();
+            }
+
+            // Get current speaking list
+            getSpeakingList() {
+                return [...this.app.state.speakingList];
+            }
+
+            // Update UI (placeholder method to be implemented later)
+            updateUI() {
+                // This will be connected to the UI manager in a later stage
+                console.log('Speaking List Updated:', this.app.state.speakingList);
+            }
+        }
+
+        // Timer Management System
+        class TimerManager {
+            constructor(app) {
+                this.app = app;
+                
+                // Timer types to manage
+                this.timerTypes = ['session', 'caucus', 'speech'];
+            }
+
+            // Start a specific timer
+            startTimer(timerType) {
+                // Validate timer type
+                if (!this.timerTypes.includes(timerType)) {
+                    this.app.logger.error(`Invalid timer type: ${timerType}`);
+                    return false;
+                }
+
+                // Get the specific timer from state
+                const timer = this.app.state.timers[timerType];
+
+                // Check if timer is already running
+                if (timer.running) {
+                    this.app.logger.log(`${// Set start time and mark as running
+            timer.startTime = Date.now();
+            timer.running = true;
+
+            // Log the timer start
+            this.app.logger.log(`${timerType} timer started`);
+
+            // Trigger timer update mechanism
+            this.startTimerUpdate(timerType);
+
+            return true;
+        }
+
+        // Stop a specific timer
+        stopTimer(timerType) {
+            // Validate timer type
+            if (!this.timerTypes.includes(timerType)) {
+                this.app.logger.error(`Invalid timer type: ${timerType}`);
+                return false;
+            }
+
+            // Get the specific timer from state
+            const timer = this.app.state.timers[timerType];
+
+            // Check if timer is running
+            if (!timer.running) {
+                this.app.logger.log(`${timerType} timer is not running`);
+                return false;
+            }
+
+            // Calculate elapsed time
+            const currentTime = Date.now();
+            timer.elapsedTime += (currentTime - timer.startTime);
             
-            // Add selection to clicked item
-            event.target.classList.add('selected');
+            // Stop the timer
+            timer.running = false;
+            timer.startTime = null;
+
+            // Log the timer stop
+            this.app.logger.log(`${timerType} timer stopped. Total elapsed time: ${this.formatElapsedTime(timer.elapsedTime)}`);
+
+            // Stop timer update mechanism
+            this.stopTimerUpdate(timerType);
+
+            return true;
+        }
+
+        // Reset a specific timer
+        resetTimer(timerType) {
+            // Validate timer type
+            if (!this.timerTypes.includes(timerType)) {
+                this.app.logger.error(`Invalid timer type: ${timerType}`);
+                return false;
+            }
+
+            // Get the specific timer from state
+            const timer = this.app.state.timers[timerType];
+
+            // Stop the timer if it's running
+            if (timer.running) {
+                this.stopTimer(timerType);
+            }
+
+            // Reset timer properties
+            timer.elapsedTime = 0;
+            timer.startTime = null;
+            timer.running = false;
+
+            // Log the timer reset
+            this.app.logger.log(`${timerType} timer reset`);
+
+            return true;
+        }
+
+        // Start timer update mechanism
+        startTimerUpdate(timerType) {
+            // Create a timer update interval
+            this[`${timerType}TimerInterval`] = setInterval(() => {
+                this.updateTimerDisplay(timerType);
+            }, 1000);
+        }
+
+        // Stop timer update mechanism
+        stopTimerUpdate(timerType) {
+            // Clear the specific timer interval
+            if (this[`${timerType}TimerInterval`]) {
+                clearInterval(this[`${timerType}TimerInterval`]);
+                this[`${timerType}TimerInterval`] = null;
+            }
+        }
+
+        // Update timer display
+        updateTimerDisplay(timerType) {
+            const timer = this.app.state.timers[timerType];
+            
+            if (timer.running) {
+                // Calculate current elapsed time
+                const currentTime = Date.now();
+                const totalElapsedTime = timer.elapsedTime + (currentTime - timer.startTime);
+                
+                // Convert to seconds
+                const seconds = Math.floor(totalElapsedTime / 1000);
+                
+                // Format and display the time
+                const formattedTime = this.app.formatTime(seconds);
+                
+                // In a real implementation, this would update the UI
+                console.log(`${timerType.toUpperCase()} Timer: ${formattedTime}`);
+            }
+        }
+
+        // Format elapsed time
+        formatElapsedTime(milliseconds) {
+            const totalSeconds = Math.floor(milliseconds / 1000);
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+            return `${minutes}m ${seconds}s`;
+        }
+
+        // Get current timer status
+        getTimerStatus(timerType) {
+            // Validate timer type
+            if (!this.timerTypes.includes(timerType)) {
+                this.app.logger.error(`Invalid timer type: ${timerType}`);
+                return null;
+            }
+
+            const timer = this.app.state.timers[timerType];
+            return {
+                running: timer.running,
+                elapsedTime: this.formatElapsedTime(timer.elapsedTime)
+            };
         }
     }
 
-    // Add Selected Country to Speaking List
-    addSelectedCountryToSpeakingList() {
-        const selectedCountry = this.elements.countryList
-            .querySelector('.list-item.selected');
-        
-        if (selectedCountry) {
-            const countryName = selectedCountry.textContent;
-            this.app.speakingListManager().addToSpeakingList(countryName);
+    // UI Management System
+    class UIManager {
+        constructor(app) {
+            this.app = app;
+            
+            // DOM Element References
+            this.elements = {
+                // Tabs
+                tabs: {
+                    main: document.querySelector('.tab[data-tab="main"]'),
+                    speakingList: document.querySelector('.tab[data-tab="speaking-list"]'),
+                    timers: document.querySelector('.tab[data-tab="timers"]')
+                },
+                // Tab Contents
+                tabContents: {
+                    main: document.getElementById('main-tab'),
+                    speakingList: document.getElementById('speaking-list-tab'),
+                    timers: document.getElementById('timers-tab')
+                },
+                // Committee Select
+                committeeSelect: document.getElementById('committee-select'),
+                
+                // Country List
+                countryList: document.getElementById('country-list'),
+                addToListBtn: document.getElementById('add-to-list-btn'),
+                
+                // Speaking List
+                speakingList: document.getElementById('speaking-list'),
+                nextSpeakerBtn: document.getElementById('next-speaker-btn'),
+                skipSpeakerBtn: document.getElementById('skip-speaker-btn'),
+                
+                // Timers
+                timers: {
+                    session: {
+                        display: document.getElementById('session-timer'),
+                        startBtn: document.getElementById('session-start-btn'),
+                        stopBtn: document.getElementById('session-stop-btn'),
+                        resetBtn: document.getElementById('session-reset-btn')
+                    },
+                    caucus: {
+                        display: document.getElementById('caucus-timer'),
+                        startBtn: document.getElementById('caucus-start-btn'),
+                        stopBtn: document.getElementById('caucus-stop-btn'),
+                        resetBtn: document.getElementById('caucus-reset-btn')
+                    },
+                    speech: {
+                        display: document.getElementById('speech-timer'),
+                        startBtn: document.getElementById('speech-start-btn'),
+                        stopBtn: document.getElementById('speech-stop-btn'),
+                        resetBtn: document.getElementById('speech-reset-btn')
+                    }
+                }
+            };
+
+            // Initialize UI
+            this.initializeEventListeners();
+            this.updateCountryList();
+        }
+
+        // Setup Event Listeners
+        initializeEventListeners() {
+            // Tab Switching
+            Object.values(this.elements.tabs).forEach(tab => {
+                tab.addEventListener('click', () => this.switchTab(tab.getAttribute('data-tab')));
+            });
+
+            // Committee Selection
+            this.elements.committeeSelect.addEventListener('change', () => this.onCommitteeChange());
+
+            // Country List
+            this.elements.countryList.addEventListener('click', (event) => this.onCountryListClick(event));
+            this.elements.addToListBtn.addEventListener('click', () => this.addSelectedCountryToSpeakingList());
+
+            // Speaking List
+            this.elements.nextSpeakerBtn.addEventListener('click', () => this.moveToNextSpeaker());
+            this.elements.skipSpeakerBtn.addEventListener('click', () => this.skipCurrentSpeaker());
+
+            // Timer Buttons
+            this.setupTimerEventListeners();
+        }
+
+        // Switch Active Tab
+        switchTab(tabName) {
+            // Remove active class from all tabs and tab contents
+            Object.values(this.elements.tabs).forEach(tab => 
+                tab.classList.remove('active'));
+            Object.values(this.elements.tabContents).forEach(content => 
+                content.classList.remove('active'));
+
+            // Add active class to selected tab and content
+            this.elements.tabs[tabName].classList.add('active');
+            this.elements.tabContents[tabName].classList.add('active');
+        }
+
+        // Update Country List based on Selected Committee
+        updateCountryList() {
+            const currentCommittee = this.app.state.currentCommittee;
+            const countries = this.app.state.committees[currentCommittee] || [];
+
+            // Clear existing list
+            this.elements.countryList.innerHTML = '';
+
+            // Populate country list
+            countries.forEach(country => {
+                const countryElement = document.createElement('div');
+                countryElement.classList.add('list-item');
+                countryElement.textContent = country;
+                this.elements.countryList.appendChild(countryElement);
+            });
+        }
+
+        // Handle Committee Change
+        onCommitteeChange() {
+            // Update current committee in app state
+            const selectedCommittee = this.elements.committeeSelect.value;
+            this.app.state.currentCommittee = selectedCommittee;
+            
+            // Update country list
+            this.updateCountryList();
+        }
+
+        // Handle Country List Click
+        onCountryListClick(event) {
+            if (event.target.classList.contains('list-item')) {
+                // Remove selection from all items
+                this.elements.countryList.querySelectorAll('.list-item')
+                    .forEach(item => item.classList.remove('selected'));
+                
+                // Add selection to clicked item
+                event.target.classList.add('selected');
+            }
+        }
+
+        // Add Selected Country to Speaking List
+        addSelectedCountryToSpeakingList() {
+            const selectedCountry = this.elements.countryList
+                .querySelector('.list-item.selected');
+            
+            if (selectedCountry) {
+                const countryName = selectedCountry.textContent;
+                this.app.speakingListManager().addToSpeakingList(countryName);
+                this.updateSpeakingList();
+            } else {
+                alert('Please select a country first');
+            }
+        }
+
+        // Update Speaking List Display
+        updateSpeakingList() {
+            const speakingList = this.app.speakingListManager().getSpeakingList();
+            
+            // Clear existing list
+            this.elements.speakingList.innerHTML = '';
+
+            // Populate speaking list
+            speakingList.forEach(country => {
+                const listItem = document.createElement('div');
+                listItem.classList.add('list-item');
+                listItem.textContent = country;
+                this.elements.speakingList.appendChild(listItem);
+            });
+        }
+
+        // Move to Next Speaker
+        moveToNextSpeaker() {
+            this.app.speakingListManager().nextSpeaker();
             this.updateSpeakingList();
-        } else {
-            alert('Please select a country first');
         }
-    }
 
-    // Update Speaking List Display
-    updateSpeakingList() {
-        const speakingList = this.app.speakingListManager().getSpeakingList();
-        
-        // Clear existing list
-        this.elements.speakingList.innerHTML = '';
+        // Skip Current Speaker
+        skipCurrentSpeaker() {
+            this.app.speakingListManager().skipCurrentSpeaker();
+            this.updateSpeakingList();
+        }
 
-        // Populate speaking list
-        speakingList.forEach(country => {
-            const listItem = document.createElement('div');
-            listItem.classList.add('list-item');
-            listItem.textContent = country;
-            this.elements.speakingList.appendChild(listItem);
-        });
-    }
+        // Setup Timer Event Listeners
+        setupTimerEventListeners() {
+            // Iterate through timer types
+            ['session', 'caucus', 'speech'].forEach(timerType => {
+                const timerControls = this.elements.timers[timerType];
 
-    // Move to Next Speaker
-    moveToNextSpeaker() {
-        this.app.speakingListManager().nextSpeaker();
-        this.updateSpeakingList();
-    }
+                // Start Button
+                timerControls.startBtn.addEventListener('click', () => {
+                    this.app.timerManager().startTimer(timerType);
+                });
 
-    // Skip Current Speaker
-    skipCurrentSpeaker() {
-        this.app.speakingListManager().skipCurrentSpeaker();
-        this.updateSpeakingList();
-    }
+                // Stop Button
+                timerControls.stopBtn.addEventListener('click', () => {
+                    this.app.timerManager().stopTimer(timerType);
+                });
 
-    // Setup Timer Event Listeners
-    setupTimerEventListeners() {
-        // Iterate through timer types
-        ['session', 'caucus', 'speech'].forEach(timerType => {
-            const timerControls = this.elements.timers[timerType];
-
-            // Start Button
-            timerControls.startBtn.addEventListener('click', () => {
-                this.app.timerManager().startTimer(timerType);
+                // Reset Button
+                timerControls.resetBtn.addEventListener('click', () => {
+                    this.app.timerManager().resetTimer(timerType);
+                });
             });
+        }
 
-            // Stop Button
-            timerControls.stopBtn.addEventListener('click', () => {
-                this.app.timerManager().stopTimer(timerType);
-            });
-
-            // Reset Button
-            timerControls.resetBtn.addEventListener('click', () => {
-                this.app.timerManager().resetTimer(timerType);
-            });
-        });
-    }
-
-    // Update Timer Display (to be called periodically)
-// Update Timer Display (to be called periodically)
-    updateTimerDisplay(timerType) {
-        const timerStatus = this.app.timerManager().getTimerStatus(timerType);
-        
-        if (timerStatus) {
-            const timerDisplay = this.elements.timers[timerType].display;
+        // Update Timer Display (to be called periodically)
+        updateTimerDisplay(timerType) {
+            const timerStatus = this.app.timerManager().getTimerStatus(timerType);
             
-            // Update display with current time
-            timerDisplay.textContent = timerStatus.running 
-                ? timerStatus.elapsedTime 
-                : '00:00';
+            if (timerStatus) {
+                const timerDisplay = this.elements.timers[timerType].display;
+                
+                // Update display with current time
+                timerDisplay.textContent = timerStatus.running 
+                    ? timerStatus.elapsedTime 
+                    : '00:00';
+            }
         }
     }
-}
 
-// Extend the main application prototype to include UI manager
-MUNSpeechTimerApp.prototype.uiManager = function() {
-    return new UIManager(this);
-};
+    // MUN Speech Timer - Comprehensive Integration Script
 
-// Initialize UI when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    // Ensure the main app instance exists
-    if (window.munApp) {
-        // Initialize UI Manager
-        const uiManager = window.munApp.uiManager();
-        
-        // Additional initialization if needed
-        console.log('UI Manager initialized');
-    }
-});
-// MUN Speech Timer - Comprehensive Integration Script
-
-// Extend the main MUNSpeechTimerApp with additional methods and integrations
-MUNSpeechTimerApp.prototype.initialize = function() {
-    // Initialize all core systems
-    this.initializeManagers();
-    this.setupGlobalEventListeners();
-    this.restoreApplicationState();
-};
-
-MUNSpeechTimerApp.prototype.initializeManagers = function() {
-    // Initialize core managers
-    this.speakingListManager();
-    this.timerManager();
-    this.uiManager();
-};
-
-MUNSpeechTimerApp.prototype.setupGlobalEventListeners = function() {
-    // Save state before page unload
-    window.addEventListener('beforeunload', () => {
-        this.saveApplicationState();
-    });
-
-    // Optional: Handle potential errors globally
-    window.addEventListener('error', (event) => {
-        this.logger.error(`Unhandled error: ${event.message}`);
-    });
-};
-
-MUNSpeechTimerApp.prototype.saveApplicationState = function() {
-    try {
-        // Serialize and save the current application state
-        const stateToSave = JSON.stringify({
-            currentCommittee: this.state.currentCommittee,
-            speakingList: this.state.speakingList,
-            speakerHistory: this.state.speakerHistory,
-            timers: this.state.timers
-        });
-
-        localStorage.setItem('munAppState', stateToSave);
-        this.logger.log('Application state saved successfully');
-    } catch (error) {
-        this.logger.error(`Failed to save application state: ${error.message}`);
-    }
-};
-
-MUNSpeechTimerApp.prototype.restoreApplicationState = function() {
-    try {
-        const savedState = localStorage.getItem('munAppState');
-        
-        if (savedState) {
-            const parsedState = JSON.parse(savedState);
-            
-            // Restore specific state components
-            if (parsedState.currentCommittee) {
-                this.state.currentCommittee = parsedState.currentCommittee;
-            }
-
-            if (parsedState.speakingList) {
-                this.state.speakingList = parsedState.speakingList;
-            }
-
-            if (parsedState.speakerHistory) {
-                this.state.speakerHistory = parsedState.speakerHistory;
-            }
-
-            if (parsedState.timers) {
-                this.state.timers = parsedState.timers;
-            }
-
-            this.logger.log('Application state restored successfully');
-        }
-    } catch (error) {
-        this.logger.error(`Failed to restore application state: ${error.message}`);
-    }
-};
-
-// Enhanced initialization process
-document.addEventListener('DOMContentLoaded', () => {
-    // Create the main application instance
-    window.munApp = new MUNSpeechTimerApp();
-
-    // Initialize the application
-    window.munApp.initialize();
-
-    // Debug logging
-    console.log('MUN Speech Timer Initialized');
-});
-
-// Optional: Add export functionality
-MUNSpeechTimerApp.prototype.exportSessionData = function(format = 'json') {
-    const sessionData = {
-        committee: this.state.currentCommittee,
-        speakingList: this.state.speakingList,
-        speakerHistory: this.state.speakerHistory,
-        timers: this.state.timers,
-        timestamp: new Date().toISOString()
+    // Extend the main MUNSpeechTimerApp with additional methods and integrations
+    MUNSpeechTimerApp.prototype.initialize = function() {
+        // Initialize all core systems
+        this.initializeManagers();
+        this.setupGlobalEventListeners();
+        this.restoreApplicationState();
     };
 
-    switch (format.toLowerCase()) {
-        case 'json':
-            return JSON.stringify(sessionData, null, 2);
-        case 'csv':
-            return this.convertToCSV(sessionData);
-        default:
-            throw new Error('Unsupported export format');
-    }
-};
+    MUNSpeechTimerApp.prototype.initializeManagers = function() {
+        // Initialize core managers
+        this.speakingListManager = new SpeakingListManager(this);
+        this.timerManager = new TimerManager(this);
+        this.uiManager = new UIManager(this);
+    };
 
-// CSV conversion utility
-MUNSpeechTimerApp.prototype.convertToCSV = function(data) {
-    // Simple CSV conversion for session data
-    let csv = 'Committee,Speaking List,Speaker History,Timers,Timestamp\n';
-    csv += `${data.committee},` +
-           `"${data.speakingList.join('|')}",` +
-           `"${data.speakerHistory.join('|')}",` +
-           `"${JSON.stringify(data.timers).replace(/"/g, '""')}",` +
-           `${data.timestamp}`;
-    return csv;
-};
-
-// Optional: Add import functionality
-MUNSpeechTimerApp.prototype.importSessionData = function(importData) {
-    try {
-        let parsedData;
-        
-        // Handle different input types
-        if (typeof importData === 'string') {
-            parsedData = JSON.parse(importData);
-        } else {
-            parsedData = importData;
-        }
-
-        // Validate imported data
-        if (!parsedData.committee) {
-            throw new Error('Invalid import data');
-        }
-
-        // Restore specific components
-        this.state.currentCommittee = parsedData.committee;
-        this.state.speakingList = parsedData.speakingList || [];
-        this.state.speakerHistory = parsedData.speakerHistory || [];
-        this.state.timers = parsedData.timers || this.state.timers;
-
-        // Log import
-        this.logger.log('Session data imported successfully');
-
-        // Trigger UI update
-        if (this.uiManager) {
-            const uiManager = this.uiManager();
-            uiManager.updateCountryList();
-            uiManager.updateSpeakingList();
-        }
-
-        return true;
-    } catch (error) {
-        this.logger.error(`Failed to import session data: ${error.message}`);
-        return false;
-    }
-};
-// MUN Speech Timer - Advanced Error Handling and Utilities
-
-// Enhanced Error Handling System
-class ErrorHandler {
-    constructor(app) {
-        this.app = app;
-        
-        // Error tracking configuration
-        this.config = {
-            maxErrorLog: 50,
-            reportingThreshold: 5
-        };
-
-        // Error type classifications
-        this.errorTypes = {
-            SYSTEM: 'system',
-            USER_ACTION: 'user_action',
-            NETWORK: 'network',
-            VALIDATION: 'validation',
-            UNKNOWN: 'unknown'
-        };
-    }
-
-    // Centralized error handling method
-    handle(error, context = {}) {
-        // Create comprehensive error entry
-        const errorEntry = {
-            id: this.generateErrorId(),
-            timestamp: new Date(),
-            message: error.message,
-            stack: error.stack,
-            type: this.classifyError(error),
-            context: context
-        };
-
-        // Log the error
-        this.logError(errorEntry);
-
-        // Determine if error requires special handling
-        this.processError(errorEntry);
-
-        return errorEntry;
-    }
-
-    // Generate unique error identifier
-    generateErrorId() {
-        return `err_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-    }
-
-    // Classify error type
-    classifyError(error) {
-        // Sophisticated error type detection
-        if (error instanceof TypeError) return this.errorTypes.VALIDATION;
-        if (error instanceof RangeError) return this.errorTypes.VALIDATION;
-        if (error.name === 'NetworkError') return this.errorTypes.NETWORK;
-        
-        return this.errorTypes.UNKNOWN;
-    }
-
-    // Log error to application state
-    logError(errorEntry) {
-        // Ensure errors array exists
-        if (!this.app.state.errors) {
-            this.app.state.errors = [];
-        }
-
-        // Add error to log
-        this.app.state.errors.push(errorEntry);
-
-        // Trim error log if it exceeds max length
-        if (this.app.state.errors.length > this.config.maxErrorLog) {
-            this.app.state.errors.shift();
-        }
-
-        // Console logging
-        console.error('Application Error:', errorEntry);
-    }
-
-    // Process error based on type and context
-    processError(errorEntry) {
-        // Determine error severity
-        const severity = this.determineErrorSeverity(errorEntry);
-
-        // Take appropriate action
-        switch (severity) {
-            case 'critical':
-                this.handleCriticalError(errorEntry);
-                break;
-            case 'warning':
-                this.handleWarningError(errorEntry);
-                break;
-            default:
-                this.handleMinorError(errorEntry);
-        }
-    }
-
-    // Determine error severity
-    determineErrorSeverity(errorEntry) {
-        // Implement severity logic
-        switch (errorEntry.type) {
-            case this.errorTypes.SYSTEM:
-                return 'critical';
-            case this.errorTypes.NETWORK:
-                return 'warning';
-            case this.errorTypes.VALIDATION:
-                return 'minor';
-            default:
-                return 'minor';
-        }
-    }
-
-    // Handle critical errors
-    handleCriticalError(errorEntry) {
-        // Notify user
-        this.displayErrorNotification('Critical Error', errorEntry.message, 'error');
-        
-        // Potential system reset or fallback
-        this.app.resetToDefaultState();
-    }
-
-    // Handle warning errors
-    handleWarningError(errorEntry) {
-        // Display warning notification
-        this.displayErrorNotification('Warning', errorEntry.message, 'warning');
-    }
-
-    // Handle minor errors
-    handleMinorError(errorEntry) {
-        // Silently log or display minor notification
-        this.displayErrorNotification('Minor Issue', errorEntry.message, 'info');
-    }
-
-    // Display error notification
-    displayErrorNotification(title, message, type = 'info') {
-        // In a real app, this would use a more sophisticated notification system
-        console.log(`[${type.toUpperCase()}] ${title}: ${message}`);
-    }
-}
-
-// Diagnostic and Performance Monitoring Utility
-class DiagnosticTool {
-    constructor(app) {
-        this.app = app;
-        
-        // Performance tracking
-        this.performanceMarks = new Map();
-    }
-
-    // Start performance measurement
-    startMeasurement(label) {
-        this.performanceMarks.set(label, performance.now());
-    }
-
-    // End performance measurement
-    endMeasurement(label) {
-        const startTime = this.performanceMarks.get(label);
-        if (!startTime) {
-            console.warn(`No start time found for measurement: ${label}`);
-            return null;
-        }
-
-        const endTime = performance.now();
-        const duration = endTime - startTime;
-
-        // Log performance
-        this.logPerformance(label, duration);
-
-        return duration;
-    }
-
-    // Log performance metrics
-    logPerformance(label, duration) {
-        // Ensure performance logs exist
-        if (!this.app.state.performanceLogs) {
-            this.app.state.performanceLogs = [];
-        }
-
-        // Add performance log
-        this.app.state.performanceLogs.push({
-            label,
-            duration,
-            timestamp: new Date()
+    MUNSpeechTimerApp.prototype.setupGlobalEventListeners = function() {
+        // Save state before page unload
+        window.addEventListener('beforeunload', () => {
+            this.saveApplicationState();
         });
 
-        // Trim logs if needed
-        if (this.app.state.performanceLogs.length > 100) {
-            this.app.state.performanceLogs.shift();
-        }
-    }
+        // Optional: Handle potential errors globally
+        window.addEventListener('error', (event) => {
+            this.logger.error(`Unhandled error: ${event.message}`);
+        });
+    };
 
-    // Generate system health report
-    generateHealthReport() {
-        return {
-            timestamp: new Date(),
-            systemVersion: this.app.config.version,
-            state: {
-                speakingListLength: this.app.state.speakingList.length,
-                currentCommittee: this.app.state.currentCommittee
-            },
-            performanceLogs: this.app.state.performanceLogs || [],
-            errors: this.app.state.errors || []
-        };
-    }
-}
+    MUNSpeechTimerApp.prototype.saveApplicationState = function() {
+        try {
+            // Serialize and save the current application state
+            const stateToSave = JSON.stringify({
+                currentCommittee: this.state.currentCommittee,
+                speakingList: this.state.speakingList,
+                speakerHistory: this.state.speakerHistory,
+                timers: this.state.timers
+            });
 
-// Extend MUNSpeechTimerApp with new utility methods
-MUNSpeechTimerApp.prototype.errorHandler = function() {
-    return new ErrorHandler(this);
-};
-
-MUNSpeechTimerApp.prototype.diagnosticTool = function() {
-    return new DiagnosticTool(this);
-};
-
-// Add method to reset to default state
-MUNSpeechTimerApp.prototype.resetToDefaultState = function() {
-    // Reset to initial state
-    this.state = {
-        currentCommittee: 'UNSC',
-        speakingList: [],
-        currentSpeaker: null,
-        speakerHistory: [],
-        timers: {
-            session: { running: false, startTime: null, elapsedTime: 0 },
-            caucus: { running: false, startTime: null, elapsedTime: 0 },
-            speech: { running: false, startTime: null, elapsedTime: 0 }
+            localStorage.setItem('munAppState', stateToSave);
+            this.logger.log('Application state saved successfully');
+        } catch (error) {
+            this.logger.error(`Failed to save application state: ${error.message}`);
         }
     };
 
-    // Log the reset
-    this.logger.log('Application state reset to default');
+    MUNSpeechTimerApp.prototype.restoreApplicationState = function() {
+        try {
+            const savedState = localStorage.getItem('munAppState');
+            
+            if (savedState) {
+                const parsedState = JSON.parse(savedState);
+                
+                // Restore specific state components
+                if (parsedState.currentCommittee) {
+                    this.state.currentCommittee = parsedState.currentCommittee;
+                }
 
-    // Trigger UI update if UI manager exists
-    if (this.uiManager) {
-        const uiManager = this.uiManager();
-        uiManager.updateCountryList();
-        uiManager.updateSpeakingList();
-    }
-};
+                if (parsedState.speakingList) {
+                    this.state.speakingList = parsedState.speakingList;
+                }
 
-// Global error handling setup
-window.addEventListener('error', (event) => {
-    if (window.munApp) {
-        const errorHandler = window.munApp.errorHandler();
-        errorHandler.handle(event.error, {
-            filename: event.filename,
-            lineno: event.lineno,
-            colno: event.colno
-        });
-    }
-});
+                if (parsedState.speakerHistory) {
+                    this.state.speakerHistory = parsedState.speakerHistory;
+                }
 
-// Optional: Add debugging utility to global window object
-window.MUNDebug = {
-    getState: () => window.munApp ? window.munApp.state : null,
-    generateHealthReport: () => window.munApp ? window.munApp.diagnosticTool().generateHealthReport() : null
-};
-        
+                if (parsedState.timers) {
+                    this.state.timers = parsedState.timers;
+                }
+
+                this.logger.log('Application state restored successfully');
+            }
+        } catch (error) {
+            this.logger.error(`Failed to restore application state: ${error.message}`);
+        }
+    };
+
+    // Enhanced initialization process
+    document.addEventListener('DOMContentLoaded', () => {
+        // Create the main application instance
+        const munApp = new MUNSpeechTimerApp();
+
+        // Initialize the application
+        munApp.initialize();
+
+        // Debug logging
+        console.log('MUN Speech Timer Initialized');
+    });
+</script>
+</body>
+</html>
+</parameter>
+<parameter name="content">OK</parameter>
+</invoke>
