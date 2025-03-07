@@ -673,7 +673,390 @@
                         <button id="move-up-button" class="button primary">Move Up</button>
                         <button id="move-down-button" class="button primary">Move Down</button>
                         <button id="remove-button" class="button danger">Remove</button>
-                        <button id="clear-list-button" class="button secondary">Clear List</button>
+                        <button id="            clearInterval(state.timerIntervals.fun);
+            state.timerRunning.fun = false;
+        }
+
+        function resetFunTimer() {
+            if (state.timerRunning.fun) {
+                stopFunTimer();
+            }
+            
+            state.timerElapsed.fun = 0;
+            state.els.funTimer.textContent = '00:00';
+        }
+
+        // Initialize the application when the DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize DOM elements
+            state.initElements();
+            
+            // Load stored data
+            loadStoredData();
+            
+            // Set up autosave every 30 seconds
+            setInterval(saveData, 30000);
+            
+            // Set up event listeners
+            setupEventListeners();
+            
+            // Initialize country list
+            updateCountryList();
+            
+            // Set up tab selection
+            document.querySelector('.tab[data-tab="main"]').click();
+            
+            // Disable messaging tab initially (until authenticated)
+            document.querySelector('.tab[data-tab="messaging"]').classList.add('disabled');
+        });
+        
+        function setupEventListeners() {
+            // Tab switching
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    if (tab.classList.contains('disabled')) return;
+                    
+                    const tabId = tab.getAttribute('data-tab');
+                    
+                    // Update active tab
+                    document.querySelectorAll('.tab').forEach(t => {
+                        t.classList.remove('active');
+                    });
+                    tab.classList.add('active');
+                    
+                    // Show corresponding content
+                    document.querySelectorAll('.tab-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    document.getElementById(`${tabId}-tab`).classList.add('active');
+                });
+            });
+            
+            // Committee select change event
+            state.els.committeeSelect.addEventListener('change', () => {
+                state.selectedCommittee = state.els.committeeSelect.value;
+                updateCountryList();
+            });
+            
+            // Add to speaking list
+            document.getElementById('add-to-list-button').addEventListener('click', () => {
+                const selectedCountry = document.querySelector('#country-list .list-item.selected');
+                
+                if (!selectedCountry) {
+                    showMessage('Selection Required', 'Please select a country first');
+                    return;
+                }
+                
+                const country = selectedCountry.textContent;
+                
+                // Check if already in list
+                let isDuplicate = false;
+                document.querySelectorAll('#speaking-list .list-item').forEach(item => {
+                    if (item.textContent === country) {
+                        isDuplicate = true;
+                    }
+                });
+                
+                if (isDuplicate) {
+                    if (!confirm(`${country} is already in the speaking list. Add anyway?`)) {
+                        return;
+                    }
+                }
+                
+                // Add to speaking list
+                const li = document.createElement('li');
+                li.textContent = country;
+                li.className = 'list-item';
+                li.addEventListener('click', (e) => {
+                    // Toggle selection
+                    document.querySelectorAll('#speaking-list .list-item').forEach(item => {
+                        item.classList.remove('selected');
+                    });
+                    e.target.classList.add('selected');
+                });
+                state.els.speakingList.appendChild(li);
+                
+                // Switch to speaking list tab
+                document.querySelector('.tab[data-tab="speaking-list"]').click();
+            });
+            
+            // Next speaker button
+            document.getElementById('next-speaker-button').addEventListener('click', () => {
+                if (state.els.speakingList.children.length === 0) {
+                    showMessage('Empty List', 'No speakers in the queue');
+                    return;
+                }
+                
+                // Get the next speaker
+                const nextSpeaker = state.els.speakingList.children[0].textContent;
+                state.els.speakingList.removeChild(state.els.speakingList.children[0]);
+                
+                // Update current speaker
+                state.currentSpeaker = nextSpeaker;
+                state.els.currentSpeakerDisplay.textContent = nextSpeaker;
+                
+                // Reset and start speech timer
+                resetTimer('speech');
+                startTimer('speech');
+            });
+
+            // Skip speaker button
+            document.getElementById('skip-speaker-button').addEventListener('click', () => {
+                if (state.els.speakingList.children.length === 0) {
+                    showMessage('Empty List', 'No speakers in the queue');
+                    return;
+                }
+                
+                // Move first speaker to end of list
+                const speaker = state.els.speakingList.children[0];
+                state.els.speakingList.removeChild(speaker);
+                state.els.speakingList.appendChild(speaker);
+                
+                // Move to next speaker
+                document.getElementById('next-speaker-button').click();
+            });
+
+            // Move up in list
+            document.getElementById('move-up-button').addEventListener('click', () => {
+                const selected = document.querySelector('#speaking-list .list-item.selected');
+                
+                if (!selected || selected === state.els.speakingList.firstChild) {
+                    return;
+                }
+                
+                const previousSibling = selected.previousElementSibling;
+                state.els.speakingList.insertBefore(selected, previousSibling);
+            });
+
+            // Move down in list
+            document.getElementById('move-down-button').addEventListener('click', () => {
+                const selected = document.querySelector('#speaking-list .list-item.selected');
+                
+                if (!selected || selected === state.els.speakingList.lastChild) {
+                    return;
+                }
+                
+                const nextSibling = selected.nextElementSibling;
+                if (nextSibling.nextElementSibling) {
+                    state.els.speakingList.insertBefore(selected, nextSibling.nextElementSibling);
+                } else {
+                    state.els.speakingList.appendChild(selected);
+                }
+            });
+
+            // Remove from list
+            document.getElementById('remove-button').addEventListener('click', () => {
+                const selected = document.querySelector('#speaking-list .list-item.selected');
+                
+                if (!selected) {
+                    showMessage('Selection Required', 'Please select a speaker first');
+                    return;
+                }
+                
+                state.els.speakingList.removeChild(selected);
+            });
+
+            // Clear list
+            document.getElementById('clear-list-button').addEventListener('click', () => {
+                if (state.els.speakingList.children.length === 0) {
+                    return;
+                }
+                
+                if (confirm('Are you sure you want to clear the entire speaking list?')) {
+                    state.els.speakingList.innerHTML = '';
+                }
+            });
+            
+            // Timer button event handlers
+            document.querySelectorAll('.timer-button').forEach(button => {
+                button.addEventListener('click', () => {
+                    const timerType = button.getAttribute('data-timer');
+                    const action = button.getAttribute('data-action');
+                    
+                    if (action === 'start') {
+                        startTimer(timerType);
+                    } else if (action === 'stop') {
+                        stopTimer(timerType);
+                    } else if (action === 'reset') {
+                        resetTimer(timerType);
+                    }
+                });
+            });
+            
+            // Rearrange timers
+            document.getElementById('rearrange-timers-button').addEventListener('click', () => {
+                // Cycle timer types and colors
+                state.timerTypes = [...state.timerTypes.slice(1), state.timerTypes[0]];
+                state.timerColors = [...state.timerColors.slice(1), state.timerColors[0]];
+                
+                // Update timer cards
+                const timerCards = document.querySelectorAll('.timer-card');
+                timerCards.forEach((card, i) => {
+                    card.style.backgroundColor = state.timerColors[i];
+                    card.querySelector('.timer-title').textContent = state.timerTypes[i];
+                });
+            });
+            
+            // Note buttons
+            document.querySelectorAll('[data-note]').forEach(button => {
+                button.addEventListener('click', () => {
+                    const noteType = button.getAttribute('data-note');
+                    addNote(noteType);
+                });
+            });
+            
+            // Lock/unlock countries
+            state.els.lockCountriesButton.addEventListener('click', () => {
+                toggleLockCountries();
+            });
+            
+            // Role call
+            document.getElementById('role-call-button').addEventListener('click', () => {
+                openRoleCall();
+            });
+            
+            // Add date button
+            document.getElementById('add-date-button').addEventListener('click', () => {
+                const newDate = state.els.roleCallDate.value.trim();
+                
+                if (!newDate) {
+                    showMessage('Date Required', 'Please enter a date');
+                    return;
+                }
+                
+                if (!state.attendanceDates.includes(newDate)) {
+                    state.attendanceDates.push(newDate);
+                    
+                    // Update attendance data with new date
+                    Object.keys(state.attendanceData).forEach(country => {
+                        state.attendanceData[country][newDate] = false;
+                    });
+                    
+                    // Rebuild the role call table
+                    const countries = Array.from(state.els.countryList.children).map(li => li.textContent);
+                    buildRoleCallTable(countries);
+                }
+            });
+            
+            // Close role call
+            document.getElementById('close-role-call-button').addEventListener('click', () => {
+                state.els.roleCallModal.style.display = 'none';
+            });
+            
+            // Save role call
+            document.getElementById('save-role-call-button').addEventListener('click', () => {
+                saveLockedCountries();
+                state.els.roleCallModal.style.display = 'none';
+                updateCountryListAttendance();
+            });
+            
+            // Export data
+            document.getElementById('export-button').addEventListener('click', () => {
+                exportData();
+            });
+            
+            // Fun mode
+            document.getElementById('fun-mode-button').addEventListener('click', () => {
+                // Hide main tab content
+                state.els.mainTab.querySelector('.columns').style.display = 'none';
+                state.els.mainTab.querySelector('.top-controls').style.display = 'none';
+                
+                // Show fun mode
+                state.els.funModeContainer.style.display = 'block';
+                state.els.mainTab.appendChild(state.els.funModeContainer);
+            });
+            
+            document.getElementById('exit-fun-mode-button').addEventListener('click', () => {
+                // Clean up fun mode
+                if (state.timerRunning.fun) {
+                    clearInterval(state.timerIntervals.fun);
+                    state.timerRunning.fun = false;
+                }
+                
+                // Hide fun mode
+                state.els.funModeContainer.style.display = 'none';
+                
+                // Show main tab content
+                state.els.mainTab.querySelector('.columns').style.display = 'flex';
+                state.els.mainTab.querySelector('.top-controls').style.display = 'flex';
+            });
+            
+            // Fun mode timer buttons
+            document.querySelectorAll('[data-action^="start-fun"], [data-action^="stop-fun"], [data-action^="reset-fun"]').forEach(button => {
+                button.addEventListener('click', () => {
+                    const action = button.getAttribute('data-action');
+                    
+                    if (action === 'start-fun') {
+                        startFunTimer();
+                    } else if (action === 'stop-fun') {
+                        stopFunTimer();
+                    } else if (action === 'reset-fun') {
+                        resetFunTimer();
+                    }
+                });
+            });
+            
+            // Game voting
+            document.querySelectorAll('.vote-button').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const gameOption = e.target.closest('.game-option');
+                    const voteCount = gameOption.querySelector('.vote-count');
+                    
+                    voteCount.textContent = (parseInt(voteCount.textContent) + 1).toString();
+                });
+            });
+            
+            // Authentication buttons
+            document.getElementById('auth-button').addEventListener('click', authenticateForMessaging);
+            document.getElementById('auth-messaging-button').addEventListener('click', authenticateForMessaging);
+            
+            // Messaging buttons
+            document.getElementById('send-message-button').addEventListener('click', sendMessage);
+            document.getElementById('new-message-button').addEventListener('click', openNewMessageDialog);
+            
+            // Cancel new message button
+            document.getElementById('cancel-message-button').addEventListener('click', () => {
+                state.els.newMessageDialog.style.display = 'none';
+            });
+            
+            // Send new message button
+            document.getElementById('send-new-message-button').addEventListener('click', () => {
+                const recipient = state.els.recipientSelect.value;
+                const content = document.getElementById('new-message-text').value.trim();
+                
+                if (!recipient) {
+                    showMessage('Error', 'Please select a recipient');
+                    return;
+                }
+                
+                if (!content) {
+                    showMessage('Error', 'Please enter a message');
+                    return;
+                }
+                
+                // Create message object
+                const message = {
+                    id: Date.now().toString(),
+                    sender: state.authenticatedUsername,
+                    recipient: recipient,
+                    content: content,
+                    timestamp: Date.now(),
+                    read: false
+                };
+                
+                // Add to messages array
+                state.messages.push(message);
+                
+                // Close dialog
+                state.els.newMessageDialog.style.display = 'none';
+                
+                // Select this conversation
+                selectConversation(recipient);
+                
+                // Save data
+                saveData();
+            });
+        }-list-button" class="button secondary">Clear List</button>
                     </div>
                 </div>
             </div>
