@@ -1762,7 +1762,95 @@ MUNSpeechTimerApp.prototype.systemIntegration = function() {
 
 // Export error handling as a global utility
 window.MUNErrorHandler = SystemIntegrationManager.ErrorHandler;
+class SpeakingListManager {
+    constructor(app) {
+        this.app = app;
+    }
 
+    // Add a speaker to the speaking list
+    addToSpeakingList(speaker) {
+        // Check if speaker is already in the list
+        if (!this.app.state.speakingList.includes(speaker)) {
+            this.app.state.speakingList.push(speaker);
+            
+            // Log the addition
+            this.app.logger.log(`Added ${speaker} to speaking list`);
+
+            // Trigger UI update
+            this.updateSpeakingListUI();
+        } else {
+            // Optional: show a message that speaker is already in the list
+            this.app.logger.log(`${speaker} is already in the speaking list`);
+        }
+    }
+
+    // Move to the next speaker
+    nextSpeaker() {
+        if (this.app.state.speakingList.length > 0) {
+            // Remove the first speaker from the list and set as current
+            const currentSpeaker = this.app.state.speakingList.shift();
+            
+            // Add to speaker history
+            if (!this.app.state.speakerHistory) {
+                this.app.state.speakerHistory = [];
+            }
+            this.app.state.speakerHistory.push(currentSpeaker);
+            
+            // Update current speaker
+            this.app.state.currentSpeaker = currentSpeaker;
+
+            // Log the speaker change
+            this.app.logger.log(`Next speaker: ${currentSpeaker}`);
+
+            // Trigger UI update
+            this.updateSpeakingListUI();
+
+            return currentSpeaker;
+        } else {
+            // No speakers in the list
+            this.app.state.currentSpeaker = null;
+            this.app.logger.log('No more speakers in the list');
+            return null;
+        }
+    }
+
+    // Skip the current speaker
+    skipCurrentSpeaker() {
+        if (this.app.state.currentSpeaker) {
+            // Add current speaker back to the end of the list
+            this.app.state.speakingList.push(this.app.state.currentSpeaker);
+            
+            // Log the skip
+            this.app.logger.log(`Skipped speaker: ${this.app.state.currentSpeaker}`);
+
+            // Move to next speaker
+            this.nextSpeaker();
+        }
+    }
+
+    // Update the UI to reflect speaking list changes
+    updateSpeakingListUI() {
+        // If a UI manager exists, update the speaking list view
+        const uiManager = this.app.uiManager();
+        if (uiManager) {
+            uiManager.updateSpeakingListView();
+        }
+    }
+
+    // Clear the entire speaking list
+    clearSpeakingList() {
+        this.app.state.speakingList = [];
+        this.app.state.currentSpeaker = null;
+        this.app.logger.log('Speaking list cleared');
+        this.updateSpeakingListUI();
+    }
+}
+
+// Extend the main application with Speaking List Manager
+MUNSpeechTimerApp.prototype.speakingListManager = function() {
+    return new SpeakingListManager(this);
+};
+                        
 // Initialize system integration when app starts
 document.addEventListener('DOMContentLoaded', () => {
     if (window.munApp) {
