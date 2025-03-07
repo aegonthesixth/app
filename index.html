@@ -451,27 +451,26 @@ document.addEventListener('DOMContentLoaded', () => {
     window.munApp = new MUNSpeechTimerApp();
 });
 // Messaging and Authentication System
-lass AuthenticationManager {
+class AuthenticationManager {
     constructor(app) {
         this.app = app;
-        
-        // GitHub OAuth Configuration
         this.githubConfig = {
-            // Replace with your actual GitHub OAuth App credentials
-            clientId: 'YOUR_GITHUB_CLIENT_ID', 
-            clientSecret: 'YOUR_GITHUB_CLIENT_SECRET',
-            redirectUri: window.location.origin + '/callback',
+            clientId: null, // Replace with your GitHub OAuth App client ID
+            clientSecret: null, // Replace with your GitHub OAuth App client secret
+            redirectUri: 'http://localhost:9095/callback',
             scopes: ['user:email']
+        };
+        this.tokenStorage = {
+            accessToken: null,
+            refreshToken: null,
+            expiresAt: null
         };
     }
 
-    // Updated Authentication Flow
+    // Initiate GitHub OAuth authentication flow
     initiateGitHubAuth() {
         // Generate a random state to prevent CSRF attacks
         const state = this.generateRandomState();
-        
-        // Store state in localStorage for verification
-        localStorage.setItem('github_oauth_state', state);
         
         // Construct GitHub OAuth URL
         const authUrl = `https://github.com/login/oauth/authorize?` +
@@ -480,23 +479,19 @@ lass AuthenticationManager {
             `&scope=${this.githubConfig.scopes.join(' ')}` +
             `&state=${state}`;
         
-        // Redirect to GitHub authentication
+        // Open GitHub authentication page
         window.location.href = authUrl;
     }
 
-    // Handle OAuth Callback
+    // Handle OAuth callback
     async handleOAuthCallback(code, state) {
         try {
             // Verify state to prevent CSRF
-            const storedState = localStorage.getItem('github_oauth_state');
-            if (state !== storedState) {
+            if (!this.verifyState(state)) {
                 throw new Error('Invalid state parameter');
             }
-            
-            // Remove stored state
-            localStorage.removeItem('github_oauth_state');
 
-            // Exchange code for access token (this would typically be done server-side)
+            // Exchange code for access token
             const tokenResponse = await this.exchangeCodeForToken(code);
 
             // Fetch user information
@@ -505,7 +500,7 @@ lass AuthenticationManager {
             // Update application state
             this.app.state.messaging.authenticatedUser = {
                 username: userInfo.login,
-                name: userInfo.name || userInfo.login,
+                name: userInfo.name,
                 email: userInfo.email,
                 avatarUrl: userInfo.avatar_url
             };
@@ -516,7 +511,7 @@ lass AuthenticationManager {
             // Log successful authentication
             this.app.logger.log(`Authenticated as ${userInfo.login}`);
 
-            // Trigger UI update
+            // Trigger UI update or navigation
             this.onSuccessfulAuthentication();
 
             return true;
@@ -527,23 +522,109 @@ lass AuthenticationManager {
         }
     }
 
-    // Simulated token exchange (in a real app, this would be a server-side call)
+    // Exchange authorization code for access token
     async exchangeCodeForToken(code) {
-        // Simulate token exchange 
-        return {
-            access_token: `github_token_${code}`,
-            token_type: 'bearer',
-            scope: this.githubConfig.scopes.join(' ')
-        };
+        const response = await fetch('https://github.com/login/oauth/access_token', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                client_id: this.githubConfig.clientId,
+                client_secret: this.githubConfig.clientSecret,
+                code: code,
+                redirect_uri: this.githubConfig.redirectUri
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error('Token exchange failed');
+        }
+
+        return await response.json();
     }
 
-    // Add a method to check for existing authentication
-    checkExistingAuthentication() {
-        const storedToken = localStorage.getItem('github_access_token');
-        return !!storedToken;
+    // Fetch authenticated user's information
+    async fetchUserInfo(accessToken) {
+        const response = await fetch('https://api.github.com/user', {
+            headers: {
+                'Authorization': `token ${accessToken}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch user information');
+        }
+
+        return await response.json();
+    }
+
+    // Verify OAuth state
+    verifyState(state) {
+        // In a real implementation, validate against stored state
+        return true;
+    }
+
+    // Generate random state for CSRF protection
+    generateRandomState() {
+        return Math.random().toString(36).substring(2, 15) + 
+               Math.random().toString(36).substring(2, 15);
+    }
+
+    // Store authentication tokens
+    storeTokens(tokenResponse) {
+        this.tokenStorage = {
+            accessToken: tokenResponse.access_token,
+            refreshToken: tokenResponse.refresh_token,
+            expiresAt: tokenResponse.expires_at || 
+                       (Date.now() + (tokenResponse.expires_in * 1000))
+        };
+
+        // Securely store tokens (consider more secure storage in production)
+        localStorage.setItem('github_access_token', this.tokenStorage.accessToken);
+    }
+
+    // Check if user is currently authenticated
+    isAuthenticated() {
+        return !!this.app.state.messaging.authenticatedUser && 
+               this.tokenStorage.accessToken && 
+               this.tokenStorage.expiresAt > Date.now();
+    }
+
+    // Handle authentication errors
+    handleAuthenticationError(error) {
+        // Implement error handling logic
+        console.error('Authentication Error:', error);
+        // Potentially show error message to user
+    }
+
+    // Trigger actions after successful authentication
+    onSuccessfulAuthentication() {
+        // Update UI, enable messaging, etc.
+        this.app.updateUIAfterAuthentication();
+    }
+
+    // Logout method
+    logout() {
+        // Clear authentication state
+        this.app.state.messaging.authenticatedUser = null;
+        this.tokenStorage = {
+            accessToken: null,
+            refreshToken: null,
+            expiresAt: null
+        };
+        
+        // Remove stored tokens
+        localStorage.removeItem('github_access_token');
+
+        // Log logout
+        this.app.logger.log('User logged out');
+
+        // Update UI
+        this.app.updateUIAfterLogout();
     }
 }
-
 
 class MessagingSystem {
     constructor(app) {
@@ -1701,208 +1782,4 @@ document.addEventListener('DOMContentLoaded', () => {
         const performanceMonitor = systemIntegration.performanceMonitoring();
         performanceMonitor.mark('appInitialization');
     }
-});
-class TimerManager {
-    constructor(app) {
-        this.app = app;
-    }
-
-    // Start a specific timer
-    startTimer(timerType) {
-        const timer = this.app.state.timers[timerType];
-        
-        if (!timer.running) {
-            timer.running = true;
-            timer.startTime = Date.now();
-            
-            // Update timer display periodically
-            timer.intervalId = setInterval(() => {
-                timer.elapsedTime = Date.now() - timer.startTime;
-                this.updateTimerDisplay(timerType);
-            }, 1000);
-
-            this.app.logger.log(`${timerType} timer started`);
-        }
-    }
-
-    // Stop a specific timer
-    stopTimer(timerType) {
-        const timer = this.app.state.timers[timerType];
-        
-        if (timer.running) {
-            timer.running = false;
-            timer.elapsedTime = Date.now() - timer.startTime;
-            
-            // Clear the interval
-            if (timer.intervalId) {
-                clearInterval(timer.intervalId);
-                timer.intervalId = null;
-            }
-
-            this.updateTimerDisplay(timerType);
-            this.app.logger.log(`${timerType} timer stopped`);
-        }
-    }
-
-    // Reset a specific timer
-    resetTimer(timerType) {
-        const timer = this.app.state.timers[timerType];
-        
-        // Stop timer if running
-        if (timer.running) {
-            this.stopTimer(timerType);
-        }
-
-        // Reset timer properties
-        timer.elapsedTime = 0;
-        timer.startTime = null;
-        
-        this.updateTimerDisplay(timerType);
-        this.app.logger.log(`${timerType} timer reset`);
-    }
-
-    // Update timer display in the UI
-    updateTimerDisplay(timerType) {
-        const timer = this.app.state.timers[timerType];
-        const timerElement = document.getElementById(`${timerType}-timer`);
-        
-        if (timerElement) {
-            // Convert milliseconds to seconds
-            const seconds = Math.floor(timer.elapsedTime / 1000);
-            timerElement.textContent = this.app.formatTime(seconds);
-        }
-    }
-
-class CountryListManager {
-    constructor(app) {
-        this.app = app;
-    }
-
-    // Populate country list for current committee
-    populateCountryList() {
-        const currentCommittee = this.app.state.currentCommittee;
-        const countryListElement = document.getElementById('country-list');
-        
-        if (!countryListElement) return;
-
-        // Clear existing list
-        countryListElement.innerHTML = '';
-
-        // Get countries for current committee
-        const countries = this.app.state.committees[currentCommittee] || [];
-
-        // Populate list
-        countries.forEach(country => {
-            const listItem = document.createElement('li');
-            listItem.textContent = country;
-            listItem.classList.add('list-item');
-            listItem.setAttribute('data-country', country);
-            
-            // Add click event listener for selection
-            listItem.addEventListener('click', () => {
-                // Remove previous selections
-                countryListElement.querySelectorAll('.list-item').forEach(item => {
-                    item.classList.remove('selected');
-                });
-                
-                // Select current item
-                listItem.classList.add('selected');
-                this.app.state.ui.selectedCountry = country;
-            });
-
-            countryListElement.appendChild(listItem);
-        });
-
-        this.app.logger.log(`Populated country list for ${currentCommittee}`);
-    }
-
-    // Update country list when committee changes
-    setupCommitteeChangeListener() {
-        const committeeSelect = document.getElementById('committee-select');
-        
-        if (committeeSelect) {
-            committeeSelect.addEventListener('change', (event) => {
-                // Update current committee in state
-                this.app.state.currentCommittee = event.target.value;
-                
-                // Repopulate country list
-                this.populateCountryList();
-            });
-        }
-    }
-}
-
-// Extend the main application with new managers
-MUNSpeechTimerApp.prototype.timerManager = function() {
-    return new TimerManager(this);
-};
-
-// Add initialization method to extend authentication functionality
-MUNSpeechTimerApp.prototype.initializeAuthentication = function() {
-    // Check for existing authentication
-    const authManager = this.authManager();
-    if (authManager.checkExistingAuthentication()) {
-        // Potentially refresh or validate existing token
-        this.updateUIAfterAuthentication();
-    }
-
-    // Setup login button
-    const loginButton = document.getElementById('login-button');
-    if (loginButton) {
-        loginButton.addEventListener('click', () => {
-            authManager.initiateGitHubAuth();
-        });
-    }
-
-    // Handle OAuth callback if on callback page
-    const urlParams = new URLSearchParams(window.location.search);
-    const code = urlParams.get('code');
-    const state = urlParams.get('state');
-
-    if (code && state) {
-        authManager.handleOAuthCallback(code, state);
-    }
-};
-
-// Modify initialization to include new managers
-MUNSpeechTimerApp.prototype.initializeApplication = function() {
-    try {
-        this.loadPersistedState();
-        this.setupEventListeners();
-        
-        // Initialize UI and managers
-        const uiManager = this.uiManager();
-        uiManager.initialize();
-
-        // Initialize country list manager
-        const countryListManager = new CountryListManager(this);
-        countryListManager.populateCountryList();
-        countryListManager.setupCommitteeChangeListener();
-
-        // Initialize authentication
-        this.initializeAuthentication();
-
-        // Start analytics session
-        this.analytics.startSession();
-        this.logger.log('Application initialized successfully');
-    } catch (error) {
-        this.logger.error(`Initialization failed: ${error.message}`);
-        this.displayErrorToUser(error);
-    }
-};
-
-// Modify application initialization to add timer functionality
-document.addEventListener('DOMContentLoaded', () => {
-    window.munApp = new MUNSpeechTimerApp();
-
-    // Setup timer buttons
-    ['session', 'caucus', 'speech'].forEach(timerType => {
-        const startBtn = document.querySelector(`[data-timer="${timerType}"][data-action="start"]`);
-        const stopBtn = document.querySelector(`[data-timer="${timerType}"][data-action="stop"]`);
-        const resetBtn = document.querySelector(`[data-timer="${timerType}"][data-action="reset"]`);
-
-        if (startBtn) startBtn.addEventListener('click', () => window.munApp.timerManager().startTimer(timerType));
-        if (stopBtn) stopBtn.addEventListener('click', () => window.munApp.timerManager().stopTimer(timerType));
-        if (resetBtn) resetBtn.addEventListener('click', () => window.munApp.timerManager().resetTimer(timerType));
-    });
 });
