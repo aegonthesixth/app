@@ -37,10 +37,6 @@ const state = {
     timerTypes: ["Session", "Caucus", "Speech"],
     timerColors: ["var(--timer-green)", "var(--timer-blue)", "var(--timer-orange)"],
 
-
-
-
-
 committees: {
                     "UNSC": ["United States", "China", "Russian Federation", "United Kingdom", "France", 
                             "Albania", "Brazil", "Gabon", "Ghana", "India", "Ireland", "Kenya", "Mexico", 
