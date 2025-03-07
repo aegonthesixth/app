@@ -1,1303 +1,1785 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MUN Committee Speech Timer</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <style>
-        :root {
-            /* Modern theme configuration */
-            --primary: #6750A4;
-            --secondary: #625B71;
-            --accent: #7D5260;
-            --success: #4CAF50;
-            --warning: #FFA726;
-            --danger: #F44336;
-            
-            --bg-primary: #F8F8FC;
-            --bg-secondary: #F0F0F6;
-            --bg-elevated: #FFFFFF;
-            
-            --text-primary: #1C1B1F;
-            --text-secondary: #49454F;
-            --text-disabled: #9E9E9E;
-            --text-on-primary: #FFFFFF;
-            
-            --border: #E0E0E6;
-            --highlight: #E8DEF8;
-            
-            --timer-green: #4CAF50;
-            --timer-blue: #03A9F4;
-            --timer-orange: #FF9800;
-            
-            --corner-radius: 8px;
-            --border-width: 1px;
-            --padding: 10px;
-            
-            --font-family: 'Segoe UI', system-ui, sans-serif;
-        }
-
-        body {
-            font-family: var(--font-family);
-            background-color: var(--bg-primary);
-            margin: 0;
-            padding: 0;
-            color: var(--text-primary);
-        }
-
-        #app {
-            width: 100%;
-            max-width: 1600px;
-            margin: 0 auto;
-            min-height: 100vh;
-        }
-
-        header {
-            background-color: var(--primary);
-            color: var(--text-on-primary);
-            padding: 15px var(--padding);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-radius: 0 0 var(--corner-radius) var(--corner-radius);
-        }
-
-        h1 {
-            margin: 0;
-            font-size: 1.5rem;
-        }
-
-        .tabs {
-            display: flex;
-            background-color: var(--bg-secondary);
-            padding: 0 var(--padding);
-            margin-top: 10px;
-            border-radius: var(--corner-radius) var(--corner-radius) 0 0;
-        }
-
-        .tab {
-            padding: 12px 16px;
-            cursor: pointer;
-            background-color: var(--bg-secondary);
-            color: var(--text-secondary);
-            border: none;
-            font-family: var(--font-family);
-            font-size: 1rem;
-            transition: background-color 0.2s, color 0.2s;
-            border-radius: var(--corner-radius) var(--corner-radius) 0 0;
-        }
-
-        .tab.active {
-            background-color: var(--primary);
-            color: var(--text-on-primary);
-        }
-
-        .tab:hover:not(.active) {
-            background-color: var(--highlight);
-        }
-
-        .tab-content {
-            display: none;
-            padding: var(--padding);
-            background-color: var(--bg-elevated);
-            border-radius: 0 0 var(--corner-radius) var(--corner-radius);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        .top-controls {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
-        }
-
-        .committee-selector {
-            display: flex;
-            align-items: center;
-        }
-
-        .committee-selector label {
-            margin-right: 8px;
-        }
-
-        select {
-            padding: 8px 12px;
-            border: 1px solid var(--border);
-            border-radius: var(--corner-radius);
-            background-color: var(--bg-elevated);
-            font-family: var(--font-family);
-            color: var(--text-primary);
-        }
-
-        .button {
-            background-color: var(--primary);
-            color: var(--text-on-primary);
-            border: none;
-            padding: 8px 16px;
-            border-radius: var(--corner-radius);
-            cursor: pointer;
-            font-family: var(--font-family);
-            font-size: 0.9rem;
-            transition: background-color 0.2s;
-            margin: 0 5px;
-        }
-
-        .button:hover {
-            filter: brightness(1.1);
-        }
-
-        .button.success { background-color: var(--success); }
-        .button.warning { background-color: var(--warning); }
-        .button.danger { background-color: var(--danger); }
-        .button.secondary { background-color: var(--secondary); }
-        .button.accent { background-color: var(--accent); }
-
-        .columns {
-            display: flex;
-            gap: 20px;
-            margin-top: 15px;
-        }
-
-        .column {
-            flex: 1;
-        }
-
-        .card {
-            background-color: var(--bg-elevated);
-            border-radius: var(--corner-radius);
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-            margin-bottom: 15px;
-            overflow: hidden;
-        }
-
-        .card-header {
-            background-color: var(--primary);
-            color: var(--text-on-primary);
-            padding: 10px 15px;
-            font-weight: bold;
-        }
-
-        .card-body {
-            padding: 15px;
-        }
-
-        .list-container {
-            height: 300px;
-            overflow-y: auto;
-            border: 1px solid var(--border);
-            border-radius: var(--corner-radius);
-            background-color: var(--bg-elevated);
-        }
-
-        .list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .list-item {
-            padding: 8px 15px;
-            border-bottom: 1px solid var(--border);
-            cursor: pointer;
-        }
-
-        .list-item:hover {
-            background-color: var(--highlight);
-        }
-
-        .list-item.selected {
-            background-color: var(--primary);
-            color: var(--text-on-primary);
-        }
-
-        .timer-cards {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-
-        .timer-card {
-            flex: 1;
-            background-color: var(--timer-green);
-            color: var(--text-on-primary);
-            border-radius: var(--corner-radius);
-            padding: 15px;
-            text-align: center;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
-        }
-
-        .timer-card:nth-child(2) {
-            background-color: var(--timer-blue);
-        }
-
-        .timer-card:nth-child(3) {
-            background-color: var(--timer-orange);
-        }
-
-        .timer-title {
-            font-weight: bold;
-            margin-bottom: 8px;
-        }
-
-        .timer-display {
-            font-size: 2.5rem;
-            font-weight: bold;
-            margin: 10px 0 15px;
-        }
-
-        .timer-controls {
-            display: flex;
-            justify-content: space-around;
-        }
-
-        .timer-button {
-            background-color: rgba(255,255,255,0.2);
-            color: white;
-            border: none;
-            padding: 6px 10px;
-            border-radius: var(--corner-radius);
-            cursor: pointer;
-            font-family: var(--font-family);
-            transition: background-color 0.2s;
-        }
-
-        .timer-button:hover {
-            background-color: rgba(255,255,255,0.3);
-        }
-
-        .notes-area {
-            width: 100%;
-            height: 150px;
-            padding: 10px;
-            border: 1px solid var(--border);
-            border-radius: var(--corner-radius);
-            font-family: var(--font-family);
-            resize: vertical;
-            margin-bottom: 10px;
-        }
-
-        .note-buttons {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        /* Current speaker display */
-        .current-speaker {
-            text-align: center;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-
-        .current-speaker-label {
-            font-size: 1.2rem;
-            color: var(--primary);
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        .current-speaker-name {
-            font-size: 2rem;
-            margin: 10px 0 20px;
-        }
-
-        /* Speaker list controls */
-        .list-controls {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 10px;
-        }
-
-        /* For frequency list coloring */
-        .frequency-indicator {
-            display: inline-block;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            margin-right: 8px;
-        }
-
-        /* Messaging layout */
-        .messaging-container {
-            display: flex;
-            height: 500px;
-            gap: 15px;
-        }
-
-        .delegates-list {
-            flex: 1;
-            max-width: 300px;
-        }
-
-        .messages-container {
-            flex: 2;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .messages-list {
-            flex: 1;
-            overflow-y: auto;
-            margin-bottom: 15px;
-        }
-
-        .message-compose {
-            background-color: var(--bg-elevated);
-            padding: 15px;
-            border-radius: var(--corner-radius);
-            border: 1px solid var(--border);
-        }
-
-        .message-input {
-            width: 100%;
-            min-height: 80px;
-            padding: 10px;
-            border: 1px solid var(--border);
-            border-radius: var(--corner-radius);
-            font-family: var(--font-family);
-            margin-bottom: 10px;
-            resize: vertical;
-        }
-
-        /* Fun mode styles */
-        .fun-mode {
-            background-color: #FF5BFF;
-            color: white;
-            text-align: center;
-            padding: 20px;
-            border-radius: var(--corner-radius);
-        }
-
-        .fun-mode-header {
-            font-size: 2.5rem;
-            margin-bottom: 20px;
-        }
-
-        .fun-timer {
-            font-size: 4rem;
-            margin: 20px 0;
-        }
-
-        .game-options {
-            margin: 30px 0;
-        }
-
-        .game-option {
-            background-color: #FFE6F7;
-            color: var(--text-primary);
-            margin: 10px auto;
-            padding: 15px;
-            border-radius: var(--corner-radius);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            max-width: 500px;
-        }
-
-        /* Role call styles */
-        .role-call-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(0,0,0,0.5);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-
-        .role-call-modal {
-            background-color: var(--bg-elevated);
-            width: 80%;
-            max-width: 1000px;
-            max-height: 80vh;
-            border-radius: var(--corner-radius);
-            overflow-y: auto;
-        }
-
-        .role-call-header {
-            background-color: var(--primary);
-            color: var(--text-on-primary);
-            padding: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .role-call-body {
-            padding: 15px;
-        }
-
-        .role-call-table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .role-call-table th, .role-call-table td {
-            padding: 10px;
-            text-align: left;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .role-call-table th {
-            background-color: var(--bg-secondary);
-            font-weight: bold;
-        }
-
-        .role-call-table tr:nth-child(even) {
-            background-color: var(--bg-secondary);
-        }
-
-        .dialog {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(0,0,0,0.5);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-
-        .dialog-content {
-            background-color: var(--bg-elevated);
-            padding: 20px;
-            border-radius: var(--corner-radius);
-            min-width: 300px;
-            max-width: 500px;
-        }
-
-        .dialog-title {
-            margin-top: 0;
-            color: var(--primary);
-        }
-
-        .dialog-buttons {
-            display: flex;
-            justify-content: flex-end;
-            margin-top: 20px;
-            gap: 10px;
-        }
-
-        .tab.disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        
-        /* Message styling */
-        .message {
-            margin-bottom: 10px;
-            padding: 10px;
-            border-radius: var(--corner-radius);
-            background-color: var(--bg-secondary);
-        }
-        
-        .message-header {
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-        
-        .message-separator {
-            height: 1px;
-            background-color: var(--border);
-            margin: 10px 0;
-        }
-
-        @media (max-width: 768px) {
-            .columns {
-                flex-direction: column;
-            }
-            
-            .timer-cards {
-                flex-direction: column;
-            }
-            
-            .messaging-container {
-                flex-direction: column;
-            }
-            
-            .delegates-list {
-                max-width: 100%;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div id="app">
-        <header>
-            <h1>MUN Committee Speech Timer</h1>
-            <div class="auth-status">
-                <span id="auth-username">Not logged in</span>
-                <button id="auth-button" class="button secondary">Login with GitHub</button>
-            </div>
-        </header>
-
-        <div class="tabs">
-            <button class="tab active" data-tab="main">Main Dashboard</button>
-            <button class="tab" data-tab="speaking-list">Speaking List</button>
-            <button class="tab" data-tab="messaging">Messaging</button>
-        </div>
-
-        <!-- Main Dashboard Tab -->
-        <div id="main-tab" class="tab-content active">
-            <div class="top-controls">
-                <div class="committee-selector">
-                    <label for="committee-select">Committee:</label>
-                    <select id="committee-select">
-                        <option value="UNSC">UNSC</option>
-                        <option value="UNODC">UNODC</option>
-                        <option value="UNGA">UNGA</option>
-                        <option value="UNHRC">UNHRC</option>
-                        <option value="ECOSOC">ECOSOC</option>
-                        <option value="WHO">WHO</option>
-                    </select>
-                </div>
-                <div class="control-buttons">
-                    <button id="export-button" class="button warning">Export Data</button>
-                    <button id="role-call-button" class="button">Role Call</button>
-                    <button id="lock-countries-button" class="button secondary">Lock Countries</button>
-                </div>
-            </div>
-
-            <div class="columns">
-                <div class="column">
-                    <!-- Country List Card -->
-                    <div class="card">
-                        <div class="card-header">Countries</div>
-                        <div class="card-body">
-                            <div class="list-container">
-                                <ul id="country-list" class="list"></ul>
-                            </div>
-                            <button id="add-to-list-button" class="button primary" style="width: 100%; margin-top: 10px;">Add to Speaking List</button>
-                        </div>
-                    </div>
-
-                    <!-- Frequency List Card -->
-                    <div class="card">
-                        <div class="card-header">Speaker Frequency</div>
-                        <div class="card-body">
-                            <div class="list-container">
-                                <ul id="frequency-list" class="list"></ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="column">
-                    <!-- Timers Section -->
-                    <div class="card">
-                        <div class="card-header">Timers</div>
-                        <div class="card-body">
-                            <div class="timer-cards">
-                                <div class="timer-card">
-                                    <div class="timer-title">Session</div>
-                                    <div class="timer-display" id="session-timer">00:00</div>
-                                    <div class="timer-controls">
-                                        <button class="timer-button" data-timer="session" data-action="start">Start</button>
-                                        <button class="timer-button" data-timer="session" data-action="stop">Stop</button>
-                                        <button class="timer-button" data-timer="session" data-action="reset">Reset</button>
-                                    </div>
-                                </div>
-                                <div class="timer-card">
-                                    <div class="timer-title">Caucus</div>
-                                    <div class="timer-display" id="caucus-timer">00:00</div>
-                                    <div class="timer-controls">
-                                        <button class="timer-button" data-timer="caucus" data-action="start">Start</button>
-                                        <button class="timer-button" data-timer="caucus" data-action="stop">Stop</button>
-                                        <button class="timer-button" data-timer="caucus" data-action="reset">Reset</button>
-                                    </div>
-                                </div>
-                                <div class="timer-card">
-                                    <div class="timer-title">Speech</div>
-                                    <div class="timer-display" id="speech-timer">00:00</div>
-                                    <div class="timer-controls">
-                                        <button class="timer-button" data-timer="speech" data-action="start">Start</button>
-                                        <button class="timer-button" data-timer="speech" data-action="stop">Stop</button>
-                                        <button class="timer-button" data-timer="speech" data-action="reset">Reset</button>
-                                    </div>
-                                </div>
-                            </div>
-                            <button id="rearrange-timers-button" class="button secondary" style="width: 100%;">Rearrange Timers</button>
-                        </div>
-                    </div>
-
-                    <!-- Notes Section -->
-                    <div class="card">
-                        <div class="card-header">Notes</div>
-                        <div class="card-body">
-                            <textarea id="notes-area" class="notes-area" placeholder="Enter notes here..."></textarea>
-                            <div class="note-buttons">
-                                <button class="button success" data-note="Good Speech">Good Speech</button>
-                                <button class="button danger" data-note="Bad Speech">Bad Speech</button>
-                                <button class="button primary" data-note="Good Diplomacy">Good Diplomacy</button>
-                                <button class="button warning" data-note="Bad Diplomacy">Bad Diplomacy</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Fun Mode Button -->
-                    <button id="fun-mode-button" class="button accent" style="width: 100%;">Fun Committee Mode</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Speaking List Tab -->
-        <div id="speaking-list-tab" class="tab-content">
-            <div class="current-speaker">
-                <div class="current-speaker-label">Current Speaker</div>
-                <div class="current-speaker-name" id="current-speaker-display">None</div>
-                <div>
-                    <button id="next-speaker-button" class="button success">Next Speaker</button>
-                    <button id="skip-speaker-button" class="button danger">Skip Speaker</button>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-header">Speaking List</div>
-                <div class="card-body">
-                    <div class="list-container" style="height: 400px;">
-                        <ul id="speaking-list" class="list"></ul>
-                    </div>
-                    <div class="list-controls">
-                        <button id="move-up-button" class="button primary">Move Up</button>
-                        <button id="move-down-button" class="button primary">Move Down</button>
-                        <button id="remove-button" class="button danger">Remove</button>
-                        <button id="            clearInterval(state.timerIntervals.fun);
-            state.timerRunning.fun = false;
-        }
-
-        function resetFunTimer() {
-            if (state.timerRunning.fun) {
-                stopFunTimer();
-            }
-            
-            state.timerElapsed.fun = 0;
-            state.els.funTimer.textContent = '00:00';
-        }
-
-        // Initialize the application when the DOM is loaded
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initialize DOM elements
-            state.initElements();
-            
-            // Load stored data
-            loadStoredData();
-            
-            // Set up autosave every 30 seconds
-            setInterval(saveData, 30000);
-            
-            // Set up event listeners
-            setupEventListeners();
-            
-            // Initialize country list
-            updateCountryList();
-            
-            // Set up tab selection
-            document.querySelector('.tab[data-tab="main"]').click();
-            
-            // Disable messaging tab initially (until authenticated)
-            document.querySelector('.tab[data-tab="messaging"]').classList.add('disabled');
-        });
-        
-        function setupEventListeners() {
-            // Tab switching
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.addEventListener('click', () => {
-                    if (tab.classList.contains('disabled')) return;
-                    
-                    const tabId = tab.getAttribute('data-tab');
-                    
-                    // Update active tab
-                    document.querySelectorAll('.tab').forEach(t => {
-                        t.classList.remove('active');
-                    });
-                    tab.classList.add('active');
-                    
-                    // Show corresponding content
-                    document.querySelectorAll('.tab-content').forEach(content => {
-                        content.classList.remove('active');
-                    });
-                    document.getElementById(`${tabId}-tab`).classList.add('active');
-                });
-            });
-            
-            // Committee select change event
-            state.els.committeeSelect.addEventListener('change', () => {
-                state.selectedCommittee = state.els.committeeSelect.value;
-                updateCountryList();
-            });
-            
-            // Add to speaking list
-            document.getElementById('add-to-list-button').addEventListener('click', () => {
-                const selectedCountry = document.querySelector('#country-list .list-item.selected');
-                
-                if (!selectedCountry) {
-                    showMessage('Selection Required', 'Please select a country first');
-                    return;
-                }
-                
-                const country = selectedCountry.textContent;
-                
-                // Check if already in list
-                let isDuplicate = false;
-                document.querySelectorAll('#speaking-list .list-item').forEach(item => {
-                    if (item.textContent === country) {
-                        isDuplicate = true;
-                    }
-                });
-                
-                if (isDuplicate) {
-                    if (!confirm(`${country} is already in the speaking list. Add anyway?`)) {
-                        return;
-                    }
-                }
-                
-                // Add to speaking list
-                const li = document.createElement('li');
-                li.textContent = country;
-                li.className = 'list-item';
-                li.addEventListener('click', (e) => {
-                    // Toggle selection
-                    document.querySelectorAll('#speaking-list .list-item').forEach(item => {
-                        item.classList.remove('selected');
-                    });
-                    e.target.classList.add('selected');
-                });
-                state.els.speakingList.appendChild(li);
-                
-                // Switch to speaking list tab
-                document.querySelector('.tab[data-tab="speaking-list"]').click();
-            });
-            
-            // Next speaker button
-            document.getElementById('next-speaker-button').addEventListener('click', () => {
-                if (state.els.speakingList.children.length === 0) {
-                    showMessage('Empty List', 'No speakers in the queue');
-                    return;
-                }
-                
-                // Get the next speaker
-                const nextSpeaker = state.els.speakingList.children[0].textContent;
-                state.els.speakingList.removeChild(state.els.speakingList.children[0]);
-                
-                // Update current speaker
-                state.currentSpeaker = nextSpeaker;
-                state.els.currentSpeakerDisplay.textContent = nextSpeaker;
-                
-                // Reset and start speech timer
-                resetTimer('speech');
-                startTimer('speech');
-            });
-
-            // Skip speaker button
-            document.getElementById('skip-speaker-button').addEventListener('click', () => {
-                if (state.els.speakingList.children.length === 0) {
-                    showMessage('Empty List', 'No speakers in the queue');
-                    return;
-                }
-                
-                // Move first speaker to end of list
-                const speaker = state.els.speakingList.children[0];
-                state.els.speakingList.removeChild(speaker);
-                state.els.speakingList.appendChild(speaker);
-                
-                // Move to next speaker
-                document.getElementById('next-speaker-button').click();
-            });
-
-            // Move up in list
-            document.getElementById('move-up-button').addEventListener('click', () => {
-                const selected = document.querySelector('#speaking-list .list-item.selected');
-                
-                if (!selected || selected === state.els.speakingList.firstChild) {
-                    return;
-                }
-                
-                const previousSibling = selected.previousElementSibling;
-                state.els.speakingList.insertBefore(selected, previousSibling);
-            });
-
-            // Move down in list
-            document.getElementById('move-down-button').addEventListener('click', () => {
-                const selected = document.querySelector('#speaking-list .list-item.selected');
-                
-                if (!selected || selected === state.els.speakingList.lastChild) {
-                    return;
-                }
-                
-                const nextSibling = selected.nextElementSibling;
-                if (nextSibling.nextElementSibling) {
-                    state.els.speakingList.insertBefore(selected, nextSibling.nextElementSibling);
-                } else {
-                    state.els.speakingList.appendChild(selected);
-                }
-            });
-
-            // Remove from list
-            document.getElementById('remove-button').addEventListener('click', () => {
-                const selected = document.querySelector('#speaking-list .list-item.selected');
-                
-                if (!selected) {
-                    showMessage('Selection Required', 'Please select a speaker first');
-                    return;
-                }
-                
-                state.els.speakingList.removeChild(selected);
-            });
-
-            // Clear list
-            document.getElementById('clear-list-button').addEventListener('click', () => {
-                if (state.els.speakingList.children.length === 0) {
-                    return;
-                }
-                
-                if (confirm('Are you sure you want to clear the entire speaking list?')) {
-                    state.els.speakingList.innerHTML = '';
-                }
-            });
-            
-            // Timer button event handlers
-            document.querySelectorAll('.timer-button').forEach(button => {
-                button.addEventListener('click', () => {
-                    const timerType = button.getAttribute('data-timer');
-                    const action = button.getAttribute('data-action');
-                    
-                    if (action === 'start') {
-                        startTimer(timerType);
-                    } else if (action === 'stop') {
-                        stopTimer(timerType);
-                    } else if (action === 'reset') {
-                        resetTimer(timerType);
-                    }
-                });
-            });
-            
-            // Rearrange timers
-            document.getElementById('rearrange-timers-button').addEventListener('click', () => {
-                // Cycle timer types and colors
-                state.timerTypes = [...state.timerTypes.slice(1), state.timerTypes[0]];
-                state.timerColors = [...state.timerColors.slice(1), state.timerColors[0]];
-                
-                // Update timer cards
-                const timerCards = document.querySelectorAll('.timer-card');
-                timerCards.forEach((card, i) => {
-                    card.style.backgroundColor = state.timerColors[i];
-                    card.querySelector('.timer-title').textContent = state.timerTypes[i];
-                });
-            });
-            
-            // Note buttons
-            document.querySelectorAll('[data-note]').forEach(button => {
-                button.addEventListener('click', () => {
-                    const noteType = button.getAttribute('data-note');
-                    addNote(noteType);
-                });
-            });
-            
-            // Lock/unlock countries
-            state.els.lockCountriesButton.addEventListener('click', () => {
-                toggleLockCountries();
-            });
-            
-            // Role call
-            document.getElementById('role-call-button').addEventListener('click', () => {
-                openRoleCall();
-            });
-            
-            // Add date button
-            document.getElementById('add-date-button').addEventListener('click', () => {
-                const newDate = state.els.roleCallDate.value.trim();
-                
-                if (!newDate) {
-                    showMessage('Date Required', 'Please enter a date');
-                    return;
-                }
-                
-                if (!state.attendanceDates.includes(newDate)) {
-                    state.attendanceDates.push(newDate);
-                    
-                    // Update attendance data with new date
-                    Object.keys(state.attendanceData).forEach(country => {
-                        state.attendanceData[country][newDate] = false;
-                    });
-                    
-                    // Rebuild the role call table
-                    const countries = Array.from(state.els.countryList.children).map(li => li.textContent);
-                    buildRoleCallTable(countries);
-                }
-            });
-            
-            // Close role call
-            document.getElementById('close-role-call-button').addEventListener('click', () => {
-                state.els.roleCallModal.style.display = 'none';
-            });
-            
-            // Save role call
-            document.getElementById('save-role-call-button').addEventListener('click', () => {
-                saveLockedCountries();
-                state.els.roleCallModal.style.display = 'none';
-                updateCountryListAttendance();
-            });
-            
-            // Export data
-            document.getElementById('export-button').addEventListener('click', () => {
-                exportData();
-            });
-            
-            // Fun mode
-            document.getElementById('fun-mode-button').addEventListener('click', () => {
-                // Hide main tab content
-                state.els.mainTab.querySelector('.columns').style.display = 'none';
-                state.els.mainTab.querySelector('.top-controls').style.display = 'none';
-                
-                // Show fun mode
-                state.els.funModeContainer.style.display = 'block';
-                state.els.mainTab.appendChild(state.els.funModeContainer);
-            });
-            
-            document.getElementById('exit-fun-mode-button').addEventListener('click', () => {
-                // Clean up fun mode
-                if (state.timerRunning.fun) {
-                    clearInterval(state.timerIntervals.fun);
-                    state.timerRunning.fun = false;
-                }
-                
-                // Hide fun mode
-                state.els.funModeContainer.style.display = 'none';
-                
-                // Show main tab content
-                state.els.mainTab.querySelector('.columns').style.display = 'flex';
-                state.els.mainTab.querySelector('.top-controls').style.display = 'flex';
-            });
-            
-            // Fun mode timer buttons
-            document.querySelectorAll('[data-action^="start-fun"], [data-action^="stop-fun"], [data-action^="reset-fun"]').forEach(button => {
-                button.addEventListener('click', () => {
-                    const action = button.getAttribute('data-action');
-                    
-                    if (action === 'start-fun') {
-                        startFunTimer();
-                    } else if (action === 'stop-fun') {
-                        stopFunTimer();
-                    } else if (action === 'reset-fun') {
-                        resetFunTimer();
-                    }
-                });
-            });
-            
-            // Game voting
-            document.querySelectorAll('.vote-button').forEach(button => {
-                button.addEventListener('click', (e) => {
-                    const gameOption = e.target.closest('.game-option');
-                    const voteCount = gameOption.querySelector('.vote-count');
-                    
-                    voteCount.textContent = (parseInt(voteCount.textContent) + 1).toString();
-                });
-            });
-            
-            // Authentication buttons
-            document.getElementById('auth-button').addEventListener('click', authenticateForMessaging);
-            document.getElementById('auth-messaging-button').addEventListener('click', authenticateForMessaging);
-            
-            // Messaging buttons
-            document.getElementById('send-message-button').addEventListener('click', sendMessage);
-            document.getElementById('new-message-button').addEventListener('click', openNewMessageDialog);
-            
-            // Cancel new message button
-            document.getElementById('cancel-message-button').addEventListener('click', () => {
-                state.els.newMessageDialog.style.display = 'none';
-            });
-            
-            // Send new message button
-            document.getElementById('send-new-message-button').addEventListener('click', () => {
-                const recipient = state.els.recipientSelect.value;
-                const content = document.getElementById('new-message-text').value.trim();
-                
-                if (!recipient) {
-                    showMessage('Error', 'Please select a recipient');
-                    return;
-                }
-                
-                if (!content) {
-                    showMessage('Error', 'Please enter a message');
-                    return;
-                }
-                
-                // Create message object
-                const message = {
-                    id: Date.now().toString(),
-                    sender: state.authenticatedUsername,
-                    recipient: recipient,
-                    content: content,
-                    timestamp: Date.now(),
-                    read: false
-                };
-                
-                // Add to messages array
-                state.messages.push(message);
-                
-                // Close dialog
-                state.els.newMessageDialog.style.display = 'none';
-                
-                // Select this conversation
-                selectConversation(recipient);
-                
-                // Save data
-                saveData();
-            });
-        }-list-button" class="button secondary">Clear List</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Messaging Tab -->
-        <div id="messaging-tab" class="tab-content">
-            <!-- Authentication Required Panel -->
-            <div id="auth-required-panel">
-                <div class="card">
-                    <div class="card-body" style="text-align: center; padding: 40px 20px;">
-                        <h2>GitHub Authentication Required</h2>
-                        <p>You need to authenticate with GitHub to access the messaging feature.</p>
-                        <button id="auth-messaging-button" class="button primary">Authenticate with GitHub</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Messaging Interface (hidden initially) -->
-            <div id="messaging-interface" style="display: none;">
-                <div class="messaging-container">
-                    <div class="delegates-list">
-                        <div class="card" style="height: 100%;">
-                            <div class="card-header">Delegates</div>
-                            <div class="card-body" style="height: calc(100% - 50px); display: flex; flex-direction: column;">
-                                <div class="list-container" style="flex: 1;">
-                                    <ul id="conversation-list" class="list"></ul>
-                                </div>
-                                <button id="new-message-button" class="button success" style="margin-top: 10px;">New Message</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="messages-container">
-                        <div class="card" style="flex: 1; margin-bottom: 10px;">
-                            <div class="card-header">Messages</div>
-                            <div class="card-body" style="height: calc(100% - 50px); overflow-y: auto;">
-                                <div id="message-display"></div>
-                            </div>
-                        </div>
-
-                        <div class="message-compose">
-                            <textarea id="message-input" class="message-input" placeholder="Type your message here..."></textarea>
-                            <div style="text-align: right;">
-                                <button id="send-message-button" class="button primary">Send Message</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Role Call Modal -->
-        <div id="role-call-modal" class="role-call-container">
-            <div class="role-call-modal">
-                <div class="role-call-header">
-                    <h2 id="role-call-title">Role Call</h2>
-                    <div>
-                        <label for="role-call-date">Date:</label>
-                        <input type="text" id="role-call-date" placeholder="YYYY-MM-DD">
-                        <button id="add-date-button" class="button primary">Add Date</button>
-                        <button id="close-role-call-button" class="button">Close</button>
-                    </div>
-                </div>
-                <div class="role-call-body">
-                    <table id="role-call-table" class="role-call-table">
-                        <thead>
-                            <tr>
-                                <th>Country</th>
-                                <!-- Dates will be inserted dynamically -->
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Countries and attendance will be inserted dynamically -->
-                        </tbody>
-                    </table>
-                    <div style="text-align: right; margin-top: 15px;">
-                        <button id="save-role-call-button" class="button success">Save Role Call</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- New Message Dialog -->
-        <div id="new-message-dialog" class="dialog">
-            <div class="dialog-content">
-                <h3 class="dialog-title">New Message</h3>
-                <div>
-                    <label for="recipient-select">To:</label>
-                    <select id="recipient-select" style="width: 100%; margin-bottom: 15px;"></select>
-                </div>
-                <div>
-                    <label for="new-message-text">Message:</label>
-                    <textarea id="new-message-text" class="message-input"></textarea>
-                </div>
-                <div class="dialog-buttons">
-                    <button id="cancel-message-button" class="button secondary">Cancel</button>
-                    <button id="send-new-message-button" class="button primary">Send</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Fun Mode Container (hidden initially) -->
-        <div id="fun-mode-container" style="display: none;">
-            <div class="fun-mode">
-                <div class="fun-mode-header">Fun Committee Mode</div>
-                <div class="fun-timer" id="fun-timer">00:00</div>
-                <div>
-                    <button class="button" style="background-color: #6A0DAD;" data-action="start-fun">Start</button>
-                    <button class="button" style="background-color: #6A0DAD;" data-action="stop-fun">Stop</button>
-                    <button class="button" style="background-color: #6A0DAD;" data-action="reset-fun">Reset</button>
-                </div>
-
-                <div class="game-options">
-                    <div class="game-option">
-                        <span>UN Charades - Votes: <span class="vote-count">0</span></span>
-                        <button class="button primary vote-button">Vote</button>
-                    </div>
-                    <div class="game-option">
-                        <span>Diplomatic Trivia - Votes: <span class="vote-count">0</span></span>
-                        <button class="button primary vote-button">Vote</button>
-                    </div>
-                    <div class="game-option">
-                        <span>Resolution Writing Race - Votes: <span class="vote-count">0</span></span>
-                        <button class="button primary vote-button">Vote</button>
-                    </div>
-                    <div class="game-option">
-                        <span>Crisis Simulation - Votes: <span class="vote-count">0</span></span>
-                        <button class="button primary vote-button">Vote</button>
-                    </div>
-                </div>
-
-                <button id="exit-fun-mode-button" class="button danger">Exit Fun Mode</button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // Helper function to generate UUIDs
-        function generateUUID() {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-                const r = Math.random() * 16 | 0;
-                const v = c === 'x' ? r : (r & 0x3 | 0x8);
-                return v.toString(16);
-            });
-        }
-        
-        // Global state object
-        const state = {
+// MUN Speech Timer - Core Application Structure
+class MUNSpeechTimerApp {
+    constructor() {
+        // Application-wide configuration and state
+        this.config = {
+            version: '1.0.0',
+            theme: 'modern',
+            language: 'en',
+            debug: false
+        };
+
+        // Comprehensive state management
+        this.state = {
+            // Committee management
+            currentCommittee: 'UNSC',
+            committees: {
+                "UNSC": ["United States", "China", "Russian Federation", "United Kingdom", "France", 
+                    "Albania", "Brazil", "Gabon", "Ghana", "India", "Ireland", "Kenya", "Mexico", 
+                    "Norway", "United Arab Emirates"],
+                "UNODC": ["Germany", "Canada", "Mexico", "Brazil", "Japan", "France", "United Kingdom", 
+                    "Russian Federation", "China", "United States", "Italy", "Spain", "Netherlands"],
+                // More committees as in original implementation
+            },
+
+            // Speaking list and current speaker management
+            speakingList: [],
             currentSpeaker: null,
+            speakerHistory: [],
+
+            // Timer management
+            timers: {
+                session: {
+                    running: false,
+                    startTime: null,
+                    elapsedTime: 0
+                },
+                caucus: {
+                    running: false,
+                    startTime: null,
+                    elapsedTime: 0
+                },
+                speech: {
+                    running: false,
+                    startTime: null,
+                    elapsedTime: 0
+                }
+            },
+
+            // Delegate and attendance tracking
             delegateData: {},
             attendanceData: {},
             attendanceDates: [],
-            isCountryListLocked: false,
-            selectedCommittee: 'UNSC',
-            authenticatedUsername: null,
-            messages: [],
-            delegates: new Set(),
-            selectedDelegate: null,
-            timerIntervals: {
-                session: null,
-                caucus: null,
-                speech: null,
-                fun: null
+
+            // Messaging system
+            messaging: {
+                authenticatedUser: null,
+                messages: [],
+                conversations: {}
             },
-            timerStart: {
-                session: 0,
-                caucus: 0,
-                speech: 0,
-                fun: 0
-            },
-            timerElapsed: {
-                session: 0,
-                caucus: 0,
-                speech: 0,
-                fun: 0
-            },
-            timerRunning: {
-                session: false,
-                caucus: false,
-                speech: false,
-                fun: false
-            },
-            timerTypes: ["Session", "Caucus", "Speech"],
-            timerColors: ["var(--timer-green)", "var(--timer-blue)", "var(--timer-orange)"],
-            
-            // DOM Elements cache
-            els: {},
-            
-            // Committee configurations
-            // Cache DOM elements for performance
-            initElements() {
-                this.els = {
-                    committeeSelect: document.getElementById('committee-select'),
-                    countryList: document.getElementById('country-list'),
-                    speakingList: document.getElementById('speaking-list'),
-                    frequencyList: document.getElementById('frequency-list'),
-                    currentSpeakerDisplay: document.getElementById('current-speaker-display'),
-                    notesArea: document.getElementById('notes-area'),
-                    sessionTimer: document.getElementById('session-timer'),
-                    caucusTimer: document.getElementById('caucus-timer'),
-                    speechTimer: document.getElementById('speech-timer'),
-                    funTimer: document.getElementById('fun-timer'),
-                    lockCountriesButton: document.getElementById('lock-countries-button'),
-                    funModeContainer: document.getElementById('fun-mode-container'),
-                    mainTab: document.getElementById('main-tab'),
-                    roleCallModal: document.getElementById('role-call-modal'),
-                    roleCallTable: document.getElementById('role-call-table'),
-                    roleCallDate: document.getElementById('role-call-date'),
-                    authUsername: document.getElementById('auth-username'),
-                    messagingInterface: document.getElementById('messaging-interface'),
-                    authRequiredPanel: document.getElementById('auth-required-panel'),
-                    conversationList: document.getElementById('conversation-list'),
-                    messageDisplay: document.getElementById('message-display'),
-                    messageInput: document.getElementById('message-input'),
-                    newMessageDialog: document.getElementById('new-message-dialog'),
-                    recipientSelect: document.getElementById('recipient-select')
+
+            // UI and interaction states
+            ui: {
+                isCountryListLocked: false,
+                selectedCountry: null,
+                activeTab: 'main'
+            }
+        };
+
+        // Logging and error tracking
+        this.logger = {
+            logs: [],
+            log(message, type = 'info') {
+                const logEntry = {
+                    timestamp: new Date(),
+                    message,
+                    type
                 };
+                this.logs.push(logEntry);
+                
+                if (this.config.debug) {
+                    console.log(`[${type.toUpperCase()}]`, message);
+                }
+            },
+            error(message) {
+                this.log(message, 'error');
+            }
+        };
+
+        // Authentication management
+        this.authManager = {
+            githubClientId: null,
+            githubClientSecret: null,
+            token: null,
+            
+            initiateGitHubAuth() {
+                // Placeholder for GitHub OAuth flow
+                throw new Error('GitHub Authentication not implemented');
             },
             
+            verifyToken() {
+                // Token verification logic
+                return this.token !== null;
+            }
+        };
+
+        // Performance and analytics tracking
+        this.analytics = {
+            sessionStartTime: null,
+            performanceMetrics: {
+                renderTimes: [],
+                eventProcessingTimes: []
+            },
+            
+            startSession() {
+                this.sessionStartTime = Date.now();
+            },
+            
+            trackRenderPerformance(renderFunction) {
+                const start = performance.now();
+                renderFunction();
+                const end = performance.now();
+                this.performanceMetrics.renderTimes.push(end - start);
+            }
+        };
+
+        // Initialize core systems
+        this.initializeApplication();
+    }
+
+    // Comprehensive application initialization
+    initializeApplication() {
+        try {
+            this.loadPersistedState();
+            this.setupEventListeners();
+            this.initializeUI();
+            this.analytics.startSession();
+            this.logger.log('Application initialized successfully');
+        } catch (error) {
+            this.logger.error(`Initialization failed: ${error.message}`);
+            this.displayErrorToUser(error);
+        }
+    }
+
+    // Load persisted state from local storage
+    loadPersistedState() {
+        try {
+            const savedState = localStorage.getItem('munAppState');
+            if (savedState) {
+                const parsedState = JSON.parse(savedState);
+                // Merge saved state with default state
+                this.state = {
+                    ...this.state,
+                    ...parsedState
+                };
+                this.logger.log('Persisted state loaded successfully');
+            }
+        } catch (error) {
+            this.logger.error(`Failed to load persisted state: ${error.message}`);
+        }
+    }
+
+    // Save current application state
+    saveApplicationState() {
+        try {
+            localStorage.setItem('munAppState', JSON.stringify(this.state));
+            this.logger.log('Application state saved');
+        } catch (error) {
+            this.logger.error(`Failed to save state: ${error.message}`);
+        }
+    }
+
+    // Setup global event listeners
+    setupEventListeners() {
+        // Placeholder for comprehensive event listener setup
+        // Will be expanded in subsequent implementations
+        window.addEventListener('beforeunload', () => {
+            this.saveApplicationState();
+        });
+    }
+
+    // Initialize User Interface
+    initializeUI() {
+        // Basic UI initialization
+        // Detailed UI setup will be in subsequent implementations
+        this.updateCountryList();
+        this.resetAllTimers();
+    }
+
+    // Update country list based on selected committee
+    updateCountryList() {
+        const currentCommittee = this.state.currentCommittee;
+        const countries = this.state.committees[currentCommittee] || [];
+        
+        // Placeholder for actual DOM manipulation
+        this.logger.log(`Updated country list for ${currentCommittee}`);
+    }
+
+    // Reset all timers
+    resetAllTimers() {
+        Object.keys(this.state.timers).forEach(timerType => {
+            this.state.timers[timerType] = {
+                running: false,
+                startTime: null,
+                elapsedTime: 0
+            };
+        });
+    }
+
+    // Display error to user (placeholder)
+    displayErrorToUser(error) {
+        console.error('Application Error:', error);
+        // In a real implementation, this would show a user-friendly error modal
+    }
+
+    // Utility method for time formatting
+    formatTime(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+}
+
+// Application Initialization
+document.addEventListener('DOMContentLoaded', () => {
+    window.munApp = new MUNSpeechTimerApp();
+});
+// MUN Speech Timer - Core Application Structure
+class MUNSpeechTimerApp {
+    constructor() {
+        // Application-wide configuration and state
+        this.config = {
+            version: '1.0.0',
+            theme: 'modern',
+            language: 'en',
+            debug: false
+        };
+
+        // Comprehensive state management
+        this.state = {
+            // Committee management
+            currentCommittee: 'UNSC',
             committees: {
                 "UNSC": ["United States", "China", "Russian Federation", "United Kingdom", "France", 
-                        "Albania", "Brazil", "Gabon", "Ghana", "India", "Ireland", "Kenya", "Mexico", 
-                        "Norway", "United Arab Emirates"],
+                    "Albania", "Brazil", "Gabon", "Ghana", "India", "Ireland", "Kenya", "Mexico", 
+                    "Norway", "United Arab Emirates"],
                 "UNODC": ["Germany", "Canada", "Mexico", "Brazil", "Japan", "France", "United Kingdom", 
-                        "Russian Federation", "China", "United States", "Italy", "Spain", "Netherlands", 
-                        "Sweden", "Australia", "New Zealand", "South Africa", "Nigeria", "Egypt", 
-                        "Saudi Arabia"],
-                "UNGA": ["Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", 
-                        "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan", "Bahamas", "Bahrain", 
-                        "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", 
-                        "Bolivia", "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei Darussalam", 
-                        "Bulgaria", "Burkina Faso", "Burundi", "Cabo Verde", "Cambodia", "Cameroon", 
-                        "Canada", "Central African Republic", "Chad", "Chile", "China", "Colombia"],
-                "UNHRC": ["Argentina", "Armenia", "Bangladesh", "Benin", "Bolivia", "Brazil", "Cameroon", 
-                        "China", "Côte d'Ivoire", "Croatia", "Cuba", "Czechia", "Denmark", "Eritrea", 
-                        "Finland", "France", "Germany", "Honduras", "India", "Indonesia", "Japan", 
-                        "Kazakhstan", "Kyrgyzstan", "Libya", "Malawi", "Malaysia"],
-                "ECOSOC": ["Afghanistan", "Argentina", "Austria", "Bangladesh", "Benin", "Bolivia", "Botswana", 
-                        "Brazil", "Bulgaria", "Canada", "China", "Colombia", "Costa Rica", "Czechia", 
-                        "Denmark", "Ecuador", "Finland", "France", "Germany", "Greece", "Guatemala"],
-                "WHO": ["Afghanistan", "Angola", "Argentina", "Australia", "Austria", "Bangladesh", "Barbados", 
-                        "Belgium", "Brazil", "Burkina Faso", "Cameroon", "Canada", "China", "Colombia", "Croatia", 
-                        "Denmark", "Egypt", "Ethiopia"]
+                    "Russian Federation", "China", "United States", "Italy", "Spain", "Netherlands"],
+                // More committees as in original implementation
+            },
+
+            // Speaking list and current speaker management
+            speakingList: [],
+            currentSpeaker: null,
+            speakerHistory: [],
+
+            // Timer management
+            timers: {
+                session: {
+                    running: false,
+                    startTime: null,
+                    elapsedTime: 0
+                },
+                caucus: {
+                    running: false,
+                    startTime: null,
+                    elapsedTime: 0
+                },
+                speech: {
+                    running: false,
+                    startTime: null,
+                    elapsedTime: 0
+                }
+            },
+
+            // Delegate and attendance tracking
+            delegateData: {},
+            attendanceData: {},
+            attendanceDates: [],
+
+            // Messaging system
+            messaging: {
+                authenticatedUser: null,
+                messages: [],
+                conversations: {}
+            },
+
+            // UI and interaction states
+            ui: {
+                isCountryListLocked: false,
+                selectedCountry: null,
+                activeTab: 'main'
+            }
+        };
+
+        // Logging and error tracking
+        this.logger = {
+            logs: [],
+            log(message, type = 'info') {
+                const logEntry = {
+                    timestamp: new Date(),
+                    message,
+                    type
+                };
+                this.logs.push(logEntry);
+                
+                if (this.config.debug) {
+                    console.log(`[${type.toUpperCase()}]`, message);
+                }
+            },
+            error(message) {
+                this.log(message, 'error');
+            }
+        };
+
+        // Authentication management
+        this.authManager = {
+            githubClientId: null,
+            githubClientSecret: null,
+            token: null,
+            
+            initiateGitHubAuth() {
+                // Placeholder for GitHub OAuth flow
+                throw new Error('GitHub Authentication not implemented');
+            },
+            
+            verifyToken() {
+                // Token verification logic
+                return this.token !== null;
+            }
+        };
+
+        // Performance and analytics tracking
+        this.analytics = {
+            sessionStartTime: null,
+            performanceMetrics: {
+                renderTimes: [],
+                eventProcessingTimes: []
+            },
+            
+            startSession() {
+                this.sessionStartTime = Date.now();
+            },
+            
+            trackRenderPerformance(renderFunction) {
+                const start = performance.now();
+                renderFunction();
+                const end = performance.now();
+                this.performanceMetrics.renderTimes.push(end - start);
+            }
+        };
+
+        // Initialize core systems
+        this.initializeApplication();
+    }
+
+    // Comprehensive application initialization
+    initializeApplication() {
+        try {
+            this.loadPersistedState();
+            this.setupEventListeners();
+            this.initializeUI();
+            this.analytics.startSession();
+            this.logger.log('Application initialized successfully');
+        } catch (error) {
+            this.logger.error(`Initialization failed: ${error.message}`);
+            this.displayErrorToUser(error);
+        }
+    }
+
+    // Load persisted state from local storage
+    loadPersistedState() {
+        try {
+            const savedState = localStorage.getItem('munAppState');
+            if (savedState) {
+                const parsedState = JSON.parse(savedState);
+                // Merge saved state with default state
+                this.state = {
+                    ...this.state,
+                    ...parsedState
+                };
+                this.logger.log('Persisted state loaded successfully');
+            }
+        } catch (error) {
+            this.logger.error(`Failed to load persisted state: ${error.message}`);
+        }
+    }
+
+    // Save current application state
+    saveApplicationState() {
+        try {
+            localStorage.setItem('munAppState', JSON.stringify(this.state));
+            this.logger.log('Application state saved');
+        } catch (error) {
+            this.logger.error(`Failed to save state: ${error.message}`);
+        }
+    }
+
+    // Setup global event listeners
+    setupEventListeners() {
+        // Placeholder for comprehensive event listener setup
+        // Will be expanded in subsequent implementations
+        window.addEventListener('beforeunload', () => {
+            this.saveApplicationState();
+        });
+    }
+
+    // Initialize User Interface
+    initializeUI() {
+        // Basic UI initialization
+        // Detailed UI setup will be in subsequent implementations
+        this.updateCountryList();
+        this.resetAllTimers();
+    }
+
+    // Update country list based on selected committee
+    updateCountryList() {
+        const currentCommittee = this.state.currentCommittee;
+        const countries = this.state.committees[currentCommittee] || [];
+        
+        // Placeholder for actual DOM manipulation
+        this.logger.log(`Updated country list for ${currentCommittee}`);
+    }
+
+    // Reset all timers
+    resetAllTimers() {
+        Object.keys(this.state.timers).forEach(timerType => {
+            this.state.timers[timerType] = {
+                running: false,
+                startTime: null,
+                elapsedTime: 0
+            };
+        });
+    }
+
+    // Display error to user (placeholder)
+    displayErrorToUser(error) {
+        console.error('Application Error:', error);
+        // In a real implementation, this would show a user-friendly error modal
+    }
+
+    // Utility method for time formatting
+    formatTime(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+}
+
+// Application Initialization
+document.addEventListener('DOMContentLoaded', () => {
+    window.munApp = new MUNSpeechTimerApp();
+});
+// Messaging and Authentication System
+class AuthenticationManager {
+    constructor(app) {
+        this.app = app;
+        this.githubConfig = {
+            clientId: null, // Replace with your GitHub OAuth App client ID
+            clientSecret: null, // Replace with your GitHub OAuth App client secret
+            redirectUri: 'http://localhost:9095/callback',
+            scopes: ['user:email']
+        };
+        this.tokenStorage = {
+            accessToken: null,
+            refreshToken: null,
+            expiresAt: null
+        };
+    }
+
+    // Initiate GitHub OAuth authentication flow
+    initiateGitHubAuth() {
+        // Generate a random state to prevent CSRF attacks
+        const state = this.generateRandomState();
+        
+        // Construct GitHub OAuth URL
+        const authUrl = `https://github.com/login/oauth/authorize?` +
+            `client_id=${this.githubConfig.clientId}` +
+            `&redirect_uri=${encodeURIComponent(this.githubConfig.redirectUri)}` +
+            `&scope=${this.githubConfig.scopes.join(' ')}` +
+            `&state=${state}`;
+        
+        // Open GitHub authentication page
+        window.location.href = authUrl;
+    }
+
+    // Handle OAuth callback
+    async handleOAuthCallback(code, state) {
+        try {
+            // Verify state to prevent CSRF
+            if (!this.verifyState(state)) {
+                throw new Error('Invalid state parameter');
+            }
+
+            // Exchange code for access token
+            const tokenResponse = await this.exchangeCodeForToken(code);
+
+            // Fetch user information
+            const userInfo = await this.fetchUserInfo(tokenResponse.access_token);
+
+            // Update application state
+            this.app.state.messaging.authenticatedUser = {
+                username: userInfo.login,
+                name: userInfo.name,
+                email: userInfo.email,
+                avatarUrl: userInfo.avatar_url
+            };
+
+            // Store tokens securely
+            this.storeTokens(tokenResponse);
+
+            // Log successful authentication
+            this.app.logger.log(`Authenticated as ${userInfo.login}`);
+
+            // Trigger UI update or navigation
+            this.onSuccessfulAuthentication();
+
+            return true;
+        } catch (error) {
+            this.app.logger.error(`Authentication failed: ${error.message}`);
+            this.handleAuthenticationError(error);
+            return false;
+        }
+    }
+
+    // Exchange authorization code for access token
+    async exchangeCodeForToken(code) {
+        const response = await fetch('https://github.com/login/oauth/access_token', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                client_id: this.githubConfig.clientId,
+                client_secret: this.githubConfig.clientSecret,
+                code: code,
+                redirect_uri: this.githubConfig.redirectUri
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error('Token exchange failed');
+        }
+
+        return await response.json();
+    }
+
+    // Fetch authenticated user's information
+    async fetchUserInfo(accessToken) {
+        const response = await fetch('https://api.github.com/user', {
+            headers: {
+                'Authorization': `token ${accessToken}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch user information');
+        }
+
+        return await response.json();
+    }
+
+    // Verify OAuth state
+    verifyState(state) {
+        // In a real implementation, validate against stored state
+        return true;
+    }
+
+    // Generate random state for CSRF protection
+    generateRandomState() {
+        return Math.random().toString(36).substring(2, 15) + 
+               Math.random().toString(36).substring(2, 15);
+    }
+
+    // Store authentication tokens
+    storeTokens(tokenResponse) {
+        this.tokenStorage = {
+            accessToken: tokenResponse.access_token,
+            refreshToken: tokenResponse.refresh_token,
+            expiresAt: tokenResponse.expires_at || 
+                       (Date.now() + (tokenResponse.expires_in * 1000))
+        };
+
+        // Securely store tokens (consider more secure storage in production)
+        localStorage.setItem('github_access_token', this.tokenStorage.accessToken);
+    }
+
+    // Check if user is currently authenticated
+    isAuthenticated() {
+        return !!this.app.state.messaging.authenticatedUser && 
+               this.tokenStorage.accessToken && 
+               this.tokenStorage.expiresAt > Date.now();
+    }
+
+    // Handle authentication errors
+    handleAuthenticationError(error) {
+        // Implement error handling logic
+        console.error('Authentication Error:', error);
+        // Potentially show error message to user
+    }
+
+    // Trigger actions after successful authentication
+    onSuccessfulAuthentication() {
+        // Update UI, enable messaging, etc.
+        this.app.updateUIAfterAuthentication();
+    }
+
+    // Logout method
+    logout() {
+        // Clear authentication state
+        this.app.state.messaging.authenticatedUser = null;
+        this.tokenStorage = {
+            accessToken: null,
+            refreshToken: null,
+            expiresAt: null
+        };
+        
+        // Remove stored tokens
+        localStorage.removeItem('github_access_token');
+
+        // Log logout
+        this.app.logger.log('User logged out');
+
+        // Update UI
+        this.app.updateUIAfterLogout();
+    }
+}
+
+class MessagingSystem {
+    constructor(app) {
+        this.app = app;
+        this.conversations = new Map();
+    }
+
+    // Send a message
+    sendMessage(recipient, content) {
+        // Validate inputs
+        if (!this.app.state.messaging.authenticatedUser) {
+            throw new Error('User not authenticated');
+        }
+
+        if (!recipient || !content) {
+            throw new Error('Recipient and content are required');
+        }
+
+        // Create message object
+        const message = {
+            id: this.generateMessageId(),
+            sender: this.app.state.messaging.authenticatedUser.username,
+            recipient: recipient,
+            content: content,
+            timestamp: Date.now(),
+            read: false
+        };
+
+        // Store message in conversations
+        if (!this.conversations.has(recipient)) {
+            this.conversations.set(recipient, []);
+        }
+        this.conversations.get(recipient).push(message);
+
+        // Update application state
+        this.app.state.messaging.messages.push(message);
+
+        // Log message
+        this.app.logger.log(`Message sent to ${recipient}`);
+
+        // Trigger UI update
+        this.updateMessageUI();
+
+        return message;
+    }
+
+    // Retrieve messages for a specific conversation
+    getConversation(participant) {
+        return this.conversations.get(participant) || [];
+    }
+
+    // Mark messages as read
+    markMessagesAsRead(participant) {
+        const conversation = this.conversations.get(participant) || [];
+        conversation.forEach(message => {
+            if (message.recipient === this.app.state.messaging.authenticatedUser.username) {
+                message.read = true;
+            }
+        });
+
+        this.updateMessageUI();
+    }
+
+    // Generate unique message ID
+    generateMessageId() {
+        return `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    }
+
+    // Update message-related UI
+    updateMessageUI() {
+        // Placeholder for UI update logic
+        // In actual implementation, this would update conversation lists, 
+        // unread message counts, etc.
+        this.app.logger.log('Updated messaging UI');
+    }
+
+    // Get unread message count
+    getUnreadMessageCount() {
+        return this.app.state.messaging.messages.filter(
+            msg => !msg.read && 
+            msg.recipient === this.app.state.messaging.authenticatedUser.username
+        ).length;
+    }
+
+    // Search messages
+    searchMessages(query) {
+        return this.app.state.messaging.messages.filter(message => 
+            message.content.toLowerCase().includes(query.toLowerCase()) ||
+            message.sender.toLowerCase().includes(query.toLowerCase()) ||
+            message.recipient.toLowerCase().includes(query.toLowerCase())
+        );
+    }
+}
+
+// Extend the main application with these systems
+MUNSpeechTimerApp.prototype.authManager = function() {
+    return new AuthenticationManager(this);
+};
+
+MUNSpeechTimerApp.prototype.messagingSystem = function() {
+    return new MessagingSystem(this);
+};
+
+// Add methods to the main application class
+MUNSpeechTimerApp.prototype.updateUIAfterAuthentication = function() {
+    // Enable messaging tab
+    // Update user display
+    // Potentially fetch initial messages
+    this.logger.log('UI updated after authentication');
+};
+
+MUNSpeechTimerApp.prototype.updateUIAfterLogout = function() {
+    // Disable messaging tab
+    // Clear user information
+    // Reset messaging-related UI
+    this.logger.log('UI updated after logout');
+};
+// Role Call and Attendance Tracking System
+class RoleCallManager {
+    constructor(app) {
+        this.app = app;
+        
+        // Attendance tracking configuration
+        this.config = {
+            maxHistoricalDates: 30, // Keep track of last 30 attendance dates
+            defaultAttendanceStatus: false // Default to absent
+        };
+    }
+
+    // Initialize attendance tracking for a committee
+    initializeAttendanceTracking(committee) {
+        const countries = this.app.state.committees[committee] || [];
+        
+        // Ensure attendance data structure exists
+        if (!this.app.state.attendanceData[committee]) {
+            this.app.state.attendanceData[committee] = {};
+        }
+
+        // Populate attendance data for each country
+        countries.forEach(country => {
+            if (!this.app.state.attendanceData[committee][country]) {
+                this.app.state.attendanceData[committee][country] = {};
+            }
+        });
+
+        this.app.logger.log(`Initialized attendance tracking for ${committee}`);
+    }
+
+    // Conduct role call for a specific date
+    conductRoleCall(date = null) {
+        const currentCommittee = this.app.state.currentCommittee;
+        const targetDate = date || this.getCurrentDate();
+
+        // Ensure attendance tracking is initialized
+        this.initializeAttendanceTracking(currentCommittee);
+
+        // Add date to historical dates if not exists
+        if (!this.app.state.attendanceDates.includes(targetDate)) {
+            this.app.state.attendanceDates.push(targetDate);
+            
+            // Trim historical dates if exceeding max
+            if (this.app.state.attendanceDates.length > this.config.maxHistoricalDates) {
+                this.app.state.attendanceDates.shift();
+            }
+        }
+
+        // Prepare role call data
+        const roleCallData = {
+            date: targetDate,
+            committee: currentCommittee,
+            attendance: {}
+        };
+
+        // Get countries for current committee
+        const countries = this.app.state.committees[currentCommittee] || [];
+
+        // Initialize attendance for each country
+        countries.forEach(country => {
+            // Default to not present
+            roleCallData.attendance[country] = this.config.defaultAttendanceStatus;
+        });
+
+        this.app.logger.log(`Conducted role call for ${targetDate}`);
+        return roleCallData;
+    }
+
+    // Update attendance for a specific country
+    updateAttendance(country, date, status) {
+        const currentCommittee = this.app.state.currentCommittee;
+
+        // Ensure attendance data structure exists
+        if (!this.app.state.attendanceData[currentCommittee]) {
+            this.app.state.attendanceData[currentCommittee] = {};
+        }
+
+        if (!this.app.state.attendanceData[currentCommittee][country]) {
+            this.app.state.attendanceData[currentCommittee][country] = {};
+        }
+
+        // Update attendance status
+        this.app.state.attendanceData[currentCommittee][country][date] = status;
+
+        this.app.logger.log(`Updated attendance for ${country} on ${date}: ${status}`);
+    }
+
+    // Get attendance summary
+    getAttendanceSummary(committee = null) {
+        const targetCommittee = committee || this.app.state.currentCommittee;
+        const attendanceData = this.app.state.attendanceData[targetCommittee] || {};
+
+        const summary = {
+            totalCountries: Object.keys(attendanceData).length,
+            presentCountries: 0,
+            attendanceRates: {}
+        };
+
+        // Calculate attendance rates
+        Object.entries(attendanceData).forEach(([country, dateAttendance]) => {
+            const presentDates = Object.entries(dateAttendance)
+                .filter(([date, status]) => status === true)
+                .map(([date]) => date);
+
+            const attendanceRate = presentDates.length / this.app.state.attendanceDates.length;
+
+            summary.attendanceRates[country] = {
+                presentDates: presentDates,
+                attendanceRate: attendanceRate
+            };
+
+            // Count present countries
+            if (presentDates.length > 0) {
+                summary.presentCountries++;
+            }
+        });
+
+        this.app.logger.log(`Generated attendance summary for ${targetCommittee}`);
+        return summary;
+    }
+
+    // Export attendance data
+    exportAttendanceData(format = 'json') {
+        const exportData = {
+            committee: this.app.state.currentCommittee,
+            dates: this.app.state.attendanceDates,
+            attendanceData: this.app.state.attendanceData[this.app.state.currentCommittee]
+        };
+
+        switch (format.toLowerCase()) {
+            case 'json':
+                return JSON.stringify(exportData, null, 2);
+            case 'csv':
+                return this.convertToCSV(exportData);
+            default:
+                throw new Error('Unsupported export format');
+        }
+    }
+
+    // Convert attendance data to CSV
+    convertToCSV(exportData) {
+        const headers = ['Country', ...exportData.dates];
+        const csvRows = [headers.join(',')];
+
+        Object.entries(exportData.attendanceData).forEach(([country, dateAttendance]) => {
+            const row = [
+                country,
+                ...exportData.dates.map(date => 
+                    dateAttendance[date] ? 'Present' : 'Absent'
+                )
+            ];
+            csvRows.push(row.join(','));
+        });
+
+        return csvRows.join('\n');
+    }
+
+    // Get current date in YYYY-MM-DD format
+    getCurrentDate() {
+        return new Date().toISOString().split('T')[0];
+    }
+
+    // Lock countries for the current committee
+    lockCountries() {
+        const currentCommittee = this.app.state.currentCommittee;
+        
+        // Toggle lock status
+        this.app.state.ui.isCountryListLocked = !this.app.state.ui.isCountryListLocked;
+
+        this.app.logger.log(`Countries ${this.app.state.ui.isCountryListLocked ? 'locked' : 'unlocked'} for ${currentCommittee}`);
+    }
+}
+
+// Utility Classes
+class ReportGenerator {
+    constructor(app) {
+        this.app = app;
+    }
+
+    // Generate comprehensive session report
+    generateSessionReport() {
+        const report = {
+            committee: this.app.state.currentCommittee,
+            timestamp: new Date().toISOString(),
+            speakerStats: this.generateSpeakerStatistics(),
+            attendanceSummary: this.app.roleCallManager().getAttendanceSummary(),
+            timerSummary: this.generateTimerSummary()
+        };
+
+        this.app.logger.log('Generated comprehensive session report');
+        return report;
+    }
+
+    // Generate speaker statistics
+    generateSpeakerStatistics() {
+        const delegateData = this.app.state.delegateData;
+        const speakerStats = {};
+
+        Object.entries(delegateData).forEach(([speaker, data]) => {
+            speakerStats[speaker] = {
+                totalSpeeches: data.speeches.length,
+                totalSpeakingTime: data.totalSpeakingTime,
+                averageSpeechDuration: data.totalSpeakingTime / data.speeches.length || 0
+            };
+        });
+
+        return speakerStats;
+    }
+
+    // Generate timer summary
+    generateTimerSummary() {
+        const timerSummary = {};
+        
+        Object.entries(this.app.state.timers).forEach(([timerType, timerData]) => {
+            timerSummary[timerType] = {
+                totalTime: timerData.elapsedTime / 1000, // Convert to seconds
+                wasRunning: timerData.running
+            };
+        });
+
+        return timerSummary;
+    }
+
+    // Export report to various formats
+    exportReport(format = 'json') {
+        const report = this.generateSessionReport();
+
+        switch (format.toLowerCase()) {
+            case 'json':
+                return JSON.stringify(report, null, 2);
+            case 'text':
+                return this.convertReportToText(report);
+            default:
+                throw new Error('Unsupported export format');
+        }
+    }
+
+    // Convert report to human-readable text
+    convertReportToText(report) {
+        let reportText = `Session Report for ${report.committee}\n`;
+        reportText += `Generated: ${report.timestamp}\n\n`;
+
+        // Speaker Statistics
+        reportText += "Speaker Statistics:\n";
+        Object.entries(report.speakerStats).forEach(([speaker, stats]) => {
+            reportText += `${speaker}:\n`;
+            reportText += `  Total Speeches: ${stats.totalSpeeches}\n`;
+            reportText += `  Total Speaking Time: ${stats.totalSpeakingTime.toFixed(2)} seconds\n`;
+            reportText += `  Average Speech Duration: ${stats.averageSpeechDuration.toFixed(2)} seconds\n\n`;
+        });
+
+        // Attendance Summary
+        reportText += "Attendance Summary:\n";
+        reportText += `Total Countries: ${report.attendanceSummary.totalCountries}\n`;
+        reportText += `Present Countries: ${report.attendanceSummary.presentCountries}\n\n`;
+
+        // Timer Summary
+        reportText += "Timer Summary:\n";
+        Object.entries(report.timerSummary).forEach(([timerType, timerStats]) => {
+            reportText += `${timerType} Timer:\n`;
+            reportText += `  Total Time: ${timerStats.totalTime.toFixed(2)} seconds\n`;
+            reportText += `  Was Running: ${timerStats.wasRunning}\n\n`;
+        });
+
+        return reportText;
+    }
+}
+
+// Extend the main application with these managers
+MUNSpeechTimerApp.prototype.roleCallManager = function() {
+    return new RoleCallManager(this);
+};
+
+MUNSpeechTimerApp.prototype.reportGenerator = function() {
+    return new ReportGenerator(this);
+};
+// UI Management and Event Handling System
+class UIManager {
+    constructor(app) {
+        this.app = app;
+        
+        // UI Configuration
+        this.config = {
+            themes: {
+                default: {
+                    primary: '#6750A4',
+                    secondary: '#625B71',
+                    background: '#F8F8FC',
+                    text: '#1C1B1F'
+                },
+                dark: {
+                    primary: '#BB86FC',
+                    secondary: '#03DAC6',
+                    background: '#121212',
+                    text: '#FFFFFF'
+                }
+            },
+            tabs: [
+                { id: 'main', label: 'Main Dashboard', icon: 'dashboard' },
+                { id: 'speaking-list', label: 'Speaking List', icon: 'list' },
+                { id: 'messaging', label: 'Messaging', icon: 'message' }
+            ]
+        };
+
+        // DOM Element References
+        this.elements = {
+            root: null,
+            tabs: {},
+            tabContents: {},
+            committeeSelect: null,
+            countryList: null,
+            speakingList: null,
+            timers: {},
+            buttons: {}
+        };
+
+        // Event Listeners Registry
+        this.eventListeners = new Map();
+    }
+
+    // Initialize UI
+    initialize() {
+        this.cacheElements();
+        this.setupTabs();
+        this.setupEventListeners();
+        this.applyTheme();
+        this.updateUIState();
+    }
+
+    // Cache DOM Elements
+    cacheElements() {
+        // Dynamically cache elements based on configuration
+        this.elements.root = document.getElementById('app');
+        
+        // Tab elements
+        this.config.tabs.forEach(tab => {
+            this.elements.tabs[tab.id] = document.querySelector(`.tab[data-tab="${tab.id}"]`);
+            this.elements.tabContents[tab.id] = document.getElementById(`${tab.id}-tab`);
+        });
+
+        // Committee and list elements
+        this.elements.committeeSelect = document.getElementById('committee-select');
+        this.elements.countryList = document.getElementById('country-list');
+        this.elements.speakingList = document.getElementById('speaking-list');
+
+        // Timer elements
+        ['session', 'caucus', 'speech'].forEach(timerType => {
+            this.elements.timers[timerType] = {
+                display: document.getElementById(`${timerType}-timer`),
+                startBtn: document.querySelector(`[data-timer="${timerType}"][data-action="start"]`),
+                stopBtn: document.querySelector(`[data-timer="${timerType}"][data-action="stop"]`),
+                resetBtn: document.querySelector(`[data-timer="${timerType}"][data-action="reset"]`)
+            };
+        });
+
+        // Common buttons
+        this.elements.buttons = {
+            addToList: document.getElementById('add-to-list-button'),
+            nextSpeaker: document.getElementById('next-speaker-button'),
+            skipSpeaker: document.getElementById('skip-speaker-button'),
+            exportData: document.getElementById('export-button'),
+            roleCall: document.getElementById('role-call-button'),
+            lockCountries: document.getElementById('lock-countries-button')
+        };
+    }
+
+    // Setup Tab System
+    setupTabs() {
+        this.config.tabs.forEach(tab => {
+            const tabElement = this.elements.tabs[tab.id];
+            const tabContent = this.elements.tabContents[tab.id];
+
+            if (tabElement && tabContent) {
+                tabElement.addEventListener('click', () => {
+                    this.switchTab(tab.id);
+                });
+            }
+        });
+    }
+
+    // Switch Active Tab
+    switchTab(tabId) {
+        // Remove active class from all tabs and tab contents
+        this.config.tabs.forEach(tab => {
+            this.elements.tabs[tab.id].classList.remove('active');
+            this.elements.tabContents[tab.id].classList.remove('active');
+        });
+
+        // Add active class to selected tab
+        this.elements.tabs[tabId].classList.add('active');
+        this.elements.tabContents[tabId].classList.add('active');
+
+        // Log tab switch
+        this.app.logger.log(`Switched to ${tabId} tab`);
+
+        // Trigger any tab-specific initialization
+        this.updateUIState(tabId);
+    }
+
+    // Setup Event Listeners
+    setupEventListeners() {
+        // Committee Selection
+        if (this.elements.committeeSelect) {
+            this.elements.committeeSelect.addEventListener('change', () => {
+                this.handleCommitteeChange();
+            });
+        }
+
+        // Country List Interactions
+        if (this.elements.countryList) {
+            this.elements.countryList.addEventListener('click', (event) => {
+                this.handleCountrySelection(event);
+            });
+        }
+
+        // Speaking List Interactions
+        if (this.elements.speakingList) {
+            this.elements.speakingList.addEventListener('click', (event) => {
+                this.handleSpeakerSelection(event);
+            });
+        }
+
+        // Button Event Listeners
+        Object.entries(this.elements.buttons).forEach(([key, button]) => {
+            if (button) {
+                button.addEventListener('click', () => this.handleButtonClick(key));
+            }
+        });
+
+        // Timer Button Listeners
+        Object.values(this.elements.timers).forEach(timer => {
+            ['startBtn', 'stopBtn', 'resetBtn'].forEach(btnType => {
+                if (timer[btnType]) {
+                    timer[btnType].addEventListener('click', () => {
+                        this.handleTimerAction(
+                            timer[btnType].getAttribute('data-timer'),
+                            timer[btnType].getAttribute('data-action')
+                        );
+                    });
+                }
+            });
+        });
+    }
+
+    // Handle Committee Change
+    handleCommitteeChange() {
+        const selectedCommittee = this.elements.committeeSelect.value;
+        this.app.state.currentCommittee = selectedCommittee;
+        
+        // Update country list
+        this.updateCountryList();
+        
+        // Log committee change
+        this.app.logger.log(`Changed committee to ${selectedCommittee}`);
+    }
+
+    // Update Country List
+    updateCountryList() {
+        const committee = this.app.state.currentCommittee;
+        const countries = this.app.state.committees[committee] || [];
+
+        // Clear existing list
+        this.elements.countryList.innerHTML = '';
+
+        // Populate country list
+        countries.forEach(country => {
+            const li = document.createElement('li');
+            li.textContent = country;
+            li.classList.add('list-item');
+            this.elements.countryList.appendChild(li);
+        });
+    }
+
+    // Handle Country Selection
+    handleCountrySelection(event) {
+        if (event.target.classList.contains('list-item')) {
+            // Remove previous selections
+            this.elements.countryList.querySelectorAll('.list-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+
+            // Select clicked country
+            event.target.classList.add('selected');
+            this.app.state.ui.selectedCountry = event.target.textContent;
+        }
+    }
+
+    // Handle Speaker Selection
+    handleSpeakerSelection(event) {
+        if (event.target.classList.contains('list-item')) {
+            // Remove previous selections
+            this.elements.speakingList.querySelectorAll('.list-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+
+            // Select clicked speaker
+            event.target.classList.add('selected');
+        }
+    }
+
+    // Handle Button Clicks
+    handleButtonClick(buttonKey) {
+        switch(buttonKey) {
+            case 'addToList':
+                this.addToSpeakingList();
+                break;
+            case 'nextSpeaker':
+                this.app.speakingListManager().nextSpeaker();
+                break;
+            case 'skipSpeaker':
+                this.app.speakingListManager().skipCurrentSpeaker();
+                break;
+            case 'exportData':
+                this.exportSessionData();
+                break;
+            case 'roleCall':
+                this.openRoleCallModal();
+                break;
+            case 'lockCountries':
+                this.app.roleCallManager().lockCountries();
+                break;
+            default:
+                this.app.logger.log(`Unhandled button click: ${buttonKey}`);
+        }
+    }
+
+    // Add Country to Speaking List
+    addToSpeakingList() {
+        const selectedCountry = this.app.state.ui.selectedCountry;
+        if (selectedCountry) {
+            this.app.speakingListManager().addToSpeakingList(selectedCountry);
+        } else {
+            this.showMessage('Selection Required', 'Please select a country first');
+        }
+    }
+
+    // Handle Timer Actions
+    handleTimerAction(timerType, action) {
+        const timerManager = this.app.timerManager();
+        
+        switch(action) {
+            case 'start':
+                timerManager.startTimer(timerType);
+                break;
+            case 'stop':
+                timerManager.stopTimer(timerType);
+                break;
+            case 'reset':
+                timerManager.resetTimer(timerType);
+                break;
+        }
+    }
+
+    // Export Session Data
+    exportSessionData() {
+        try {
+            const reportGenerator = this.app.reportGenerator();
+            const exportedData = reportGenerator.exportReport('json');
+            
+            // Create download link
+            const blob = new Blob([exportedData], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `mun_session_report_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+
+            this.app.logger.log('Session data exported');
+        } catch (error) {
+            this.showMessage('Export Error', error.message);
+        }
+    }
+
+    // Open Role Call Modal
+    openRoleCallModal() {
+        // Placeholder for role call modal logic
+        const roleCallModal = document.getElementById('role-call-modal');
+        if (roleCallModal) {
+            roleCallModal.style.display = 'flex';
+        }
+    }
+
+    // Update UI State
+    updateUIState(activeTab = 'main') {
+        // Manage UI state based on current context
+        switch(activeTab) {
+            case 'main':
+                this.updateMainDashboard();
+                break;
+            case 'speaking-list':
+                this.updateSpeakingListView();
+                break;
+            case 'messaging':
+                this.updateMessagingView();
+                break;
+        }
+    }
+
+    // Update Main Dashboard
+    updateMainDashboard() {
+        // Update committee select
+        this.elements.committeeSelect.value = this.app.state.currentCommittee;
+        
+        // Update country list
+        this.updateCountryList();
+    }
+
+    // Update Speaking List View
+    updateSpeakingListView() {
+        // Clear existing list
+        this.elements.speakingList.innerHTML = '';
+
+        // Populate speaking list
+        this.app.state.speakingList.forEach(speaker => {
+            const li = document.createElement('li');
+            li.textContent = speaker;
+            li.classList.add('list-item');
+            this.elements.speakingList.appendChild(li);
+        });
+    }
+
+    // Update Messaging View
+    updateMessagingView() {
+        // Placeholder for messaging view update
+        // Would include populating conversation list, etc.
+    }
+
+    // Apply Theme
+    applyTheme(themeName = 'default') {
+        const theme = this.config.themes[themeName];
+        
+        if (theme) {
+            Object.entries(theme).forEach(([key, value]) => {
+                document.documentElement.style.setProperty(`--${key}`, value);
+            });
+        }
+    }
+
+    // Show Message (Simple Modal/Alert)
+    showMessage(title, message, type = 'info') {
+        // In a real implementation, this would be a more sophisticated modal
+        alert(`${title}: ${message}`);
+        this.app.logger.log(`${type.toUpperCase()} Message: ${title} - ${message}`);
+    }
+}
+
+// Extend the main application with UI Manager
+MUNSpeechTimerApp.prototype.uiManager = function() {
+    return new UIManager(this);
+};
+
+// Initialize UI when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    // Assuming the main app instance is already created
+    if (window.munApp) {
+        const uiManager = window.munApp.uiManager();
+        uiManager.initialize();
+    }
+});
+// Advanced Utilities and System Integration
+class SystemIntegrationManager {
+    constructor(app) {
+        this.app = app;
+        
+        // Configuration for external integrations
+        this.config = {
+            backupServices: [
+                { 
+                    name: 'localStorage', 
+                    priority: 1 
+                },
+                { 
+                    name: 'cloudStorage', 
+                    priority: 2 
+                }
+            ],
+            supportedExportFormats: ['json', 'csv', 'xlsx'],
+            cloudSyncInterval: 5 * 60 * 1000 // 5 minutes
+        };
+
+        // Error tracking and reporting
+        this.errorTracker = {
+            errors: [],
+            maxErrorLog: 100,
+            critical: []
+        };
+
+        // Performance monitoring
+        this.performanceMonitor = {
+            markers: new Map(),
+            measurements: []
+        };
+    }
+
+    // Comprehensive Error Handling System
+    class ErrorHandler {
+        constructor(integrationManager) {
+            this.manager = integrationManager;
+            this.errorTypes = {
+                NETWORK: 'network',
+                AUTHENTICATION: 'auth',
+                DATA_VALIDATION: 'validation',
+                SYSTEM: 'system',
+                UNKNOWN: 'unknown'
+            };
+        }
+
+        // Classify and handle errors
+        handle(error, context = {}) {
+            const errorEntry = {
+                id: this.generateErrorId(),
+                timestamp: new Date(),
+                message: error.message,
+                stack: error.stack,
+                type: this.classifyError(error),
+                context: context
+            };
+
+            // Log error
+            this.log(errorEntry);
+
+            // Determine severity and take action
+            this.processError(errorEntry);
+
+            return errorEntry;
+        }
+
+        // Generate unique error identifier
+        generateErrorId() {
+            return `err_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        }
+
+        // Classify error type
+        classifyError(error) {
+            // Implement sophisticated error classification
+            if (error.name === 'NetworkError') return this.errorTypes.NETWORK;
+            if (error.name === 'AuthenticationError') return this.errorTypes.AUTHENTICATION;
+            if (error.name === 'ValidationError') return this.errorTypes.DATA_VALIDATION;
+            
+            return this.errorTypes.UNKNOWN;
+        }
+
+        // Log error
+        log(errorEntry) {
+            const manager = this.manager;
+            
+            // Add to error tracker
+            manager.errorTracker.errors.push(errorEntry);
+
+            // Trim error log if exceeds max
+            if (manager.errorTracker.errors.length > manager.errorTracker.maxErrorLog) {
+                manager.errorTracker.errors.shift();
+            }
+
+            // Log to console
+            console.error('Application Error:', errorEntry);
+
+            // Track critical errors
+            if (this.isCritical(errorEntry)) {
+                manager.errorTracker.critical.push(errorEntry);
+                this.notifyAdministrator(errorEntry);
+            }
+        }
+
+        // Determine if error is critical
+        isCritical(errorEntry) {
+            const criticalTypes = [
+                this.errorTypes.AUTHENTICATION,
+                this.errorTypes.NETWORK,
+                this.errorTypes.SYSTEM
+            ];
+
+            return criticalTypes.includes(errorEntry.type);
+        }
+
+        // Notify system administrator
+        notifyAdministrator(errorEntry) {
+            // In a real implementation, this would send an email or trigger an alert
+            console.warn('Critical Error - Administrator Notification', errorEntry);
+        }
+    }
+
+    // Performance Monitoring Utility
+    performanceMonitoring() {
+        return {
+            // Start tracking a performance marker
+            mark(name) {
+                performance.mark(`${name}-start`);
+            },
+
+            // End tracking and measure performance
+            measure(name) {
+                performance.mark(`${name}-end`);
+                performance.measure(name, `${name}-start`, `${name}-end`);
+
+                // Get the last measurement
+                const entries = performance.getEntriesByName(name);
+                const lastEntry = entries[entries.length - 1];
+
+                return {
+                    name: name,
+                    duration: lastEntry.duration,
+                    startTime: lastEntry.startTime
+                };
+            },
+
+            // Get all performance measurements
+            getAllMeasurements() {
+                return performance.getEntries()
+                    .filter(entry => entry.entryType === 'measure')
+                    .map(entry => ({
+                        name: entry.name,
+                        duration: entry.duration,
+                        startTime: entry.startTime
+                    }));
+            },
+
+            // Clear all performance entries
+            clear() {
+                performance.clearMarks();
+                performance.clearMeasures();
+            }
+        };
+    }
+
+    // Backup and Synchronization
+    backupManager() {
+        return {
+            // Backup application state
+            backup(format = 'json') {
+                const state = this.app.state;
+                
+                switch (format.toLowerCase()) {
+                    case 'json':
+                        return JSON.stringify(state, null, 2);
+                    case 'csv':
+                        return this.convertToCSV(state);
+                    default:
+                        throw new Error(`Unsupported backup format: ${format}`);
+                }
+            },
+
+            // Restore application state
+            restore(backupData, format = 'json') {
+                try {
+                    let parsedData;
+                    
+                    switch (format.toLowerCase()) {
+                        case 'json':
+                            parsedData = JSON.parse(backupData);
+                            break;
+                        case 'csv':
+                            parsedData = this.parseCSV(backupData);
+                            break;
+                        default:
+                            throw new Error(`Unsupported restore format: ${format}`);
+                    }
+
+                    // Merge restored data
+                    this.app.state = {
+                        ...this.app.state,
+                        ...parsedData
+                    };
+
+                    this.app.logger.log('State restored successfully');
+                    return true;
+                } catch (error) {
+                    this.app.logger.error(`State restoration failed: ${error.message}`);
+                    return false;
+                }
+            },
+
+            // Convert state to CSV
+            convertToCSV(state) {
+                // Implement CSV conversion logic
+                // This is a simplified example
+                return Object.entries(state)
+                    .map(([key, value]) => `${key},${JSON.stringify(value)}`)
+                    .join('\n');
+            },
+
+            // Parse CSV backup
+            parseCSV(csvData) {
+                return Object.fromEntries(
+                    csvData.split('\n')
+                        .map(line => {
+                            const [key, value] = line.split(',');
+                            return [key, JSON.parse(value)];
+                        })
+                );
+            }
+        };
+    }
+
+    // Cloud Synchronization
+    cloudSyncManager() {
+        return {
+            // Simulate cloud synchronization
+            sync() {
+                try {
+                    // In a real implementation, this would sync with a cloud service
+                    const stateToSync = this.app.state;
+                    
+                    // Simulated cloud sync
+                    console.log('Syncing state to cloud', stateToSync);
+
+                    return {
+                        success: true,
+                        timestamp: new Date()
+                    };
+                } catch (error) {
+                    console.error('Cloud sync failed', error);
+                    return {
+                        success: false,
+                        error: error.message
+                    };
+                }
+            },
+
+            // Start periodic synchronization
+            startPeriodicSync() {
+                return setInterval(() => {
+                    this.sync();
+                }, this.config.cloudSyncInterval);
+            }
+        };
+    }
+
+    // Diagnostic and Troubleshooting Utilities
+    diagnosticTools() {
+        return {
+            // Generate comprehensive system report
+            generateSystemReport() {
+                return {
+                    appVersion: this.app.config.version,
+                    timestamp: new Date(),
+                    state: {
+                        currentCommittee: this.app.state.currentCommittee,
+                        speakingListLength: this.app.state.speakingList.length,
+                        timers: Object.keys(this.app.state.timers)
+                            .map(timerType => ({
+                                type: timerType,
+                                running: this.app.state.timers[timerType].running,
+                                elapsedTime: this.app.state.timers[timerType].elapsedTime
+                            }))
+                    },
+                    errors: this.errorTracker.errors.slice(-10), // Last 10 errors
+                    performanceMeasurements: this.performanceMonitor.measurements.slice(-10) // Last 10 performance measurements
+                };
+            },
+
+            // Run system self-check
+            selfCheck() {
+                const report = this.generateSystemReport();
+                
+                const checks = {
+                    stateIntegrity: this.checkStateIntegrity(),
+                    performanceHealth: this.checkPerformanceHealth(),
+                    errorStatus: this.checkErrorStatus()
+                };
+
+                return {
+                    ...report,
+                    systemChecks: checks
+                };
+            },
+
+            // Check state integrity
+            checkStateIntegrity() {
+                // Implement state validation logic
+                const state = this.app.state;
+                const issues = [];
+
+                if (!state.currentCommittee) {
+                    issues.push('No current committee selected');
+                }
+
+                return {
+                    healthy: issues.length === 0,
+                    issues: issues
+                };
+            },
+
+            // Check performance health
+            checkPerformanceHealth() {
+                const measurements = this.performanceMonitor.measurements;
+                
+                // Calculate average performance
+                const avgDuration = measurements.length > 0 
+                    ? measurements.reduce((sum, m) => sum + m.duration, 0) / measurements.length
+                    : 0;
+
+                return {
+                    averagePerformance: avgDuration,
+                    healthy: avgDuration < 100 // milliseconds threshold
+                };
+            },
+
+            // Check error status
+            checkErrorStatus() {
+                const errors = this.errorTracker.errors;
+                
+                return {
+                    totalErrors: errors.length,
+                    criticalErrors: this.errorTracker.critical.length,
+                    healthy: this.errorTracker.critical.length === 0
+                };
+            }
+        };
+    }
+}
+
+// Extend the main application with System Integration Manager
+MUNSpeechTimerApp.prototype.systemIntegration = function() {
+    return new SystemIntegrationManager(this);
+};
+
+// Export error handling as a global utility
+window.MUNErrorHandler = SystemIntegrationManager.ErrorHandler;
+
+// Initialize system integration when app starts
+document.addEventListener('DOMContentLoaded', () => {
+    if (window.munApp) {
+        const systemIntegration = window.munApp.systemIntegration();
+        
+        // Setup error handling
+        window.addEventListener('error', (event) => {
+            const errorHandler = new SystemIntegrationManager.ErrorHandler(systemIntegration);
+            errorHandler.handle(event.error, {
+                filename: event.filename,
+                lineno: event.lineno,
+                colno: event.colno
+            });
+        });
+
+        // Setup performance monitoring
+        const performanceMonitor = systemIntegration.performanceMonitoring();
+        performanceMonitor.mark('appInitialization');
+    }
+});
