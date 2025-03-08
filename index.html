@@ -181,6 +181,9 @@
             color: var(--text-on-primary);
             padding: 10px 15px;
             font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .card-body {
@@ -301,7 +304,7 @@
 .timer-set-button:hover {
     background-color: rgba(255,255,255,0.3);
 }
-        .notes-area {
+.notes-area {
             width: 100%;
             height: 150px;
             padding: 10px;
@@ -524,6 +527,32 @@
             cursor: not-allowed;
         }
 
+        /* Performance list specific styles */
+        .performance-legend {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            margin-top: 10px;
+            font-size: 0.8rem;
+        }
+
+        /* Timer relationship indicator styles */
+        .timer-relationship {
+            font-size: 12px;
+            margin-top: 5px;
+            color: rgba(255,255,255,0.8);
+        }
+
+        /* Timer suggestions box */
+        #timer-suggestions {
+            background-color: rgba(255,255,255,0.9);
+            border: 1px solid var(--border);
+            border-radius: var(--corner-radius);
+            padding: 10px;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
         @media (max-width: 768px) {
             .columns {
                 flex-direction: column;
@@ -558,8 +587,7 @@
             <button class="tab" data-tab="speaking-list">Speaking List</button>
             <button class="tab" data-tab="messaging">Messaging</button>
         </div>
-
-        <!-- Main Dashboard Tab -->
+<!-- Main Dashboard Tab -->
         <div id="main-tab" class="tab-content active">
             <div class="top-controls">
                 <div class="committee-selector">
@@ -602,6 +630,24 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Performance List Card (New) -->
+                    <div class="card">
+                        <div class="card-header">
+                            <span>Speaker Performance</span>
+                            <button id="toggle-performance-button" class="button secondary" style="padding: 2px 8px; font-size: 0.8rem;">Show</button>
+                        </div>
+                        <div class="card-body">
+                            <div id="performance-list-container" class="list-container" style="display: none;">
+                                <ul id="performance-list" class="list"></ul>
+                            </div>
+                            <div class="performance-legend">
+                                <div><span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: #4CAF50; margin-right: 5px;"></span> High Performance (>75%)</div>
+                                <div><span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: #FFA726; margin-right: 5px;"></span> Medium Performance (50-75%)</div>
+                                <div><span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: #F44336; margin-right: 5px;"></span> Low Performance (<50%)</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="column">
@@ -613,11 +659,10 @@
                                 <div class="timer-card">
                                     <div class="timer-title">Session</div>
                                     <div class="timer-display" id="session-timer">00:00</div>
-                                    <!-- Add this inside each timer-card div, just after the timer-display div -->
-<div class="timer-settings">
-  <input type="number" class="timer-duration" min="1" value="10" data-timer="session"> min
-  <button class="timer-set-button" data-timer="session">Set</button>
-</div>
+                                    <div class="timer-settings">
+                                        <input type="number" class="timer-duration" min="1" value="10" data-timer="session"> min
+                                        <button class="timer-set-button" data-timer="session">Set</button>
+                                    </div>
                                     <div class="timer-controls">
                                         <button class="timer-button" data-timer="session" data-action="start">Start</button>
                                         <button class="timer-button" data-timer="session" data-action="stop">Stop</button>
@@ -627,11 +672,10 @@
                                 <div class="timer-card">
                                     <div class="timer-title">Caucus</div>
                                     <div class="timer-display" id="caucus-timer">00:00</div>
-                                    <!-- Add this inside each timer-card div, just after the timer-display div -->
-<div class="timer-settings">
-  <input type="number" class="timer-duration" min="1" value="10" data-timer="session"> min
-  <button class="timer-set-button" data-timer="session">Set</button>
-</div>
+                                    <div class="timer-settings">
+                                        <input type="number" class="timer-duration" min="1" value="5" data-timer="caucus"> min
+                                        <button class="timer-set-button" data-timer="caucus">Set</button>
+                                    </div>
                                     <div class="timer-controls">
                                         <button class="timer-button" data-timer="caucus" data-action="start">Start</button>
                                         <button class="timer-button" data-timer="caucus" data-action="stop">Stop</button>
@@ -641,11 +685,10 @@
                                 <div class="timer-card">
                                     <div class="timer-title">Speech</div>
                                     <div class="timer-display" id="speech-timer">00:00</div>
-                                    <!-- Add this inside each timer-card div, just after the timer-display div -->
-<div class="timer-settings">
-  <input type="number" class="timer-duration" min="1" value="10" data-timer="session"> min
-  <button class="timer-set-button" data-timer="session">Set</button>
-</div>
+                                    <div class="timer-settings">
+                                        <input type="number" class="timer-duration" min="1" value="1" data-timer="speech"> min
+                                        <button class="timer-set-button" data-timer="speech">Set</button>
+                                    </div>
                                     <div class="timer-controls">
                                         <button class="timer-button" data-timer="speech" data-action="start">Start</button>
                                         <button class="timer-button" data-timer="speech" data-action="stop">Stop</button>
@@ -676,8 +719,7 @@
                 </div>
             </div>
         </div>
-
-        <!-- Speaking List Tab -->
+<!-- Speaking List Tab -->
         <div id="speaking-list-tab" class="tab-content">
             <div class="current-speaker">
                 <div class="current-speaker-label">Current Speaker</div>
@@ -764,80 +806,98 @@
                     </div>
                 </div>
                 <div class="role-call-body">
-                    <table id="role-call-table" class="role-call-table">
-                        <thead>
-                            <tr>
-                                <th>Country</th>
-                                <!-- Dates will be inserted dynamically -->
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Countries and attendance will be inserted dynamically -->
-                        </tbody>
-                    </table>
-                    <div style="text-align: right; margin-top: 15px;">
-                        <button id="save-role-call-button" class="button success">Save Role Call</button>
-                    </div>
-                </div>
-            </div>
-        </div>
+<script>
+// Define the state object to track application state
+const state = {
+    selectedCommittee: 'UNSC',
+    speakerQueue: [],
+    currentSpeaker: null,
+    timerRunning: {
+        session: false,
+        caucus: false,
+        speech: false,
+        fun: false
+    },
+    timerIntervals: {
+        session: null,
+        caucus: null,
+        speech: null,
+        fun: null
+    },
+    timerElapsed: {
+        session: 600, // 10 minutes in seconds
+        caucus: 300,  // 5 minutes in seconds
+        speech: 60,   // 1 minute in seconds
+        fun: 300      // 5 minutes in seconds
+    },
+    timerDurations: {
+        session: 600, // 10 minutes in seconds
+        caucus: 300,  // 5 minutes in seconds
+        speech: 60,   // 1 minute in seconds
+        fun: 300      // 5 minutes in seconds
+    },
+    delegateData: {},
+    isCountryListLocked: false,
+    attendanceData: {},
+    attendanceDates: [],
+    timerColors: [
+        'var(--timer-green)',
+        'var(--timer-blue)',
+        'var(--timer-orange)'
+    ],
+    // Add new field for performance tracking
+    showPerformanceList: false
+};
 
-        <!-- New Message Dialog -->
-        <div id="new-message-dialog" class="dialog">
-            <div class="dialog-content">
-                <h3 class="dialog-title">New Message</h3>
-                <div>
-                    <label for="recipient-select">To:</label>
-                    <select id="recipient-select" style="width: 100%; margin-bottom: 15px;"></select>
-                </div>
-                <div>
-                    <label for="new-message-text">Message:</label>
-                    <textarea id="new-message-text" class="message-input"></textarea>
-                </div>
-                <div class="dialog-buttons">
-                    <button id="cancel-message-button" class="button secondary">Cancel</button>
-                    <button id="send-new-message-button" class="button primary">Send</button>
-                </div>
-            </div>
-        </div>
+// Define committee countries
+const committeeCountries = {
+    UNSC: [
+        'United States', 'United Kingdom', 'France', 'Russia', 'China',
+        'Algeria', 'Ecuador', 'Guyana', 'Japan', 'Malta', 
+        'Mozambique', 'Sierra Leone', 'Slovenia', 'South Korea', 'Switzerland'
+    ],
+    UNODC: [
+        'Afghanistan', 'Albania', 'Algeria', 'Argentina', 'Australia',
+        'Belgium', 'Brazil', 'Canada', 'China', 'Colombia',
+        'Egypt', 'France', 'Germany', 'India', 'Indonesia',
+        'Iran', 'Italy', 'Japan', 'Mexico', 'Netherlands',
+        'Nigeria', 'Pakistan', 'Russia', 'Saudi Arabia', 'South Africa',
+        'Spain', 'Thailand', 'Turkey', 'United Kingdom', 'United States'
+    ],
+    UNGA: [
+        'Afghanistan', 'Albania', 'Algeria', 'Andorra', 'Angola',
+        'Antigua and Barbuda', 'Argentina', 'Armenia', 'Australia', 'Austria',
+        'Azerbaijan', 'Bahamas', 'Bahrain', 'Bangladesh', 'Barbados',
+        'Belarus', 'Belgium', 'Belize', 'Benin', 'Bhutan',
+        'Bolivia', 'Bosnia and Herzegovina', 'Botswana', 'Brazil', 'Brunei',
+        'Bulgaria', 'Burkina Faso', 'Burundi', 'Cabo Verde', 'Cambodia'
+    ],
+    UNHRC: [
+        'Argentina', 'Bangladesh', 'Belgium', 'Benin', 'Cameroon',
+        'China', 'Cuba', 'Eritrea', 'Finland', 'France',
+        'Gambia', 'Georgia', 'Germany', 'Honduras', 'India',
+        'Kazakhstan', 'Lithuania', 'Luxembourg', 'Malaysia', 'Montenegro',
+        'Morocco', 'Netherlands', 'Pakistan', 'Paraguay', 'Qatar',
+        'Somalia', 'South Africa', 'Sudan', 'United Arab Emirates', 'United States'
+    ],
+    ECOSOC: [
+        'Angola', 'Argentina', 'Australia', 'Bangladesh', 'Brazil',
+        'Canada', 'China', 'Egypt', 'France', 'Germany',
+        'Ghana', 'India', 'Indonesia', 'Iran', 'Italy',
+        'Japan', 'Kenya', 'Mexico', 'Nigeria', 'Norway',
+        'Russia', 'Saudi Arabia', 'South Africa', 'Spain', 'Sweden',
+        'Thailand', 'Turkey', 'United Kingdom', 'United States', 'Venezuela'
+    ],
+    WHO: [
+        'Argentina', 'Australia', 'Brazil', 'Canada', 'China',
+        'Egypt', 'Ethiopia', 'France', 'Germany', 'India',
+        'Indonesia', 'Italy', 'Japan', 'Kenya', 'Mexico',
+        'Nigeria', 'Pakistan', 'Russia', 'Saudi Arabia', 'South Africa',
+        'South Korea', 'Spain', 'Sweden', 'Switzerland', 'Thailand',
+        'Turkey', 'United Arab Emirates', 'United Kingdom', 'United States', 'Vietnam'
+    ]
+};
 
-        <!-- Fun Mode Container (hidden initially) -->
-        <div id="fun-mode-container" style="display: none;">
-            
-            <div class="fun-mode">
-                <div class="fun-mode-header">Fun Committee Mode</div>
-                <div class="fun-timer" id="fun-timer">00:00</div>
-                <div>
-                    <button class="button" style="background-color: #6A0DAD;" data-action="start-fun">Start</button>
-                    <button class="button" style="background-color: #6A0DAD;" data-action="stop-fun">Stop</button>
-                    <button class="button" style="background-color: #6A0DAD;" data-action="reset-fun">Reset</button>
-                </div>
-
-                <div class="game-options">
-                    <div class="game-option">
-                        <span>UN Charades - Votes: <span class="vote-count">0</span></span>
-                        <button class="button primary vote-button">Vote</button>
-                    </div>
-                    <div class="game-option">
-                        <span>Diplomatic Trivia - Votes: <span class="vote-count">0</span></span>
-                        <button class="button primary vote-button">Vote</button>
-                    </div>
-                    <div class="game-option">
-                        <span>Resolution Writing Race - Votes: <span class="vote-count">0</span></span>
-                        <button class="button primary vote-button">Vote</button>
-                    </div>
-                    <div class="game-option">
-                        <span>Crisis Simulation - Votes: <span class="vote-count">0</span></span>
-                        <button class="button primary vote-button">Vote</button>
-                    </div>
-                </div>
-
-                <button id="exit-fun-mode-button" class="button danger">Exit Fun Mode</button>
-            </div>
-        </div>
-    </div>
-
-    <script>
 // Function to update timer relationship indicators
 function updateTimerRelationships() {
     const sessionMinutes = state.timerDurations.session / 60;
@@ -861,9 +921,6 @@ function updateTimerRelationships() {
     if (sessionCard) {
         const indicator = document.createElement('div');
         indicator.className = 'timer-relationship';
-        indicator.style.fontSize = '12px';
-        indicator.style.marginTop = '5px';
-        indicator.style.color = 'rgba(255,255,255,0.8)';
         indicator.textContent = `Contains: ${caucusesPerSession} caucuses or ${speechesPerSession} speeches`;
         
         // Insert after the timer settings
@@ -876,9 +933,6 @@ function updateTimerRelationships() {
     if (caucusCard) {
         const indicator = document.createElement('div');
         indicator.className = 'timer-relationship';
-        indicator.style.fontSize = '12px';
-        indicator.style.marginTop = '5px';
-        indicator.style.color = 'rgba(255,255,255,0.8)';
         indicator.textContent = `${caucusesPerSession} caucuses per session`;
         
         // Insert after the timer settings
@@ -891,9 +945,6 @@ function updateTimerRelationships() {
     if (speechCard) {
         const indicator = document.createElement('div');
         indicator.className = 'timer-relationship';
-        indicator.style.fontSize = '12px';
-        indicator.style.marginTop = '5px';
-        indicator.style.color = 'rgba(255,255,255,0.8)';
         indicator.textContent = `${speechesPerSession} speeches per session`;
         
         // Insert after the timer settings
@@ -961,12 +1012,6 @@ function showTimerSuggestions() {
     if (!suggestionsBox) {
         suggestionsBox = document.createElement('div');
         suggestionsBox.id = 'timer-suggestions';
-        suggestionsBox.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
-        suggestionsBox.style.border = '1px solid var(--border)';
-        suggestionsBox.style.borderRadius = 'var(--corner-radius)';
-        suggestionsBox.style.padding = '10px';
-        suggestionsBox.style.marginTop = '15px';
-        suggestionsBox.style.fontSize = '14px';
         
         // Add it after the timer cards
         const timerCards = document.querySelector('.timer-cards');
@@ -1067,7 +1112,7 @@ function stopTimer(timerType) {
     console.log(`Stopped ${timerType} timer`);
 }
 
-// Modify resetTimer to use the stored duration
+// Use the stored duration
 function resetTimer(timerType) {
     const lowerType = timerType.toLowerCase();
     stopTimer(timerType);
@@ -1076,6 +1121,27 @@ function resetTimer(timerType) {
     console.log(`Reset ${timerType} timer to ${state.timerDurations[lowerType]} seconds`);
 }
 
+// Function to set timer duration
+function setTimerDuration(timerType, minutes) {
+    const seconds = minutes * 60;
+    const lowerType = timerType.toLowerCase();
+    
+    state.timerDurations[lowerType] = seconds;
+    
+    // If timer is not running, update the elapsed time too
+    if (!state.timerRunning[lowerType]) {
+        state.timerElapsed[lowerType] = seconds;
+        updateTimerDisplay(timerType);
+    }
+    
+    console.log(`Set ${timerType} timer duration to ${minutes} minutes (${seconds} seconds)`);
+    
+    // Update timer relationships
+    updateTimerRelationships();
+    
+    // Show suggestions if needed
+    showTimerSuggestions();
+}
 // Function to populate country list
 function populateCountryList(committee) {
     const countryList = document.getElementById('country-list');
@@ -1187,6 +1253,165 @@ function updateFrequencyList() {
     });
 }
 
+// Function to calculate performance metrics for each delegate
+function calculatePerformance(delegate) {
+    // Get the delegate data
+    const data = state.delegateData[delegate];
+    if (!data || !data.notes || data.notes.length === 0) {
+        return {
+            goodSpeechCount: 0,
+            badSpeechCount: 0,
+            goodDiplomacyCount: 0,
+            badDiplomacyCount: 0,
+            totalNotes: 0,
+            speechQuality: 0,
+            diplomacyQuality: 0,
+            overallPerformance: 0
+        };
+    }
+    
+    // Count the different types of notes
+    let goodSpeechCount = 0;
+    let badSpeechCount = 0;
+    let goodDiplomacyCount = 0;
+    let badDiplomacyCount = 0;
+    
+    data.notes.forEach(note => {
+        if (note.text === 'Good Speech') {
+            goodSpeechCount++;
+        } else if (note.text === 'Bad Speech') {
+            badSpeechCount++;
+        } else if (note.text === 'Good Diplomacy') {
+            goodDiplomacyCount++;
+        } else if (note.text === 'Bad Diplomacy') {
+            badDiplomacyCount++;
+        }
+    });
+    
+    const totalNotes = data.notes.length;
+    
+    // Calculate speech quality (percentage of good speeches)
+    const totalSpeechNotes = goodSpeechCount + badSpeechCount;
+    const speechQuality = totalSpeechNotes > 0 ? (goodSpeechCount / totalSpeechNotes) * 100 : 0;
+    
+    // Calculate diplomacy quality (percentage of good diplomacy)
+    const totalDiplomacyNotes = goodDiplomacyCount + badDiplomacyCount;
+    const diplomacyQuality = totalDiplomacyNotes > 0 ? (goodDiplomacyCount / totalDiplomacyNotes) * 100 : 0;
+    
+    // Calculate overall performance
+    // If both types of notes exist, average them. Otherwise, use the one that exists.
+    let overallPerformance = 0;
+    if (totalSpeechNotes > 0 && totalDiplomacyNotes > 0) {
+        overallPerformance = (speechQuality + diplomacyQuality) / 2;
+    } else if (totalSpeechNotes > 0) {
+        overallPerformance = speechQuality;
+    } else if (totalDiplomacyNotes > 0) {
+        overallPerformance = diplomacyQuality;
+    }
+    
+    return {
+        goodSpeechCount,
+        badSpeechCount,
+        goodDiplomacyCount,
+        badDiplomacyCount,
+        totalNotes,
+        speechQuality,
+        diplomacyQuality,
+        overallPerformance
+    };
+}
+
+// Function to update the performance list
+function updatePerformanceList() {
+    const performanceList = document.getElementById('performance-list');
+    if (!performanceList) return;
+    
+    performanceList.innerHTML = '';
+    
+    // Get all delegates who have notes
+    const delegatesWithNotes = Object.keys(state.delegateData)
+        .filter(delegate => 
+            state.delegateData[delegate].notes && 
+            state.delegateData[delegate].notes.length > 0
+        );
+    
+    // Calculate performance for each delegate
+    const performances = delegatesWithNotes.map(delegate => {
+        const performance = calculatePerformance(delegate);
+        return {
+            delegate,
+            ...performance
+        };
+    });
+    
+    // Sort by overall performance (highest first)
+    performances.sort((a, b) => b.overallPerformance - a.overallPerformance);
+    
+    // Create list items for each delegate
+    performances.forEach(perf => {
+        const li = document.createElement('li');
+        li.className = 'list-item';
+        
+        // Determine color based on performance
+        let colorClass = '';
+        if (perf.overallPerformance >= 75) {
+            colorClass = 'background-color: var(--success);';
+        } else if (perf.overallPerformance >= 50) {
+            colorClass = 'background-color: var(--warning);';
+        } else {
+            colorClass = 'background-color: var(--danger);';
+        }
+        
+        // Format the performance details
+        const speechDetails = perf.goodSpeechCount + perf.badSpeechCount > 0 
+            ? `Speech: ${perf.speechQuality.toFixed(0)}% (${perf.goodSpeechCount}/${perf.goodSpeechCount + perf.badSpeechCount})` 
+            : 'No speech data';
+            
+        const diplomacyDetails = perf.goodDiplomacyCount + perf.badDiplomacyCount > 0 
+            ? `Diplomacy: ${perf.diplomacyQuality.toFixed(0)}% (${perf.goodDiplomacyCount}/${perf.goodDiplomacyCount + perf.badDiplomacyCount})` 
+            : 'No diplomacy data';
+        
+        li.innerHTML = `
+            <div>
+                <span class="frequency-indicator" style="${colorClass}"></span>
+                <strong>${perf.delegate}</strong> - ${perf.overallPerformance.toFixed(0)}%
+            </div>
+            <div style="font-size: 0.8rem; margin-left: 18px; color: var(--text-secondary);">
+                ${speechDetails} | ${diplomacyDetails}
+            </div>
+        `;
+        
+        performanceList.appendChild(li);
+    });
+    
+    // If no performances to show
+    if (performances.length === 0) {
+        const li = document.createElement('li');
+        li.className = 'list-item';
+        li.textContent = 'No performance data available yet. Take notes on speeches to see data here.';
+        performanceList.appendChild(li);
+    }
+}
+
+// Add function to toggle performance list visibility
+function togglePerformanceList() {
+    state.showPerformanceList = !state.showPerformanceList;
+    
+    const container = document.getElementById('performance-list-container');
+    const toggleButton = document.getElementById('toggle-performance-button');
+    
+    if (container && toggleButton) {
+        if (state.showPerformanceList) {
+            container.style.display = 'block';
+            toggleButton.textContent = 'Hide';
+            updatePerformanceList();
+        } else {
+            container.style.display = 'none';
+            toggleButton.textContent = 'Show';
+        }
+    }
+}
+
 function generateRoleCallTable() {
     const table = document.getElementById('role-call-table');
     if (!table) return;
@@ -1237,262 +1462,8 @@ function generateRoleCallTable() {
                 if (!state.attendanceData[country]) {
                     state.attendanceData[country] = {};
                 }
-                state.attendanceData[country][date] = this.checked;
-            });
-            
-            td.appendChild(checkbox);
-            tr.appendChild(td);
-        });
-        
-        tbody.appendChild(tr);
-    });
-}
-
-// Set up the application
-function initializeApp() {
-    // Initialize with default committee
-    populateCountryList(state.selectedCommittee);
-
-    // Initialize timer displays
-    updateTimerDisplay('session');
-    updateTimerDisplay('caucus');
-    updateTimerDisplay('speech');
-    updateTimerDisplay('fun');
-    
-    // Initialize timer relationship indicators
-    updateTimerRelationships();
-    
-    // Show initial suggestions if needed
-    showTimerSuggestions();
-    
-    // Setup tab switching
-    setupTabSwitching();
-    
-    // Setup event listeners for all buttons and interactive elements
-    setupEventListeners();
-    
-    console.log("MUN Committee Timer App initialized successfully");
-}
-
-// Setup all event listeners
-function setupEventListeners() {
-    // Add timer settings event listeners
-    document.querySelectorAll('.timer-set-button').forEach(button => {
-        button.addEventListener('click', function() {
-            const timerType = this.getAttribute('data-timer');
-            const input = document.querySelector(`.timer-duration[data-timer="${timerType}"]`);
-            
-            if (input) {
-                const minutes = parseInt(input.value);
-                setTimerDuration(timerType, minutes);
-            }
-        });
-    });
-    
-    // Helper to safely add event listener
-    function addSafeEventListener(id, event, callback) {
-        const element = document.getElementById(id);
-        if (element) {
-            element.addEventListener(event, callback);
-            return true;
-        } else {
-            console.warn(`Element with id ${id} not found for event listener`);
-            return false;
-        }
-    }
-    
-    // Handle committee selection change
-    addSafeEventListener('committee-select', 'change', function() {
-        state.selectedCommittee = this.value;
-        populateCountryList(state.selectedCommittee);
-        updateFrequencyList();
-    });
-
-    // Add to speaking list button
-    addSafeEventListener('add-to-list-button', 'click', function() {
-        const selectedCountry = document.querySelector('#country-list .list-item.selected');
-        if (selectedCountry) {
-            const country = selectedCountry.textContent;
-            addToSpeakingList(country);
-            updateSpeakingList();
-            updateFrequencyList();
-        } else {
-            console.log("No country selected to add to speaking list");
-        }
-    });
-
-    // Add event listeners for timer buttons
-    document.querySelectorAll('.timer-button').forEach(button => {
-        button.addEventListener('click', function(event) {
-            // Prevent default to be safe
-            event.preventDefault();
-            
-            const timer = this.getAttribute('data-timer');
-            const action = this.getAttribute('data-action');
-            
-            console.log(`Timer button clicked: ${timer} - ${action}`);
-            
-            if (action === 'start') {
-                startTimer(timer);
-            } else if (action === 'stop') {
-                stopTimer(timer);
-            } else if (action === 'reset') {
-                resetTimer(timer);
-            }
-        });
-    });
-
-    // Next speaker button
-    addSafeEventListener('next-speaker-button', 'click', function() {
-        if (state.speakerQueue.length > 0) {
-            if (state.currentSpeaker) {
-                // Current speaker is done
-                resetTimer('speech');
-            }
-            
-            // Get next speaker
-            state.currentSpeaker = state.speakerQueue.shift();
-            const currentSpeakerDisplay = document.getElementById('current-speaker-display');
-            if (currentSpeakerDisplay) {
-                currentSpeakerDisplay.textContent = state.currentSpeaker;
-            }
-            
-            // Start speech timer
-            resetTimer('speech');
-            startTimer('speech');
-            
-            // Update the display
-            updateSpeakingList();
-        } else {
-            console.log("No speakers in queue");
-        }
-    });
-
-    // Skip speaker button
-    addSafeEventListener('skip-speaker-button', 'click', function() {
-        if (state.currentSpeaker) {
-            resetTimer('speech');
-            state.currentSpeaker = null;
-            
-            const currentSpeakerDisplay = document.getElementById('current-speaker-display');
-            if (currentSpeakerDisplay) {
-                currentSpeakerDisplay.textContent = 'None';
-            }
-            
-            if (state.speakerQueue.length > 0) {
-                state.currentSpeaker = state.speakerQueue.shift();
-                if (currentSpeakerDisplay) {
-                    currentSpeakerDisplay.textContent = state.currentSpeaker;
-                }
-                resetTimer('speech');
-                startTimer('speech');
-            }
-            
-            updateSpeakingList();
-        }
-    });
-
-    // Speaking list controls
-    addSafeEventListener('move-up-button', 'click', function() {
-        const selected = document.querySelector('#speaking-list .list-item.selected');
-        if (selected) {
-            const index = parseInt(selected.dataset.index);
-            if (index > 0) {
-                // Swap with previous item
-                [state.speakerQueue[index], state.speakerQueue[index - 1]] = [state.speakerQueue[index - 1], state.speakerQueue[index]];
-                updateSpeakingList();
-                
-                // Keep the item selected
-                const items = document.querySelectorAll('#speaking-list .list-item');
-                if (items.length > index - 1) {
-                    items[index - 1].classList.add('selected');
-                }
-            }
-        }
-    });
-
-    addSafeEventListener('move-down-button', 'click', function() {
-        const selected = document.querySelector('#speaking-list .list-item.selected');
-        if (selected) {
-            const index = parseInt(selected.dataset.index);
-            if (index < state.speakerQueue.length - 1) {
-                // Swap with next item
-                [state.speakerQueue[index], state.speakerQueue[index + 1]] = [state.speakerQueue[index + 1], state.speakerQueue[index]];
-                updateSpeakingList();
-                
-                // Keep the item selected
-                const items = document.querySelectorAll('#speaking-list .list-item');
-                if (items.length > index + 1) {
-                    items[index + 1].classList.add('selected');
-                }
-            }
-        }
-    });
-
-    addSafeEventListener('remove-button', 'click', function() {
-        const selected = document.querySelector('#speaking-list .list-item.selected');
-        if (selected) {
-            const index = parseInt(selected.dataset.index);
-            state.speakerQueue.splice(index, 1);
-            updateSpeakingList();
-        }
-    });
-
-    addSafeEventListener('clear-list-button', 'click', function() {
-        state.speakerQueue = [];
-        updateSpeakingList();
-    });
-
-    // Notes functionality
-    document.querySelectorAll('.note-buttons .button').forEach(button => {
-        button.addEventListener('click', function() {
-            const noteText = this.getAttribute('data-note');
-            const notesArea = document.getElementById('notes-area');
-            
-            if (state.currentSpeaker && notesArea) {
-                const timestamp = new Date().toLocaleTimeString();
-                const note = `[${timestamp}] ${state.currentSpeaker}: ${noteText}`;
-                
-                // Add to text area
-                notesArea.value += (notesArea.value ? '\n' : '') + note;
-                
-                // Add to delegate data
-                if (!state.delegateData[state.currentSpeaker]) {
-                    state.delegateData[state.currentSpeaker] = {
-                        speaking: 0,
-                        votes: 0,
-                        notes: []
-                    };
-                }
-                state.delegateData[state.currentSpeaker].notes.push({
-                    timestamp: timestamp,
-                    note: noteText
-                });
-            }
-        });
-    });
-
-    // Lock countries functionality
-    addSafeEventListener('lock-countries-button', 'click', function() {
-        state.isCountryListLocked = !state.isCountryListLocked;
-        
-        const countryListItems = document.querySelectorAll('#country-list .list-item');
-        if (state.isCountryListLocked) {
-            this.textContent = 'Unlock Countries';
-            countryListItems.forEach(item => {
-                item.style.pointerEvents = 'none';
-                item.style.opacity = '0.6';
-            });
-        } else {
-            this.textContent = 'Lock Countries';
-            countryListItems.forEach(item => {
-                item.style.pointerEvents = 'auto';
-                item.style.opacity = '1';
-            });
-        }
-    });
-
-    // Fun Mode functionality
+                state.attendanceData
+// Fun Mode functionality - Fixed in this version
     addSafeEventListener('fun-mode-button', 'click', function() {
         const appElement = document.getElementById('app');
         const funModeContainer = document.getElementById('fun-mode-container');
@@ -1515,27 +1486,20 @@ function setupEventListeners() {
         }
     });
 
-    // Fun mode timer controls
-    const startFunButton = document.querySelector('[data-action="start-fun"]');
-    if (startFunButton) {
-        startFunButton.addEventListener('click', function() {
-            startTimer('fun');
+    // Fun mode timer controls - Fixed in this version
+    document.querySelectorAll('[data-action="start-fun"], [data-action="stop-fun"], [data-action="reset-fun"]').forEach(button => {
+        button.addEventListener('click', function() {
+            const action = this.getAttribute('data-action');
+            
+            if (action === 'start-fun') {
+                startTimer('fun');
+            } else if (action === 'stop-fun') {
+                stopTimer('fun');
+            } else if (action === 'reset-fun') {
+                resetTimer('fun');
+            }
         });
-    }
-
-    const stopFunButton = document.querySelector('[data-action="stop-fun"]');
-    if (stopFunButton) {
-        stopFunButton.addEventListener('click', function() {
-            stopTimer('fun');
-        });
-    }
-
-    const resetFunButton = document.querySelector('[data-action="reset-fun"]');
-    if (resetFunButton) {
-        resetFunButton.addEventListener('click', function() {
-            resetTimer('fun');
-        });
-    }
+    });
 
     // Fun mode voting
     document.querySelectorAll('.vote-button').forEach(button => {
@@ -1616,6 +1580,51 @@ function setupEventListeners() {
     });
 }
 
-// Call the initialization function
-initializeApp();
-</script>            
+// Set up the application
+function initializeApp() {
+    // Initialize with default committee
+    populateCountryList(state.selectedCommittee);
+
+    // Initialize timer displays
+    updateTimerDisplay('session');
+    updateTimerDisplay('caucus');
+    updateTimerDisplay('speech');
+    updateTimerDisplay('fun');
+    
+    // Initialize timer relationship indicators
+    updateTimerRelationships();
+    
+    // Show initial suggestions if needed
+    showTimerSuggestions();
+    
+    // Setup tab switching
+    setupTabSwitching();
+    
+    // Setup event listeners for all buttons and interactive elements
+    setupEventListeners();
+    
+    console.log("MUN Committee Timer App initialized successfully");
+}
+
+// Debug helper function
+function debugState() {
+    console.log('Current state:', JSON.stringify(state, null, 2));
+}
+
+// Initialize the application when the DOM is fully loaded
+document.addEventListener('DOMContentLoaded', function() {
+    initializeApp();
+    
+    // Additional event listeners for elements that might be created dynamically
+    const togglePerformanceButton = document.getElementById('toggle-performance-button');
+    if (togglePerformanceButton) {
+        togglePerformanceButton.addEventListener('click', togglePerformanceList);
+    }
+    
+    console.log('To debug the application state, run debugState() in console');
+});
+    </script>
+</body>
+</html>
+                    
+                    
