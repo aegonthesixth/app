@@ -270,7 +270,37 @@
         .timer-button:hover {
             background-color: rgba(255,255,255,0.3);
         }
+.timer-settings {
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+}
 
+.timer-duration {
+    width: 50px;
+    padding: 2px 5px;
+    border: 1px solid rgba(255,255,255,0.3);
+    background-color: rgba(255,255,255,0.1);
+    color: white;
+    border-radius: var(--corner-radius);
+    text-align: center;
+}
+
+.timer-set-button {
+    background-color: rgba(255,255,255,0.2);
+    color: white;
+    border: none;
+    padding: 2px 8px;
+    border-radius: var(--corner-radius);
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.timer-set-button:hover {
+    background-color: rgba(255,255,255,0.3);
+}
         .notes-area {
             width: 100%;
             height: 150px;
@@ -583,6 +613,11 @@
                                 <div class="timer-card">
                                     <div class="timer-title">Session</div>
                                     <div class="timer-display" id="session-timer">00:00</div>
+                                    <!-- Add this inside each timer-card div, just after the timer-display div -->
+<div class="timer-settings">
+  <input type="number" class="timer-duration" min="1" value="10" data-timer="session"> min
+  <button class="timer-set-button" data-timer="session">Set</button>
+</div>
                                     <div class="timer-controls">
                                         <button class="timer-button" data-timer="session" data-action="start">Start</button>
                                         <button class="timer-button" data-timer="session" data-action="stop">Stop</button>
@@ -592,6 +627,11 @@
                                 <div class="timer-card">
                                     <div class="timer-title">Caucus</div>
                                     <div class="timer-display" id="caucus-timer">00:00</div>
+                                    <!-- Add this inside each timer-card div, just after the timer-display div -->
+<div class="timer-settings">
+  <input type="number" class="timer-duration" min="1" value="10" data-timer="session"> min
+  <button class="timer-set-button" data-timer="session">Set</button>
+</div>
                                     <div class="timer-controls">
                                         <button class="timer-button" data-timer="caucus" data-action="start">Start</button>
                                         <button class="timer-button" data-timer="caucus" data-action="stop">Stop</button>
@@ -601,6 +641,11 @@
                                 <div class="timer-card">
                                     <div class="timer-title">Speech</div>
                                     <div class="timer-display" id="speech-timer">00:00</div>
+                                    <!-- Add this inside each timer-card div, just after the timer-display div -->
+<div class="timer-settings">
+  <input type="number" class="timer-duration" min="1" value="10" data-timer="session"> min
+  <button class="timer-set-button" data-timer="session">Set</button>
+</div>
                                     <div class="timer-controls">
                                         <button class="timer-button" data-timer="speech" data-action="start">Start</button>
                                         <button class="timer-button" data-timer="speech" data-action="stop">Stop</button>
@@ -758,6 +803,7 @@
 
         <!-- Fun Mode Container (hidden initially) -->
         <div id="fun-mode-container" style="display: none;">
+            
             <div class="fun-mode">
                 <div class="fun-mode-header">Fun Committee Mode</div>
                 <div class="fun-timer" id="fun-timer">00:00</div>
@@ -833,6 +879,12 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Global data and state
     const state = {
+        timerDurations: {
+    session: 10 * 60, // 10 minutes in seconds
+    caucus: 5 * 60,   // 5 minutes in seconds
+    speech: 1 * 60,   // 1 minute in seconds
+    fun: 2 * 60       // 2 minutes in seconds
+},
         currentSpeaker: null,
         speakerQueue: [],
         delegateData: {},
@@ -883,6 +935,27 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     // Updated timer functions
+// Updated timer functions
+    // Add this function for setting custom timer durations
+function setTimerDuration(timerType, minutes) {
+    const lowerType = timerType.toLowerCase();
+    const seconds = parseInt(minutes) * 60;
+    
+    if (isNaN(seconds) || seconds <= 0) {
+        console.error(`Invalid duration for ${timerType} timer: ${minutes}`);
+        return;
+    }
+    
+    state.timerDurations[lowerType] = seconds;
+    
+    // If the timer is not running, also set the current elapsed time to match the duration
+    if (!state.timerRunning[lowerType]) {
+        state.timerElapsed[lowerType] = seconds;
+        updateTimerDisplay(timerType);
+    }
+    
+    console.log(`Set ${timerType} timer duration to ${minutes} minutes (${seconds} seconds)`);
+}
 function formatTime(timeInSeconds) {
     const minutes = Math.floor(timeInSeconds / 60).toString().padStart(2, '0');
     const seconds = (timeInSeconds % 60).toString().padStart(2, '0');
@@ -904,16 +977,22 @@ function startTimer(timerType) {
     
     // Set running state
     state.timerRunning[lowerType] = true;
-    state.timerStart[lowerType] = Date.now() - (state.timerElapsed[lowerType] * 1000);
     
-    // Create new interval
+    // Create new interval for countdown
     state.timerIntervals[lowerType] = setInterval(() => {
-        const currentTime = Date.now();
-        state.timerElapsed[lowerType] = Math.floor((currentTime - state.timerStart[lowerType]) / 1000);
-        updateTimerDisplay(timerType);
-    }, 200); // More frequent updates for smoother display
+        // Reduce timer by 1 second
+        if (state.timerElapsed[lowerType] > 0) {
+            state.timerElapsed[lowerType]--;
+            updateTimerDisplay(timerType);
+        } else {
+            // Timer reached zero
+            stopTimer(timerType);
+            // You could add an alert or sound here
+            console.log(`${timerType} timer finished!`);
+        }
+    }, 1000);
     
-    console.log(`Started ${timerType} timer`);
+    console.log(`Started ${timerType} timer countdown from ${state.timerElapsed[lowerType]} seconds`);
 }
 
 function stopTimer(timerType) {
@@ -929,14 +1008,14 @@ function stopTimer(timerType) {
     console.log(`Stopped ${timerType} timer`);
 }
 
+// Modify resetTimer to use the stored duration
 function resetTimer(timerType) {
     const lowerType = timerType.toLowerCase();
     stopTimer(timerType);
-    state.timerElapsed[lowerType] = 0;
+    state.timerElapsed[lowerType] = state.timerDurations[lowerType]; // Use the stored duration
     updateTimerDisplay(timerType);
-    console.log(`Reset ${timerType} timer`);
+    console.log(`Reset ${timerType} timer to ${state.timerDurations[lowerType]} seconds`);
 }
-
     // Function to populate country list
     function populateCountryList(committee) {
         const countryList = document.getElementById('country-list');
@@ -1131,6 +1210,18 @@ function resetTimer(timerType) {
 
     // Setup all event listeners
     function setupEventListeners() {
+        // Add timer settings event listeners
+document.querySelectorAll('.timer-set-button').forEach(button => {
+    button.addEventListener('click', function() {
+        const timerType = this.getAttribute('data-timer');
+        const input = document.querySelector(`.timer-duration[data-timer="${timerType}"]`);
+        
+        if (input) {
+            const minutes = parseInt(input.value);
+            setTimerDuration(timerType, minutes);
+        }
+    });
+});
         // Helper to safely add event listener
         function addSafeEventListener(id, event, callback) {
             const element = document.getElementById(id);
