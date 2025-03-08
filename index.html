@@ -3,896 +3,1325 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MUN Speech Timer</title>
-        /<style>
+    <title>MUN Committee Speech Timer</title>
+    <style>
         :root {
-            --primary-color: #6750A4;
-            --secondary-color: #625B71;
-            --background-color: #F8F8FC;
-            --text-color: #1C1B1F;
-            --accent-color: #03DAC6;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+            /* Modern theme configuration */
+            --primary: #6750A4;
+            --secondary: #625B71;
+            --accent: #7D5260;
+            --success: #4CAF50;
+            --warning: #FFA726;
+            --danger: #F44336;
+            
+            --bg-primary: #F8F8FC;
+            --bg-secondary: #F0F0F6;
+            --bg-elevated: #FFFFFF;
+            
+            --text-primary: #1C1B1F;
+            --text-secondary: #49454F;
+            --text-disabled: #9E9E9E;
+            --text-on-primary: #FFFFFF;
+            
+            --border: #E0E0E6;
+            --highlight: #E8DEF8;
+            
+            --timer-green: #4CAF50;
+            --timer-blue: #03A9F4;
+            --timer-orange: #FF9800;
+            
+            --corner-radius: 8px;
+            --border-width: 1px;
+            --padding: 10px;
+            
+            --font-family: 'Segoe UI', system-ui, sans-serif;
         }
 
         body {
-            font-family: 'Arial', sans-serif;
-            background-color: var(--background-color);
-            color: var(--text-color);
-            line-height: 1.6;
+            font-family: var(--font-family);
+            background-color: var(--bg-primary);
+            margin: 0;
+            padding: 0;
+            color: var(--text-primary);
         }
 
         #app {
-            max-width: 800px;
+            width: 100%;
+            max-width: 1600px;
             margin: 0 auto;
-            padding: 20px;
+            min-height: 100vh;
+        }
+
+        header {
+            background-color: var(--primary);
+            color: var(--text-on-primary);
+            padding: 15px var(--padding);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 0 0 var(--corner-radius) var(--corner-radius);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.5rem;
         }
 
         .tabs {
             display: flex;
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
+            background-color: var(--bg-secondary);
+            padding: 0 var(--padding);
+            margin-top: 10px;
+            border-radius: var(--corner-radius) var(--corner-radius) 0 0;
         }
 
         .tab {
-            flex: 1;
-            padding: 10px 15px;
-            text-align: center;
+            padding: 12px 16px;
             cursor: pointer;
-            transition: background-color 0.3s ease;
-            border-bottom: 3px solid transparent;
+            background-color: var(--bg-secondary);
+            color: var(--text-secondary);
+            border: none;
+            font-family: var(--font-family);
+            font-size: 1rem;
+            transition: background-color 0.2s, color 0.2s;
+            border-radius: var(--corner-radius) var(--corner-radius) 0 0;
         }
 
         .tab.active {
-            border-bottom-color: var(--primary-color);
-            color: var(--primary-color);
+            background-color: var(--primary);
+            color: var(--text-on-primary);
+        }
+
+        .tab:hover:not(.active) {
+            background-color: var(--highlight);
         }
 
         .tab-content {
             display: none;
-            background-color: white;
-            border-radius: 8px;
+            padding: var(--padding);
+            background-color: var(--bg-elevated);
+            border-radius: 0 0 var(--corner-radius) var(--corner-radius);
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            padding: 20px;
+            margin-bottom: 20px;
         }
 
         .tab-content.active {
             display: block;
         }
 
-        .section-header {
+        .top-controls {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .committee-selector {
+            display: flex;
+            align-items: center;
+        }
+
+        .committee-selector label {
+            margin-right: 8px;
+        }
+
+        select {
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: var(--corner-radius);
+            background-color: var(--bg-elevated);
+            font-family: var(--font-family);
+            color: var(--text-primary);
+        }
+
+        .button {
+            background-color: var(--primary);
+            color: var(--text-on-primary);
+            border: none;
+            padding: 8px 16px;
+            border-radius: var(--corner-radius);
+            cursor: pointer;
+            font-family: var(--font-family);
+            font-size: 0.9rem;
+            transition: background-color 0.2s;
+            margin: 0 5px;
+        }
+
+        .button:hover {
+            filter: brightness(1.1);
+        }
+
+        .button.success { background-color: var(--success); }
+        .button.warning { background-color: var(--warning); }
+        .button.danger { background-color: var(--danger); }
+        .button.secondary { background-color: var(--secondary); }
+        .button.accent { background-color: var(--accent); }
+
+        .columns {
+            display: flex;
+            gap: 20px;
+            margin-top: 15px;
+        }
+
+        .column {
+            flex: 1;
+        }
+
+        .card {
+            background-color: var(--bg-elevated);
+            border-radius: var(--corner-radius);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+
+        .card-header {
+            background-color: var(--primary);
+            color: var(--text-on-primary);
+            padding: 10px 15px;
+            font-weight: bold;
+        }
+
+        .card-body {
+            padding: 15px;
+        }
+
+        .list-container {
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            border-radius: var(--corner-radius);
+            background-color: var(--bg-elevated);
+        }
+
+        .list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .list-item {
+            padding: 8px 15px;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+        }
+
+        .list-item:hover {
+            background-color: var(--highlight);
+        }
+
+        .list-item.selected {
+            background-color: var(--primary);
+            color: var(--text-on-primary);
+        }
+
+        .timer-cards {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .timer-card {
+            flex: 1;
+            background-color: var(--timer-green);
+            color: var(--text-on-primary);
+            border-radius: var(--corner-radius);
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+        }
+
+        .timer-card:nth-child(2) {
+            background-color: var(--timer-blue);
+        }
+
+        .timer-card:nth-child(3) {
+            background-color: var(--timer-orange);
+        }
+
+        .timer-title {
+            font-weight: bold;
+            margin-bottom: 8px;
         }
 
         .timer-display {
-            font-size: 2rem;
+            font-size: 2.5rem;
             font-weight: bold;
-            text-align: center;
-            margin: 20px 0;
+            margin: 10px 0 15px;
         }
 
         .timer-controls {
             display: flex;
-            justify-content: center;
+            justify-content: space-around;
+        }
+
+        .timer-button {
+            background-color: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: var(--corner-radius);
+            cursor: pointer;
+            font-family: var(--font-family);
+            transition: background-color 0.2s;
+        }
+
+        .timer-button:hover {
+            background-color: rgba(255,255,255,0.3);
+        }
+
+        .notes-area {
+            width: 100%;
+            height: 150px;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: var(--corner-radius);
+            font-family: var(--font-family);
+            resize: vertical;
+            margin-bottom: 10px;
+        }
+
+        .note-buttons {
+            display: flex;
+            flex-wrap: wrap;
             gap: 10px;
         }
 
-        .btn {
-            padding: 10px 15px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
+        /* Current speaker display */
+        .current-speaker {
+            text-align: center;
+            padding: 20px;
+            margin-bottom: 20px;
         }
 
-        .btn-primary {
-            background-color: var(--primary-color);
+        .current-speaker-label {
+            font-size: 1.2rem;
+            color: var(--primary);
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .current-speaker-name {
+            font-size: 2rem;
+            margin: 10px 0 20px;
+        }
+
+        /* Speaker list controls */
+        .list-controls {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+
+        /* For frequency list coloring */
+        .frequency-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        /* Messaging layout */
+        .messaging-container {
+            display: flex;
+            height: 500px;
+            gap: 15px;
+        }
+
+        .delegates-list {
+            flex: 1;
+            max-width: 300px;
+        }
+
+        .messages-container {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .messages-list {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 15px;
+        }
+
+        .message-compose {
+            background-color: var(--bg-elevated);
+            padding: 15px;
+            border-radius: var(--corner-radius);
+            border: 1px solid var(--border);
+        }
+
+        .message-input {
+            width: 100%;
+            min-height: 80px;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: var(--corner-radius);
+            font-family: var(--font-family);
+            margin-bottom: 10px;
+            resize: vertical;
+        }
+
+        /* Fun mode styles */
+        .fun-mode {
+            background-color: #FF5BFF;
             color: white;
+            text-align: center;
+            padding: 20px;
+            border-radius: var(--corner-radius);
         }
 
-        .btn-secondary {
-            background-color: var(--secondary-color);
-            color: white;
+        .fun-mode-header {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
         }
 
-        .list-container {
-            border: 1px solid #e0e0e0;
-            border-radius: 4px;
-            max-height: 300px;
+        .fun-timer {
+            font-size: 4rem;
+            margin: 20px 0;
+        }
+
+        .game-options {
+            margin: 30px 0;
+        }
+
+        .game-option {
+            background-color: #FFE6F7;
+            color: var(--text-primary);
+            margin: 10px auto;
+            padding: 15px;
+            border-radius: var(--corner-radius);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 500px;
+        }
+
+        /* Role call styles */
+        .role-call-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .role-call-modal {
+            background-color: var(--bg-elevated);
+            width: 80%;
+            max-width: 1000px;
+            max-height: 80vh;
+            border-radius: var(--corner-radius);
             overflow-y: auto;
         }
 
-        .list-item {
-            padding: 10px;
-            border-bottom: 1px solid #f0f0f0;
+        .role-call-header {
+            background-color: var(--primary);
+            color: var(--text-on-primary);
+            padding: 15px;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        .list-item:last-child {
-            border-bottom: none;
+        .role-call-body {
+            padding: 15px;
         }
 
-        .list-item.selected {
-            background-color: var(--primary-color);
-            color: white;
-        }
-
-        #committee-select {
+        .role-call-table {
             width: 100%;
-            padding: 10px;
-            margin-bottom: 15px;
+            border-collapse: collapse;
         }
-  * Rest of the CSS styles */
+
+        .role-call-table th, .role-call-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .role-call-table th {
+            background-color: var(--bg-secondary);
+            font-weight: bold;
+        }
+
+        .role-call-table tr:nth-child(even) {
+            background-color: var(--bg-secondary);
+        }
+
+        .dialog {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .dialog-content {
+            background-color: var(--bg-elevated);
+            padding: 20px;
+            border-radius: var(--corner-radius);
+            min-width: 300px;
+            max-width: 500px;
+        }
+
+        .dialog-title {
+            margin-top: 0;
+            color: var(--primary);
+        }
+
+        .dialog-buttons {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 20px;
+            gap: 10px;
+        }
+
+        .tab.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        @media (max-width: 768px) {
+            .columns {
+                flex-direction: column;
+            }
+            
+            .timer-cards {
+                flex-direction: column;
+            }
+            
+            .messaging-container {
+                flex-direction: column;
+            }
+            
+            .delegates-list {
+                max-width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
     <div id="app">
- <div id="app">
-        <!-- Tab Navigation -->
+        <header>
+            <h1>MUN Committee Speech Timer</h1>
+            <div class="auth-status">
+                <span id="auth-username">Not logged in</span>
+                <button id="auth-button" class="button secondary">Login with GitHub</button>
+            </div>
+        </header>
+
         <div class="tabs">
-            <div class="tab active" data-tab="main">Main Dashboard</div>
-            <div class="tab" data-tab="speaking-list">Speaking List</div>
-            <div class="tab" data-tab="timers">Timers</div>
+            <button class="tab active" data-tab="main">Main Dashboard</button>
+            <button class="tab" data-tab="speaking-list">Speaking List</button>
+            <button class="tab" data-tab="messaging">Messaging</button>
         </div>
 
         <!-- Main Dashboard Tab -->
         <div id="main-tab" class="tab-content active">
-            <div class="section-header">
-                <h2>Main Dashboard</h2>
+            <div class="top-controls">
+                <div class="committee-selector">
+                    <label for="committee-select">Committee:</label>
+                    <select id="committee-select">
+                        <option value="UNSC">UNSC</option>
+                        <option value="UNODC">UNODC</option>
+                        <option value="UNGA">UNGA</option>
+                        <option value="UNHRC">UNHRC</option>
+                        <option value="ECOSOC">ECOSOC</option>
+                        <option value="WHO">WHO</option>
+                    </select>
+                </div>
+                <div class="control-buttons">
+                    <button id="export-button" class="button warning">Export Data</button>
+                    <button id="role-call-button" class="button">Role Call</button>
+                    <button id="lock-countries-button" class="button secondary">Lock Countries</button>
+                </div>
             </div>
 
-            <select id="committee-select">
-                <option value="UNSC">United Nations Security Council (UNSC)</option>
-                <option value="UNODC">UN Office on Drugs and Crime (UNODC)</option>
-            </select>
+            <div class="columns">
+                <div class="column">
+                    <!-- Country List Card -->
+                    <div class="card">
+                        <div class="card-header">Countries</div>
+                        <div class="card-body">
+                            <div class="list-container">
+                                <ul id="country-list" class="list"></ul>
+                            </div>
+                            <button id="add-to-list-button" class="button primary" style="width: 100%; margin-top: 10px;">Add to Speaking List</button>
+                        </div>
+                    </div>
 
-            <div class="section-header">
-                <h3>Country List</h3>
-                <button id="add-to-list-btn" class="btn btn-primary">Add to Speaking List</button>
+                    <!-- Frequency List Card -->
+                    <div class="card">
+                        <div class="card-header">Speaker Frequency</div>
+                        <div class="card-body">
+                            <div class="list-container">
+                                <ul id="frequency-list" class="list"></ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="column">
+                    <!-- Timers Section -->
+                    <div class="card">
+                        <div class="card-header">Timers</div>
+                        <div class="card-body">
+                            <div class="timer-cards">
+                                <div class="timer-card">
+                                    <div class="timer-title">Session</div>
+                                    <div class="timer-display" id="session-timer">00:00</div>
+                                    <div class="timer-controls">
+                                        <button class="timer-button" data-timer="session" data-action="start">Start</button>
+                                        <button class="timer-button" data-timer="session" data-action="stop">Stop</button>
+                                        <button class="timer-button" data-timer="session" data-action="reset">Reset</button>
+                                    </div>
+                                </div>
+                                <div class="timer-card">
+                                    <div class="timer-title">Caucus</div>
+                                    <div class="timer-display" id="caucus-timer">00:00</div>
+                                    <div class="timer-controls">
+                                        <button class="timer-button" data-timer="caucus" data-action="start">Start</button>
+                                        <button class="timer-button" data-timer="caucus" data-action="stop">Stop</button>
+                                        <button class="timer-button" data-timer="caucus" data-action="reset">Reset</button>
+                                    </div>
+                                </div>
+                                <div class="timer-card">
+                                    <div class="timer-title">Speech</div>
+                                    <div class="timer-display" id="speech-timer">00:00</div>
+                                    <div class="timer-controls">
+                                        <button class="timer-button" data-timer="speech" data-action="start">Start</button>
+                                        <button class="timer-button" data-timer="speech" data-action="stop">Stop</button>
+                                        <button class="timer-button" data-timer="speech" data-action="reset">Reset</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <button id="rearrange-timers-button" class="button secondary" style="width: 100%;">Rearrange Timers</button>
+                        </div>
+                    </div>
+
+                    <!-- Notes Section -->
+                    <div class="card">
+                        <div class="card-header">Notes</div>
+                        <div class="card-body">
+                            <textarea id="notes-area" class="notes-area" placeholder="Enter notes here..."></textarea>
+                            <div class="note-buttons">
+                                <button class="button success" data-note="Good Speech">Good Speech</button>
+                                <button class="button danger" data-note="Bad Speech">Bad Speech</button>
+                                <button class="button primary" data-note="Good Diplomacy">Good Diplomacy</button>
+                                <button class="button warning" data-note="Bad Diplomacy">Bad Diplomacy</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Fun Mode Button -->
+                    <button id="fun-mode-button" class="button accent" style="width: 100%;">Fun Committee Mode</button>
+                </div>
             </div>
-            <div id="country-list" class="list-container"></div>
         </div>
 
         <!-- Speaking List Tab -->
         <div id="speaking-list-tab" class="tab-content">
-            <div class="section-header">
-                <h2>Speaking List</h2>
+            <div class="current-speaker">
+                <div class="current-speaker-label">Current Speaker</div>
+                <div class="current-speaker-name" id="current-speaker-display">None</div>
                 <div>
-                    <button id="next-speaker-btn" class="btn btn-primary">Next Speaker</button>
-                    <button id="skip-speaker-btn" class="btn btn-secondary">Skip Speaker</button>
-                </div>
-            </div>
-            <div id="speaking-list" class="list-container"></div>
-        </div>
-
-        <!-- Timers Tab -->
-        <div id="timers-tab" class="tab-content">
-            <div class="section-header">
-                <h2>Timers</h2>
-            </div>
-
-            <!-- Session Timer -->
-            <div class="timer-section">
-                <h3>Session Timer</h3>
-                <div id="session-timer" class="timer-display">00:00</div>
-                <div class="timer-controls">
-                    <button id="session-start-btn" class="btn btn-primary" data-timer="session" data-action="start">Start</button>
-                    <button id="session-stop-btn" class="btn btn-secondary" data-timer="session" data-action="stop">Stop</button>
-                    <button id="session-reset-btn" class="btn btn-secondary" data-timer="session" data-action="reset">Reset</button>
+                    <button id="next-speaker-button" class="button success">Next Speaker</button>
+                    <button id="skip-speaker-button" class="button danger">Skip Speaker</button>
                 </div>
             </div>
 
-            <!-- Caucus Timer -->
-            <div class="timer-section">
-                <h3>Caucus Timer</h3>
-                <div id="caucus-timer" class="timer-display">00:00</div>
-                <div class="timer-controls">
-                    <button id="caucus-start-btn" class="btn btn-primary" data-timer="caucus" data-action="start">Start</button>
-                    <button id="caucus-stop-btn" class="btn btn-secondary" data-timer="caucus" data-action="stop">Stop</button>
-                    <button id="caucus-reset-btn" class="btn btn-secondary" data-timer="caucus" data-action="reset">Reset</button>
-                </div>
-            </div>
-
-            <!-- Speech Timer -->
-            <div class="timer-section">
-                <h3>Speech Timer</h3>
-                <div id="speech-timer" class="timer-display">00:00</div>
-                <div class="timer-controls">
-                    <button id="speech-start-btn" class="btn btn-primary" data-timer="speech" data-action="start">Start</button>
-                    <button id="speech-stop-btn" class="btn btn-secondary" data-timer="speech" data-action="stop">Stop</button>
-                    <button id="speech-reset-btn" class="btn btn-secondary" data-timer="speech" data-action="reset">Reset</button>
+            <div class="card">
+                <div class="card-header">Speaking List</div>
+                <div class="card-body">
+                    <div class="list-container" style="height: 400px;">
+                        <ul id="speaking-list" class="list"></ul>
+                    </div>
+                    <div class="list-controls">
+                        <button id="move-up-button" class="button primary">Move Up</button>
+                        <button id="move-down-button" class="button primary">Move Down</button>
+                        <button id="remove-button" class="button danger">Remove</button>
+                        <button id="clear-list-button" class="button secondary">Clear List</button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>        <!-- Tab Navigation -->
+
+        <!-- Messaging Tab -->
+        <div id="messaging-tab" class="tab-content">
+            <!-- Authentication Required Panel -->
+            <div id="auth-required-panel">
+                <div class="card">
+                    <div class="card-body" style="text-align: center; padding: 40px 20px;">
+                        <h2>GitHub Authentication Required</h2>
+                        <p>You need to authenticate with GitHub to access the messaging feature.</p>
+                        <button id="auth-messaging-button" class="button primary">Authenticate with GitHub</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Messaging Interface (hidden initially) -->
+            <div id="messaging-interface" style="display: none;">
+                <div class="messaging-container">
+                    <div class="delegates-list">
+                        <div class="card" style="height: 100%;">
+                            <div class="card-header">Delegates</div>
+                            <div class="card-body" style="height: calc(100% - 50px); display: flex; flex-direction: column;">
+                                <div class="list-container" style="flex: 1;">
+                                    <ul id="conversation-list" class="list"></ul>
+                                </div>
+                                <button id="new-message-button" class="button success" style="margin-top: 10px;">New Message</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="messages-container">
+                        <div class="card" style="flex: 1; margin-bottom: 10px;">
+                            <div class="card-header">Messages</div>
+                            <div class="card-body" style="height: calc(100% - 50px); overflow-y: auto;">
+                                <div id="message-display"></div>
+                            </div>
+                        </div>
+
+                        <div class="message-compose">
+                            <textarea id="message-input" class="message-input" placeholder="Type your message here..."></textarea>
+                            <div style="text-align: right;">
+                                <button id="send-message-button" class="button primary">Send Message</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Role Call Modal -->
+        <div id="role-call-modal" class="role-call-container">
+            <div class="role-call-modal">
+                <div class="role-call-header">
+                    <h2 id="role-call-title">Role Call</h2>
+                    <div>
+                        <label for="role-call-date">Date:</label>
+                        <input type="text" id="role-call-date" placeholder="YYYY-MM-DD">
+                        <button id="add-date-button" class="button primary">Add Date</button>
+                        <button id="close-role-call-button" class="button">Close</button>
+                    </div>
+                </div>
+                <div class="role-call-body">
+                    <table id="role-call-table" class="role-call-table">
+                        <thead>
+                            <tr>
+                                <th>Country</th>
+                                <!-- Dates will be inserted dynamically -->
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Countries and attendance will be inserted dynamically -->
+                        </tbody>
+                    </table>
+                    <div style="text-align: right; margin-top: 15px;">
+                        <button id="save-role-call-button" class="button success">Save Role Call</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- New Message Dialog -->
+        <div id="new-message-dialog" class="dialog">
+            <div class="dialog-content">
+                <h3 class="dialog-title">New Message</h3>
+                <div>
+                    <label for="recipient-select">To:</label>
+                    <select id="recipient-select" style="width: 100%; margin-bottom: 15px;"></select>
+                </div>
+                <div>
+                    <label for="new-message-text">Message:</label>
+                    <textarea id="new-message-text" class="message-input"></textarea>
+                </div>
+                <div class="dialog-buttons">
+                    <button id="cancel-message-button" class="button secondary">Cancel</button>
+                    <button id="send-new-message-button" class="button primary">Send</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fun Mode Container (hidden initially) -->
+        <div id="fun-mode-container" style="display: none;">
+            <div class="fun-mode">
+                <div class="fun-mode-header">Fun Committee Mode</div>
+                <div class="fun-timer" id="fun-timer">00:00</div>
+                <div>
+                    <button class="button" style="background-color: #6A0DAD;" data-action="start-fun">Start</button>
+                    <button class="button" style="background-color: #6A0DAD;" data-action="stop-fun">Stop</button>
+                    <button class="button" style="background-color: #6A0DAD;" data-action="reset-fun">Reset</button>
+                </div>
+
+                <div class="game-options">
+                    <div class="game-option">
+                        <span>UN Charades - Votes: <span class="vote-count">0</span></span>
+                        <button class="button primary vote-button">Vote</button>
+                    </div>
+                    <div class="game-option">
+                        <span>Diplomatic Trivia - Votes: <span class="vote-count">0</span></span>
+                        <button class="button primary vote-button">Vote</button>
+                    </div>
+                    <div class="game-option">
+                        <span>Resolution Writing Race - Votes: <span class="vote-count">0</span></span>
+                        <button class="button primary vote-button">Vote</button>
+                    </div>
+                    <div class="game-option">
+                        <span>Crisis Simulation - Votes: <span class="vote-count">0</span></span>
+                        <button class="button primary vote-button">Vote</button>
+                    </div>
+                </div>
+
+                <button id="exit-fun-mode-button" class="button danger">Exit Fun Mode</button>
+            </div>
+        </div>
+    </div>
 
     <script>
-   // MUN Speech Timer - Core Application Structure
-        class MUNSpeechTimerApp {
-            constructor() {
-                // Application-wide configuration
-                this.config = {
-                    version: '1.0.0',
-                    theme: 'default',
-                    language: 'en',
-                    debug: true  // Enable debug mode for more logging
-                };
+// Initialize countries for committees
+const committeeCountries = {
+    'UNSC': ['USA', 'UK', 'France', 'Russia', 'China', 'India', 'Brazil', 'Japan', 'Germany', 'South Africa', 'Kenya', 'Ghana'],
+    'UNODC': ['USA', 'Canada', 'Mexico', 'Brazil', 'Colombia', 'UK', 'France', 'Germany', 'Russia', 'China', 'Japan', 'India', 'Nigeria', 'South Africa'],
+    'UNGA': ['USA', 'UK', 'France', 'Russia', 'China', 'India', 'Germany', 'Japan', 'Brazil', 'South Africa', 'Egypt', 'Saudi Arabia', 'Australia', 'Canada'],
+    'UNHRC': ['USA', 'UK', 'Germany', 'France', 'Italy', 'Argentina', 'Brazil', 'Japan', 'South Korea', 'India', 'South Africa', 'Kenya', 'Morocco'],
+    'ECOSOC': ['USA', 'China', 'Russia', 'UK', 'France', 'Germany', 'India', 'Brazil', 'Japan', 'South Africa', 'Nigeria', 'Egypt', 'Saudi Arabia'],
+    'WHO': ['USA', 'UK', 'France', 'Germany', 'Japan', 'China', 'India', 'Brazil', 'South Africa', 'Kenya', 'Australia', 'Canada', 'Mexico']
+};
 
-                // Comprehensive state management
-                this.state = {
-                    // Committee management
-                    currentCommittee: 'UNSC',
-                    committees: {
-                        "UNSC": ["United States", "China", "Russian Federation", "United Kingdom", "France", 
-                            "Albania", "Brazil", "Gabon", "Ghana", "India", "Ireland", "Kenya", "Mexico", 
-                            "Norway", "United Arab Emirates"],
-                        "UNODC": ["Germany", "Canada", "Mexico", "Brazil", "Japan", "France", "United Kingdom", 
-                            "Russian Federation", "China", "United States", "Italy", "Spain", "Netherlands"]
-                    },
-
-                    // Speaking list management
-                    speakingList: [],
-                    currentSpeaker: null,
-                    speakerHistory: [],
-
-                    // Timer management
-                    timers: {
-                        session: {
-                            running: false,
-                            startTime: null,
-                            elapsedTime: 0
-                        },
-                        caucus: {
-                            running: false,
-                            startTime: null,
-                            elapsedTime: 0
-                        },
-                        speech: {
-                            running: false,
-                            startTime: null,
-                            elapsedTime: 0
-                        }
-                    },
-
-                    // UI state
-                    ui: {
-                        activeTab: 'main',
-                        selectedCountry: null
-                    }
-                };
-
-                // Logging system
-                this.logger = {
-                    logs: [],
-                    log(message, type = 'info') {
-                        const logEntry = {
-                            timestamp: new Date(),
-                            message,
-                            type
-                        };
-                        this.logs.push(logEntry);
-                        
-                        // Console logging for debug mode
-                        if (this.config.debug) {
-                            console.log(`[${type.toUpperCase()}]`, message);
-                        }
-                    },
-                    error(message) {
-                        this.log(message, 'error');
-                        console.error(message);
-                    }
-                };
-
-                // Initialize the application
-                this.initializeApplication();
-            }
-
-            // Application initialization method
-            initializeApplication() {
-                try {
-                    this.logger.log('Initializing MUN Speech Timer Application');
-                    
-                    // Setup event listeners
-                    this.setupEventListeners();
-
-                    // Log successful initialization
-                    this.logger.log('Application initialized successfully');
-                } catch (error) {
-                    this.logger.error(`Initialization failed: ${error.message}`);
-                }
-            }
-
-            // Setup global event listeners
-            setupEventListeners() {
-                // Placeholder for event listener setup
-                this.logger.log('Setting up global event listeners');
-            }
-
-            // Utility method for time formatting
-            formatTime(seconds) {
-                const mins = Math.floor(seconds / 60);
-                const secs = Math.floor(seconds % 60);
-                return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-            }
-        }
-
-        // Speaking List Manager
-        class SpeakingListManager {
-            constructor(app) {
-                this.app = app;
-            }
-
-            // Add a speaker to the speaking list
-            addToSpeakingList(speaker) {
-                // Validate input
-                if (!speaker || typeof speaker !== 'string') {
-                    this.app.logger.error('Invalid speaker name');
-                    return false;
-                }
-
-                // Check if speaker is already in the list
-                if (!this.app.state.speakingList.includes(speaker)) {
-                    // Add speaker to the list
-                    this.app.state.speakingList.push(speaker);
-                    
-                    // Log the addition
-                    this.app.logger.log(`Added ${speaker} to speaking list`);
-
-                    // Trigger UI update if needed
-                    this.updateUI();
-
-                    return true;
-                } else {
-                    // Speaker already in the list
-                    this.app.logger.log(`${speaker} is already in the speaking list`);
-                    return false;
-                }
-            }
-
-            // Move to the next speaker
-            nextSpeaker() {
-                // Check if there are speakers in the list
-                if (this.app.state.speakingList.length > 0) {
-                    // Remove the first speaker from the list
-                    const currentSpeaker = this.app.state.speakingList.shift();
-                    
-                    // Update current speaker
-                    this.app.state.currentSpeaker = currentSpeaker;
-
-                    // Add to speaker history
-                    if (!this.app.state.speakerHistory) {
-                        this.app.state.speakerHistory = [];
-                    }
-                    this.app.state.speakerHistory.push(currentSpeaker);
-
-                    // Log the speaker change
-                    this.app.logger.log(`Next speaker: ${currentSpeaker}`);
-
-                    // Trigger UI update
-                    this.updateUI();
-
-                    return currentSpeaker;
-                } else {
-                    // No speakers in the list
-                    this.app.state.currentSpeaker = null;
-                    this.app.logger.log('No more speakers in the list');
-                    return null;
-                }
-            }
-
-            // Skip the current speaker
-            skipCurrentSpeaker() {
-                // Check if there's a current speaker
-                if (this.app.state.currentSpeaker) {
-                    // Add current speaker back to the end of the list
-                    this.app.state.speakingList.push(this.app.state.currentSpeaker);
-                    
-                    // Log the skip
-                    this.app.logger.log(`Skipped speaker: ${this.app.state.currentSpeaker}`);
-
-                    // Move to next speaker
-                    this.nextSpeaker();
-                }
-            }
-
-            // Clear the entire speaking list
-            clearSpeakingList() {
-                // Reset speaking list and current speaker
-                this.app.state.speakingList = [];
-                this.app.state.currentSpeaker = null;
-                
-                // Log the action
-                this.app.logger.log('Speaking list cleared');
-
-                // Trigger UI update
-                this.updateUI();
-            }
-
-            // Get current speaking list
-            getSpeakingList() {
-                return [...this.app.state.speakingList];
-            }
-
-            // Update UI (placeholder method to be implemented later)
-            updateUI() {
-                // This will be connected to the UI manager in a later stage
-                console.log('Speaking List Updated:', this.app.state.speakingList);
-            }
-        }
-
-        // Timer Management System
-        class TimerManager {
-            constructor(app) {
-                this.app = app;
-                
-                // Timer types to manage
-                this.timerTypes = ['session', 'caucus', 'speech'];
-            }
-
-            // Start a specific timer
-            startTimer(timerType) {
-                // Validate timer type
-                if (!this.timerTypes.includes(timerType)) {
-                    this.app.logger.error(`Invalid timer type: ${timerType}`);
-                    return false;
-                }
-
-                // Get the specific timer from state
-                const timer = this.app.state.timers[timerType];
-
-                // Check if timer is already running
-                if (timer.running) {
-                    this.app.logger.log(`${// Set start time and mark as running
-            timer.startTime = Date.now();
-            timer.running = true;
-
-            // Log the timer start
-            this.app.logger.log(`${timerType} timer started`);
-
-            // Trigger timer update mechanism
-            this.startTimerUpdate(timerType);
-
-            return true;
-        }
-
-        // Stop a specific timer
-        stopTimer(timerType) {
-            // Validate timer type
-            if (!this.timerTypes.includes(timerType)) {
-                this.app.logger.error(`Invalid timer type: ${timerType}`);
-                return false;
-            }
-
-            // Get the specific timer from state
-            const timer = this.app.state.timers[timerType];
-
-            // Check if timer is running
-            if (!timer.running) {
-                this.app.logger.log(`${timerType} timer is not running`);
-                return false;
-            }
-
-            // Calculate elapsed time
-            const currentTime = Date.now();
-            timer.elapsedTime += (currentTime - timer.startTime);
-            
-            // Stop the timer
-            timer.running = false;
-            timer.startTime = null;
-
-            // Log the timer stop
-            this.app.logger.log(`${timerType} timer stopped. Total elapsed time: ${this.formatElapsedTime(timer.elapsedTime)}`);
-
-            // Stop timer update mechanism
-            this.stopTimerUpdate(timerType);
-
-            return true;
-        }
-
-        // Reset a specific timer
-        resetTimer(timerType) {
-            // Validate timer type
-            if (!this.timerTypes.includes(timerType)) {
-                this.app.logger.error(`Invalid timer type: ${timerType}`);
-                return false;
-            }
-
-            // Get the specific timer from state
-            const timer = this.app.state.timers[timerType];
-
-            // Stop the timer if it's running
-            if (timer.running) {
-                this.stopTimer(timerType);
-            }
-
-            // Reset timer properties
-            timer.elapsedTime = 0;
-            timer.startTime = null;
-            timer.running = false;
-
-            // Log the timer reset
-            this.app.logger.log(`${timerType} timer reset`);
-
-            return true;
-        }
-
-        // Start timer update mechanism
-        startTimerUpdate(timerType) {
-            // Create a timer update interval
-            this[`${timerType}TimerInterval`] = setInterval(() => {
-                this.updateTimerDisplay(timerType);
-            }, 1000);
-        }
-
-        // Stop timer update mechanism
-        stopTimerUpdate(timerType) {
-            // Clear the specific timer interval
-            if (this[`${timerType}TimerInterval`]) {
-                clearInterval(this[`${timerType}TimerInterval`]);
-                this[`${timerType}TimerInterval`] = null;
-            }
-        }
-
-        // Update timer display
-        updateTimerDisplay(timerType) {
-            const timer = this.app.state.timers[timerType];
-            
-            if (timer.running) {
-                // Calculate current elapsed time
-                const currentTime = Date.now();
-                const totalElapsedTime = timer.elapsedTime + (currentTime - timer.startTime);
-                
-                // Convert to seconds
-                const seconds = Math.floor(totalElapsedTime / 1000);
-                
-                // Format and display the time
-                const formattedTime = this.app.formatTime(seconds);
-                
-                // In a real implementation, this would update the UI
-                console.log(`${timerType.toUpperCase()} Timer: ${formattedTime}`);
-            }
-        }
-
-        // Format elapsed time
-        formatElapsedTime(milliseconds) {
-            const totalSeconds = Math.floor(milliseconds / 1000);
-            const minutes = Math.floor(totalSeconds / 60);
-            const seconds = totalSeconds % 60;
-            return `${minutes}m ${seconds}s`;
-        }
-
-        // Get current timer status
-        getTimerStatus(timerType) {
-            // Validate timer type
-            if (!this.timerTypes.includes(timerType)) {
-                this.app.logger.error(`Invalid timer type: ${timerType}`);
-                return null;
-            }
-
-            const timer = this.app.state.timers[timerType];
-            return {
-                running: timer.running,
-                elapsedTime: this.formatElapsedTime(timer.elapsedTime)
-            };
-        }
-    }
-
-    // UI Management System
-    class UIManager {
-        constructor(app) {
-            this.app = app;
-            
-            // DOM Element References
-            this.elements = {
-                // Tabs
-                tabs: {
-                    main: document.querySelector('.tab[data-tab="main"]'),
-                    speakingList: document.querySelector('.tab[data-tab="speaking-list"]'),
-                    timers: document.querySelector('.tab[data-tab="timers"]')
-                },
-                // Tab Contents
-                tabContents: {
-                    main: document.getElementById('main-tab'),
-                    speakingList: document.getElementById('speaking-list-tab'),
-                    timers: document.getElementById('timers-tab')
-                },
-                // Committee Select
-                committeeSelect: document.getElementById('committee-select'),
-                
-                // Country List
-                countryList: document.getElementById('country-list'),
-                addToListBtn: document.getElementById('add-to-list-btn'),
-                
-                // Speaking List
-                speakingList: document.getElementById('speaking-list'),
-                nextSpeakerBtn: document.getElementById('next-speaker-btn'),
-                skipSpeakerBtn: document.getElementById('skip-speaker-btn'),
-                
-                // Timers
-                timers: {
-                    session: {
-                        display: document.getElementById('session-timer'),
-                        startBtn: document.getElementById('session-start-btn'),
-                        stopBtn: document.getElementById('session-stop-btn'),
-                        resetBtn: document.getElementById('session-reset-btn')
-                    },
-                    caucus: {
-                        display: document.getElementById('caucus-timer'),
-                        startBtn: document.getElementById('caucus-start-btn'),
-                        stopBtn: document.getElementById('caucus-stop-btn'),
-                        resetBtn: document.getElementById('caucus-reset-btn')
-                    },
-                    speech: {
-                        display: document.getElementById('speech-timer'),
-                        startBtn: document.getElementById('speech-start-btn'),
-                        stopBtn: document.getElementById('speech-stop-btn'),
-                        resetBtn: document.getElementById('speech-reset-btn')
-                    }
-                }
-            };
-
-            // Initialize UI
-            this.initializeEventListeners();
-            this.updateCountryList();
-        }
-
-        // Setup Event Listeners
-        initializeEventListeners() {
-            // Tab Switching
-            Object.values(this.elements.tabs).forEach(tab => {
-                tab.addEventListener('click', () => this.switchTab(tab.getAttribute('data-tab')));
+// Function to populate country list
+function populateCountryList(committee) {
+    const countryList = document.getElementById('country-list');
+    countryList.innerHTML = '';
+    
+    committeeCountries[committee].forEach(country => {
+        const li = document.createElement('li');
+        li.textContent = country;
+        li.className = 'list-item';
+        li.addEventListener('click', function() {
+            document.querySelectorAll('#country-list .list-item').forEach(item => {
+                item.classList.remove('selected');
             });
-
-            // Committee Selection
-            this.elements.committeeSelect.addEventListener('change', () => this.onCommitteeChange());
-
-            // Country List
-            this.elements.countryList.addEventListener('click', (event) => this.onCountryListClick(event));
-            this.elements.addToListBtn.addEventListener('click', () => this.addSelectedCountryToSpeakingList());
-
-            // Speaking List
-            this.elements.nextSpeakerBtn.addEventListener('click', () => this.moveToNextSpeaker());
-            this.elements.skipSpeakerBtn.addEventListener('click', () => this.skipCurrentSpeaker());
-
-            // Timer Buttons
-            this.setupTimerEventListeners();
-        }
-
-        // Switch Active Tab
-        switchTab(tabName) {
-            // Remove active class from all tabs and tab contents
-            Object.values(this.elements.tabs).forEach(tab => 
-                tab.classList.remove('active'));
-            Object.values(this.elements.tabContents).forEach(content => 
-                content.classList.remove('active'));
-
-            // Add active class to selected tab and content
-            this.elements.tabs[tabName].classList.add('active');
-            this.elements.tabContents[tabName].classList.add('active');
-        }
-
-        // Update Country List based on Selected Committee
-        updateCountryList() {
-            const currentCommittee = this.app.state.currentCommittee;
-            const countries = this.app.state.committees[currentCommittee] || [];
-
-            // Clear existing list
-            this.elements.countryList.innerHTML = '';
-
-            // Populate country list
-            countries.forEach(country => {
-                const countryElement = document.createElement('div');
-                countryElement.classList.add('list-item');
-                countryElement.textContent = country;
-                this.elements.countryList.appendChild(countryElement);
-            });
-        }
-
-        // Handle Committee Change
-        onCommitteeChange() {
-            // Update current committee in app state
-            const selectedCommittee = this.elements.committeeSelect.value;
-            this.app.state.currentCommittee = selectedCommittee;
-            
-            // Update country list
-            this.updateCountryList();
-        }
-
-        // Handle Country List Click
-        onCountryListClick(event) {
-            if (event.target.classList.contains('list-item')) {
-                // Remove selection from all items
-                this.elements.countryList.querySelectorAll('.list-item')
-                    .forEach(item => item.classList.remove('selected'));
-                
-                // Add selection to clicked item
-                event.target.classList.add('selected');
-            }
-        }
-
-        // Add Selected Country to Speaking List
-        addSelectedCountryToSpeakingList() {
-            const selectedCountry = this.elements.countryList
-                .querySelector('.list-item.selected');
-            
-            if (selectedCountry) {
-                const countryName = selectedCountry.textContent;
-                this.app.speakingListManager().addToSpeakingList(countryName);
-                this.updateSpeakingList();
-            } else {
-                alert('Please select a country first');
-            }
-        }
-
-        // Update Speaking List Display
-        updateSpeakingList() {
-            const speakingList = this.app.speakingListManager().getSpeakingList();
-            
-            // Clear existing list
-            this.elements.speakingList.innerHTML = '';
-
-            // Populate speaking list
-            speakingList.forEach(country => {
-                const listItem = document.createElement('div');
-                listItem.classList.add('list-item');
-                listItem.textContent = country;
-                this.elements.speakingList.appendChild(listItem);
-            });
-        }
-
-        // Move to Next Speaker
-        moveToNextSpeaker() {
-            this.app.speakingListManager().nextSpeaker();
-            this.updateSpeakingList();
-        }
-
-        // Skip Current Speaker
-        skipCurrentSpeaker() {
-            this.app.speakingListManager().skipCurrentSpeaker();
-            this.updateSpeakingList();
-        }
-
-        // Setup Timer Event Listeners
-        setupTimerEventListeners() {
-            // Iterate through timer types
-            ['session', 'caucus', 'speech'].forEach(timerType => {
-                const timerControls = this.elements.timers[timerType];
-
-                // Start Button
-                timerControls.startBtn.addEventListener('click', () => {
-                    this.app.timerManager().startTimer(timerType);
-                });
-
-                // Stop Button
-                timerControls.stopBtn.addEventListener('click', () => {
-                    this.app.timerManager().stopTimer(timerType);
-                });
-
-                // Reset Button
-                timerControls.resetBtn.addEventListener('click', () => {
-                    this.app.timerManager().resetTimer(timerType);
-                });
-            });
-        }
-
-        // Update Timer Display (to be called periodically)
-        updateTimerDisplay(timerType) {
-            const timerStatus = this.app.timerManager().getTimerStatus(timerType);
-            
-            if (timerStatus) {
-                const timerDisplay = this.elements.timers[timerType].display;
-                
-                // Update display with current time
-                timerDisplay.textContent = timerStatus.running 
-                    ? timerStatus.elapsedTime 
-                    : '00:00';
-            }
-        }
-    }
-
-    // MUN Speech Timer - Comprehensive Integration Script
-
-    // Extend the main MUNSpeechTimerApp with additional methods and integrations
-    MUNSpeechTimerApp.prototype.initialize = function() {
-        // Initialize all core systems
-        this.initializeManagers();
-        this.setupGlobalEventListeners();
-        this.restoreApplicationState();
-    };
-
-    MUNSpeechTimerApp.prototype.initializeManagers = function() {
-        // Initialize core managers
-        this.speakingListManager = new SpeakingListManager(this);
-        this.timerManager = new TimerManager(this);
-        this.uiManager = new UIManager(this);
-    };
-
-    MUNSpeechTimerApp.prototype.setupGlobalEventListeners = function() {
-        // Save state before page unload
-        window.addEventListener('beforeunload', () => {
-            this.saveApplicationState();
+            this.classList.add('selected');
         });
-
-        // Optional: Handle potential errors globally
-        window.addEventListener('error', (event) => {
-            this.logger.error(`Unhandled error: ${event.message}`);
-        });
-    };
-
-    MUNSpeechTimerApp.prototype.saveApplicationState = function() {
-        try {
-            // Serialize and save the current application state
-            const stateToSave = JSON.stringify({
-                currentCommittee: this.state.currentCommittee,
-                speakingList: this.state.speakingList,
-                speakerHistory: this.state.speakerHistory,
-                timers: this.state.timers
-            });
-
-            localStorage.setItem('munAppState', stateToSave);
-            this.logger.log('Application state saved successfully');
-        } catch (error) {
-            this.logger.error(`Failed to save application state: ${error.message}`);
-        }
-    };
-
-    MUNSpeechTimerApp.prototype.restoreApplicationState = function() {
-        try {
-            const savedState = localStorage.getItem('munAppState');
-            
-            if (savedState) {
-                const parsedState = JSON.parse(savedState);
-                
-                // Restore specific state components
-                if (parsedState.currentCommittee) {
-                    this.state.currentCommittee = parsedState.currentCommittee;
-                }
-
-                if (parsedState.speakingList) {
-                    this.state.speakingList = parsedState.speakingList;
-                }
-
-                if (parsedState.speakerHistory) {
-                    this.state.speakerHistory = parsedState.speakerHistory;
-                }
-
-                if (parsedState.timers) {
-                    this.state.timers = parsedState.timers;
-                }
-
-                this.logger.log('Application state restored successfully');
-            }
-        } catch (error) {
-            this.logger.error(`Failed to restore application state: ${error.message}`);
-        }
-    };
-
-    // Enhanced initialization process
-    document.addEventListener('DOMContentLoaded', () => {
-        // Create the main application instance
-        const munApp = new MUNSpeechTimerApp();
-
-        // Initialize the application
-        munApp.initialize();
-
-        // Debug logging
-        console.log('MUN Speech Timer Initialized');
+        countryList.appendChild(li);
     });
-</script>
-</body>
-</html>
-</parameter>
-<parameter name="content">OK</parameter>
-</invoke>        // MUN Speech Timer - Core Application Structure
-       
+}
+
+// Initialize with default committee
+populateCountryList(state.selectedCommittee);
+
+// Handle committee selection change
+document.getElementById('committee-select').addEventListener('change', function() {
+    state.selectedCommittee = this.value;
+    populateCountryList(state.selectedCommittee);
+    updateFrequencyList();
+});
+
+// Add to speaking list button
+document.getElementById('add-to-list-button').addEventListener('click', function() {
+    const selectedCountry = document.querySelector('#country-list .list-item.selected');
+    if (selectedCountry) {
+        const country = selectedCountry.textContent;
+        addToSpeakingList(country);
+        updateSpeakingList();
+        updateFrequencyList();
+    }
+});
+
+// Function to add a country to the speaking list
+function addToSpeakingList(country) {
+    state.speakerQueue.push(country);
+    
+    // Update frequency data
+    if (!state.delegateData[country]) {
+        state.delegateData[country] = {
+            speaking: 0,
+            votes: 0,
+            notes: []
+        };
+    }
+    state.delegateData[country].speaking++;
+}
+
+// Function to update speaking list display
+function updateSpeakingList() {
+    const speakingList = document.getElementById('speaking-list');
+    speakingList.innerHTML = '';
+    
+    state.speakerQueue.forEach((country, index) => {
+        const li = document.createElement('li');
+        li.textContent = country;
+        li.className = 'list-item';
+        li.dataset.index = index;
+        li.addEventListener('click', function() {
+            document.querySelectorAll('#speaking-list .list-item').forEach(item => {
+                item.classList.remove('selected');
+            });
+            this.classList.add('selected');
+        });
+        speakingList.appendChild(li);
+    });
+}
+
+// Function to update frequency list
+function updateFrequencyList() {
+    const frequencyList = document.getElementById('frequency-list');
+    frequencyList.innerHTML = '';
+    
+    // Create array from delegate data
+    const delegates = Object.keys(state.delegateData).map(country => {
+        return {
+            country: country,
+            count: state.delegateData[country].speaking
+        };
+    });
+    
+    // Sort by speaking count descending
+    delegates.sort((a, b) => b.count - a.count);
+    
+    delegates.forEach(delegate => {
+        const li = document.createElement('li');
+        li.className = 'list-item';
+        
+        // Determine color based on frequency
+        let colorClass = '';
+        if (delegate.count > 5) {
+            colorClass = 'background-color: var(--danger);';
+        } else if (delegate.count > 3) {
+            colorClass = 'background-color: var(--warning);';
+        } else if (delegate.count > 0) {
+            colorClass = 'background-color: var(--success);';
+        }
+        
+        li.innerHTML = `<span class="frequency-indicator" style="${colorClass}"></span>${delegate.country} - ${delegate.count}`;
+        frequencyList.appendChild(li);
+    });
+}        // Helper function to generate UUIDs
+        function generateUUID() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                const r = Math.random() * 16 | 0;
+                const v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+
+        // Initialize the application when the DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Tab switching
+            const tabs = document.querySelectorAll('.tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    if (tab.classList.contains('disabled')) return;
+                    
+                    const tabId = tab.getAttribute('data-tab');
+                    
+                    // Update active tab
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    
+                    // Show corresponding content
+                    tabContents.forEach(content => {
+                        content.classList.remove('active');
+                        if (content.id === `${tabId}-tab`) {
+                            content.classList.add('active');
+                        }
+                    });
+                });
+            });
+
+            // Global data and state
+            const state = {
+                currentSpeaker: null,
+                speakerQueue: [],
+                delegateData: {},
+                attendanceData: {},
+                attendanceDates: [],
+                isCountryListLocked: false,
+                selectedCommittee: 'UNSC',
+                authenticatedUsername: null,
+                messages: [],
+                delegates: new Set(),
+                selectedDelegate: null,
+                timerIntervals: {
+                    session: null,
+                    caucus: null,
+                    speech: null,
+                    fun: null
+                },
+                timerStart: {
+                    session: 0,
+                    caucus: 0,
+                    speech: 0,
+                    fun: 0
+                },
+                timerElapsed: {
+                    session: 0,
+                    caucus: 0,
+                    speech: 0,
+                    fun: 0
+                },
+                timerRunning: {
+                    session: false,
+                    caucus: false,
+                    speech: false,
+                    fun: false
+                },
+                timerTypes: ["Session", "Caucus", "Speech"],
+                timerColors: ["var(--timer-green)", "var(--timer-blue)", "var(--timer-orange)"],
+                // Timer functions
+function formatTime(timeInSeconds) {
+    const minutes = Math.floor(timeInSeconds / 60).toString().padStart(2, '0');
+    const seconds = (timeInSeconds % 60).toString().padStart(2, '0');
+    return `${minutes}:${seconds}`;
+}
+
+function updateTimerDisplay(timerType) {
+    const display = document.getElementById(`${timerType.toLowerCase()}-timer`);
+    display.textContent = formatTime(state.timerElapsed[timerType.toLowerCase()]);
+}
+
+function startTimer(timerType) {
+    const lowerType = timerType.toLowerCase();
+    if (!state.timerRunning[lowerType]) {
+        state.timerRunning[lowerType] = true;
+        state.timerStart[lowerType] = Date.now() - (state.timerElapsed[lowerType] * 1000);
+        state.timerIntervals[lowerType] = setInterval(() => {
+            state.timerElapsed[lowerType] = Math.floor((Date.now() - state.timerStart[lowerType]) / 1000);
+            updateTimerDisplay(timerType);
+        }, 1000);
+    }
+}
+
+function stopTimer(timerType) {
+    const lowerType = timerType.toLowerCase();
+    if (state.timerRunning[lowerType]) {
+        clearInterval(state.timerIntervals[lowerType]);
+        state.timerRunning[lowerType] = false;
+    }
+}
+
+function resetTimer(timerType) {
+    const lowerType = timerType.toLowerCase();
+    stopTimer(timerType);
+    state.timerElapsed[lowerType] = 0;
+    updateTimerDisplay(timerType);
+}
+
+// Add event listeners for timer buttons
+document.querySelectorAll('.timer-button').forEach(button => {
+    button.addEventListener('click', function() {
+        const timer = this.getAttribute('data-timer');
+        const action = this.getAttribute('data-action');
+        
+        if (action === 'start') {
+            startTimer(timer);
+        } else if (action === 'stop') {
+            stopTimer(timer);
+        } else if (action === 'reset') {
+            resetTimer(timer);
+        }
+    });
+});
+
+// Initialize timer displays
+updateTimerDisplay('session');
+updateTimerDisplay('caucus');
+updateTimerDisplay('speech');
+// Next speaker button
+document.getElementById('next-speaker-button').addEventListener('click', function() {
+    if (state.speakerQueue.length > 0) {
+        if (state.currentSpeaker) {
+            // Current speaker is done
+            resetTimer('speech');
+        }
+        
+        // Get next speaker
+        state.currentSpeaker = state.speakerQueue.shift();
+        document.getElementById('current-speaker-display').textContent = state.currentSpeaker;
+        
+        // Start speech timer
+        resetTimer('speech');
+        startTimer('speech');
+        
+        // Update the display
+        updateSpeakingList();
+    }
+});
+
+// Skip speaker button
+document.getElementById('skip-speaker-button').addEventListener('click', function() {
+    if (state.currentSpeaker) {
+        resetTimer('speech');
+        state.currentSpeaker = null;
+        document.getElementById('current-speaker-display').textContent = 'None';
+        
+        if (state.speakerQueue.length > 0) {
+            state.currentSpeaker = state.speakerQueue.shift();
+            document.getElementById('current-speaker-display').textContent = state.currentSpeaker;
+            resetTimer('speech');
+            startTimer('speech');
+        }
+        
+        updateSpeakingList();
+    }
+});
+
+// Speaking list controls
+document.getElementById('move-up-button').addEventListener('click', function() {
+    const selected = document.querySelector('#speaking-list .list-item.selected');
+    if (selected) {
+        const index = parseInt(selected.dataset.index);
+        if (index > 0) {
+            // Swap with previous item
+            [state.speakerQueue[index], state.speakerQueue[index - 1]] = [state.speakerQueue[index - 1], state.speakerQueue[index]];
+            updateSpeakingList();
+            
+            // Keep the item selected
+            document.querySelectorAll('#speaking-list .list-item')[index - 1].classList.add('selected');
+        }
+    }
+});
+
+document.getElementById('move-down-button').addEventListener('click', function() {
+    const selected = document.querySelector('#speaking-list .list-item.selected');
+    if (selected) {
+        const index = parseInt(selected.dataset.index);
+        if (index < state.speakerQueue.length - 1) {
+            // Swap with next item
+            [state.speakerQueue[index], state.speakerQueue[index + 1]] = [state.speakerQueue[index + 1], state.speakerQueue[index]];
+            updateSpeakingList();
+            
+            // Keep the item selected
+            document.querySelectorAll('#speaking-list .list-item')[index + 1].classList.add('selected');
+        }
+    }
+});
+
+document.getElementById('remove-button').addEventListener('click', function() {
+    const selected = document.querySelector('#speaking-list .list-item.selected');
+    if (selected) {
+        const index = parseInt(selected.dataset.index);
+        state.speakerQueue.splice(index, 1);
+        updateSpeakingList();
+    }
+});
+
+document.getElementById('clear-list-button').addEventListener('click', function() {
+    state.speakerQueue = [];
+    updateSpeakingList();
+});
+// Notes functionality
+document.querySelectorAll('.note-buttons .button').forEach(button => {
+    button.addEventListener('click', function() {
+        const noteText = this.getAttribute('data-note');
+        const notesArea = document.getElementById('notes-area');
+        
+        if (state.currentSpeaker) {
+            const timestamp = new Date().toLocaleTimeString();
+            const note = `[${timestamp}] ${state.currentSpeaker}: ${noteText}`;
+            
+            // Add to text area
+            notesArea.value += (notesArea.value ? '\n' : '') + note;
+            
+            // Add to delegate data
+            if (!state.delegateData[state.currentSpeaker]) {
+                state.delegateData[state.currentSpeaker] = {
+                    speaking: 0,
+                    votes: 0,
+                    notes: []
+                };
+            }
+            state.delegateData[state.currentSpeaker].notes.push({
+                timestamp: timestamp,
+                note: noteText
+            });
+        }
+    });
+});
+// Lock countries functionality
+document.getElementById('lock-countries-button').addEventListener('click', function() {
+    state.isCountryListLocked = !state.isCountryListLocked;
+    
+    const countryListItems = document.querySelectorAll('#country-list .list-item');
+    if (state.isCountryListLocked) {
+        this.textContent = 'Unlock Countries';
+        countryListItems.forEach(item => {
+            item.style.pointerEvents = 'none';
+            item.style.opacity = '0.6';
+        });
+    } else {
+        this.textContent = 'Lock Countries';
+        countryListItems.forEach(item => {
+            item.style.pointerEvents = 'auto';
+            item.style.opacity = '1';
+        });
+    }
+});
+// Fun Mode functionality
+document.getElementById('fun-mode-button').addEventListener('click', function() {
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('fun-mode-container').style.display = 'block';
+    resetTimer('fun');
+});
+
+document.getElementById('exit-fun-mode-button').addEventListener('click', function() {
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('fun-mode-container').style.display = 'none';
+    stopTimer('fun');
+});
+
+// Fun mode timer controls
+document.querySelector('[data-action="start-fun"]').addEventListener('click', function() {
+    startTimer('fun');
+});
+
+document.querySelector('[data-action="stop-fun"]').addEventListener('click', function() {
+    stopTimer('fun');
+});
+
+document.querySelector('[data-action="reset-fun"]').addEventListener('click', function() {
+    resetTimer('fun');
+});
+
+// Update fun timer display
+function updateFunTimerDisplay() {
+    document.getElementById('fun-timer').textContent = formatTime(state.timerElapsed.fun);
+}
+
+// Fun mode voting
+document.querySelectorAll('.vote-button').forEach(button => {
+    button.addEventListener('click', function() {
+        const voteCount = this.parentElement.querySelector('.vote-count');
+        const currentCount = parseInt(voteCount.textContent);
+        voteCount.textContent = currentCount + 1;
+    });
+});
+// Role Call functionality
+document.getElementById('role-call-button').addEventListener('click', function() {
+    generateRoleCallTable();
+    document.getElementById('role-call-modal').style.display = 'flex';
+});
+
+document.getElementById('close-role-call-button').addEventListener('click', function() {
+    document.getElementById('role-call-modal').style.display = 'none';
+});
+
+document.getElementById('add-date-button').addEventListener('click', function() {
+    const dateInput = document.getElementById('role-call-date');
+    const date = dateInput.value.trim();
+    
+    if (date && !state.attendanceDates.includes(date)) {
+        state.attendanceDates.push(date);
+        generateRoleCallTable();
+    }
+    
+    dateInput.value = '';
+});
+
+function generateRoleCallTable() {
+    const table = document.getElementById('role-call-table');
+    const headerRow = table.querySelector('thead tr');
+    
+    // Clear existing header cells except first one
+    while (headerRow.children.length > 1) {
+        headerRow.removeChild(headerRow.lastChild);
+    }
+    
+    // Add date headers
+    state.attendanceDates.forEach(date => {
+        const th = document.createElement('th');
+        th.textContent = date;
+        headerRow.appendChild(th);
+    });
+    
+    // Clear existing body rows
+    const tbody = table.querySelector('tbody');
+    tbody.innerHTML = '';
+    
+    // Add country rows
+    const countries = committeeCountries[state.selectedCommittee];
+    countries.forEach(country => {
+        const tr = document.createElement('tr');
+        
+        const td = document.createElement('td');
+        td.textContent = country;
+        tr.appendChild(td);
+        
+        // Add attendance cells
+        state.attendanceDates.forEach(date => {
+            const td = document.createElement('td');
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            
+            // Check if attendance data exists
+            if (state.attendanceData[country] && state.attendanceData[country][date]) {
+                checkbox.checked = true;
+            }
+            
+            // Add change event
+            checkbox.addEventListener('change', function() {
+                if (!state.attendanceData[country]) {
+                    state.attendanceData[country] = {};
+                }
+                state.attendanceData[country][date] = this.checked;
+            });
+            
+            td.appendChild(checkbox);
+            tr.appendChild(td);
+        });
+        
+        tbody.appendChild(tr);
+    });
+}
+
+document.getElementById('save-role-call-button').addEventListener('click', function() {
+    // In a real app, this would save to a database
+    alert('Role call data saved successfully!');
+});
+// Export data functionality
+document.getElementById('export-button').addEventListener('click', function() {
+    const exportData = {
+        committee: state.selectedCommittee,
+        delegateData: state.delegateData,
+        attendanceData: state.attendanceData,
+        attendanceDates: state.attendanceDates,
+        currentTime: new Date().toISOString()
+    };
+    
+    const dataStr = JSON.stringify(exportData, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+    
+    const exportFileDefaultName = `MUN_${state.selectedCommittee}_data.json`;
+    
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
+});
+// Rearrange Timers functionality
+document.getElementById('rearrange-timers-button').addEventListener('click', function() {
+    // Rotate timer colors
+    state.timerColors.unshift(state.timerColors.pop());
+    
+    // Apply new colors
+    document.querySelectorAll('.timer-card').forEach((card, index) => {
+        card.style.backgroundColor = state.timerColors[index];
+    });
+});
+</script>            
