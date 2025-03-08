@@ -882,57 +882,60 @@ document.addEventListener('DOMContentLoaded', function() {
         'WHO': ['USA', 'UK', 'France', 'Germany', 'Japan', 'China', 'India', 'Brazil', 'South Africa', 'Kenya', 'Australia', 'Canada', 'Mexico']
     };
 
-    // Timer functions
-    function formatTime(timeInSeconds) {
-        const minutes = Math.floor(timeInSeconds / 60).toString().padStart(2, '0');
-        const seconds = (timeInSeconds % 60).toString().padStart(2, '0');
-        return `${minutes}:${seconds}`;
-    }
+    // Updated timer functions
+function formatTime(timeInSeconds) {
+    const minutes = Math.floor(timeInSeconds / 60).toString().padStart(2, '0');
+    const seconds = (timeInSeconds % 60).toString().padStart(2, '0');
+    return `${minutes}:${seconds}`;
+}
 
-    function updateTimerDisplay(timerType) {
-        const display = document.getElementById(`${timerType.toLowerCase()}-timer`);
-        if (display) {
-            display.textContent = formatTime(state.timerElapsed[timerType.toLowerCase()]);
-        }
+function updateTimerDisplay(timerType) {
+    const display = document.getElementById(`${timerType.toLowerCase()}-timer`);
+    if (display) {
+        display.textContent = formatTime(state.timerElapsed[timerType.toLowerCase()]);
     }
+}
 
-    function startTimer(timerType) {
-        const lowerType = timerType.toLowerCase();
-        if (!state.timerRunning[lowerType]) {
-            state.timerRunning[lowerType] = true;
-            state.timerStart[lowerType] = Date.now() - (state.timerElapsed[lowerType] * 1000);
-            
-            // Clear any existing interval first to prevent duplicates
-            if (state.timerIntervals[lowerType]) {
-                clearInterval(state.timerIntervals[lowerType]);
-            }
-            
-            state.timerIntervals[lowerType] = setInterval(() => {
-                state.timerElapsed[lowerType] = Math.floor((Date.now() - state.timerStart[lowerType]) / 1000);
-                updateTimerDisplay(timerType);
-            }, 1000);
-            
-            console.log(`Started ${timerType} timer`);
-        }
-    }
-
-    function stopTimer(timerType) {
-        const lowerType = timerType.toLowerCase();
-        if (state.timerRunning[lowerType]) {
-            clearInterval(state.timerIntervals[lowerType]);
-            state.timerIntervals[lowerType] = null;
-            state.timerRunning[lowerType] = false;
-            console.log(`Stopped ${timerType} timer`);
-        }
-    }
-
-    function resetTimer(timerType) {
-        const lowerType = timerType.toLowerCase();
-        stopTimer(timerType);
-        state.timerElapsed[lowerType] = 0;
+function startTimer(timerType) {
+    const lowerType = timerType.toLowerCase();
+    
+    // Stop any running timer first to ensure clean state
+    stopTimer(timerType);
+    
+    // Set running state
+    state.timerRunning[lowerType] = true;
+    state.timerStart[lowerType] = Date.now() - (state.timerElapsed[lowerType] * 1000);
+    
+    // Create new interval
+    state.timerIntervals[lowerType] = setInterval(() => {
+        const currentTime = Date.now();
+        state.timerElapsed[lowerType] = Math.floor((currentTime - state.timerStart[lowerType]) / 1000);
         updateTimerDisplay(timerType);
-        console.log(`Reset ${timerType} timer`);
+    }, 200); // More frequent updates for smoother display
+    
+    console.log(`Started ${timerType} timer`);
+}
+
+function stopTimer(timerType) {
+    const lowerType = timerType.toLowerCase();
+    
+    // Always clear interval, even if we think it's not running
+    if (state.timerIntervals[lowerType]) {
+        clearInterval(state.timerIntervals[lowerType]);
+        state.timerIntervals[lowerType] = null;
     }
+    
+    state.timerRunning[lowerType] = false;
+    console.log(`Stopped ${timerType} timer`);
+}
+
+function resetTimer(timerType) {
+    const lowerType = timerType.toLowerCase();
+    stopTimer(timerType);
+    state.timerElapsed[lowerType] = 0;
+    updateTimerDisplay(timerType);
+    console.log(`Reset ${timerType} timer`);
+}
 
     // Function to populate country list
     function populateCountryList(committee) {
@@ -1160,22 +1163,26 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         // Add event listeners for timer buttons
-        document.querySelectorAll('.timer-button').forEach(button => {
-            button.addEventListener('click', function() {
-                const timer = this.getAttribute('data-timer');
-                const action = this.getAttribute('data-action');
-                
-                console.log(`Timer button clicked: ${timer} - ${action}`);
-                
-                if (action === 'start') {
-                    startTimer(timer);
-                } else if (action === 'stop') {
-                    stopTimer(timer);
-                } else if (action === 'reset') {
-                    resetTimer(timer);
-                }
-            });
-        });
+        // Updated timer button event listeners
+document.querySelectorAll('.timer-button').forEach(button => {
+    button.addEventListener('click', function(event) {
+        // Prevent default to be safe
+        event.preventDefault();
+        
+        const timer = this.getAttribute('data-timer');
+        const action = this.getAttribute('data-action');
+        
+        console.log(`Timer button clicked: ${timer} - ${action}`);
+        
+        if (action === 'start') {
+            startTimer(timer);
+        } else if (action === 'stop') {
+            stopTimer(timer);
+        } else if (action === 'reset') {
+            resetTimer(timer);
+        }
+    });
+});
 
         // Next speaker button
         addSafeEventListener('next-speaker-button', 'click', function() {
