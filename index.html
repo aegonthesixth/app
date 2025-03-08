@@ -609,42 +609,81 @@
                     <div class="card">
                         <div class="card-header">Timers</div>
                         <div class="card-body">
-                            <div class="timer-cards">
-                                <div class="timer-card">
-                                    <div class="timer-title">Session</div>
-                                    <div class="timer-display" id="session-timer">00:00</div>
-                                    <!-- Add this inside each timer-card div, just after the timer-display div -->
-<div class="timer-settings">
-  <input type="number" class="timer-duration" min="1" value="10" data-timer="session"> min
-  <button class="timer-set-button" data-timer="session">Set</button>
+                          <div class="timer-cards">
+    <div class="timer-card">
+        <div class="timer-title">Session</div>
+        <div class="timer-display" id="session-timer">00:00</div>
+        <div class="timer-settings">
+            <input type="number" class="timer-duration" min="1" value="10" data-timer="session"> min
+            <button class="timer-set-button" data-timer="session">Set</button>
+        </div>
+        <div class="timer-controls">
+            <button class="timer-button" data-timer="session" data-action="start">Start</button>
+            <button class="timer-button" data-timer="session" data-action="stop">Stop</button>
+            <button class="timer-button" data-timer="session" data-action="reset">Reset</button>
+        </div>
+    </div>
+    <div class="timer-card">
+        <div class="timer-title">Caucus</div>
+        <div class="timer-display" id="caucus-timer">00:00</div>
+        <div class="timer-settings">
+            <input type="number" class="timer-duration" min="1" value="5" data-timer="caucus"> min
+            <button class="timer-set-button" data-timer="caucus">Set</button>
+        </div>
+        <div class="timer-controls">
+            <button class="timer-button" data-timer="caucus" data-action="start">Start</button>
+            <button class="timer-button" data-timer="caucus" data-action="stop">Stop</button>
+            <button class="timer-button" data-timer="caucus" data-action="reset">Reset</button>
+        </div>
+    </div>
+    <div class="timer-card">
+        <div class="timer-title">Speech</div>
+        <div class="timer-display" id="speech-timer">00:00</div>
+        <div class="timer-settings">
+            <input type="number" class="timer-duration" min="1" value="1" data-timer="speech"> min
+            <button class="timer-set-button" data-timer="speech">Set</button>
+        </div>
+        <div class="timer-controls">
+            <button class="timer-button" data-timer="speech" data-action="start">Start</button>
+            <button class="timer-button" data-timer="speech" data-action="stop">Stop</button>
+            <button class="timer-button" data-timer="speech" data-action="reset">Reset</button>
+        </div>
+    </div>
 </div>
-                                    <div class="timer-controls">
-                                        <button class="timer-button" data-timer="session" data-action="start">Start</button>
-                                        <button class="timer-button" data-timer="session" data-action="stop">Stop</button>
-                                        <button class="timer-button" data-timer="session" data-action="reset">Reset</button>
-                                    </div>
-                                </div>
-                                <div class="timer-card">
-                                    <div class="timer-title">Caucus</div>
-                                    <div class="timer-display" id="caucus-timer">00:00</div>
-                                    <!-- Add this inside each timer-card div, just after the timer-display div -->
-<div class="timer-settings">
-  <input type="number" class="timer-duration" min="1" value="10" data-timer="session"> min
-  <button class="timer-set-button" data-timer="session">Set</button>
+    <div class="timer-controls">
+        <button class="timer-button" data-timer="session" data-action="start">Start</button>
+        <button class="timer-button" data-timer="session" data-action="stop">Stop</button>
+        <button class="timer-button" data-timer="session" data-action="reset">Reset</button>
+    </div>
 </div>
-                                    <div class="timer-controls">
-                                        <button class="timer-button" data-timer="caucus" data-action="start">Start</button>
-                                        <button class="timer-button" data-timer="caucus" data-action="stop">Stop</button>
-                                        <button class="timer-button" data-timer="caucus" data-action="reset">Reset</button>
-                                    </div>
-                                </div>
-                                <div class="timer-card">
-                                    <div class="timer-title">Speech</div>
-                                    <div class="timer-display" id="speech-timer">00:00</div>
-                                    <!-- Add this inside each timer-card div, just after the timer-display div -->
-<div class="timer-settings">
-  <input type="number" class="timer-duration" min="1" value="10" data-timer="session"> min
-  <button class="timer-set-button" data-timer="session">Set</button>
+
+<!-- Caucus Timer -->
+<div class="timer-card">
+    <div class="timer-title">Caucus</div>
+    <div class="timer-display" id="caucus-timer">00:00</div>
+    <div class="timer-settings">
+        <input type="number" class="timer-duration" min="1" value="5" data-timer="caucus"> min
+        <button class="timer-set-button" data-timer="caucus">Set</button>
+    </div>
+    <div class="timer-controls">
+        <button class="timer-button" data-timer="caucus" data-action="start">Start</button>
+        <button class="timer-button" data-timer="caucus" data-action="stop">Stop</button>
+        <button class="timer-button" data-timer="caucus" data-action="reset">Reset</button>
+    </div>
+</div>
+<!-- Speech Timer -->
+<div class="timer-card">
+    <div class="timer-title">Speech</div>
+    <div class="timer-display" id="speech-timer">00:00</div>
+    <div class="timer-settings">
+        <input type="number" class="timer-duration" min="1" value="1" data-timer="speech"> min
+        <button class="timer-set-button" data-timer="speech">Set</button>
+    </div>
+    <div class="timer-controls">
+        <button class="timer-button" data-timer="speech" data-action="start">Start</button>
+        <button class="timer-button" data-timer="speech" data-action="stop">Stop</button>
+        <button class="timer-button" data-timer="speech" data-action="reset">Reset</button>
+    </div>
 </div>
                                     <div class="timer-controls">
                                         <button class="timer-button" data-timer="speech" data-action="start">Start</button>
@@ -873,6 +912,11 @@ document.addEventListener('DOMContentLoaded', function() {
                         content.classList.add('active');
                     }
                 });
+    }
+
+    // Call the initialization function
+    initializeApp();
+});
             });
         });
     }
@@ -880,11 +924,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // Global data and state
     const state = {
         timerDurations: {
-    session: 10 * 60, // 10 minutes in seconds
-    caucus: 5 * 60,   // 5 minutes in seconds
-    speech: 1 * 60,   // 1 minute in seconds
-    fun: 2 * 60       // 2 minutes in seconds
-},
+            session: 10 * 60, // 10 minutes in seconds
+            caucus: 5 * 60,   // 5 minutes in seconds
+            speech: 1 * 60,   // 1 minute in seconds
+            fun: 2 * 60       // 2 minutes in seconds
+        },
         currentSpeaker: null,
         speakerQueue: [],
         delegateData: {},
@@ -934,88 +978,273 @@ document.addEventListener('DOMContentLoaded', function() {
         'WHO': ['USA', 'UK', 'France', 'Germany', 'Japan', 'China', 'India', 'Brazil', 'South Africa', 'Kenya', 'Australia', 'Canada', 'Mexico']
     };
 
-    // Updated timer functions
-// Updated timer functions
-    // Add this function for setting custom timer durations
-function setTimerDuration(timerType, minutes) {
-    const lowerType = timerType.toLowerCase();
-    const seconds = parseInt(minutes) * 60;
-    
-    if (isNaN(seconds) || seconds <= 0) {
-        console.error(`Invalid duration for ${timerType} timer: ${minutes}`);
-        return;
-    }
-    
-    state.timerDurations[lowerType] = seconds;
-    
-    // If the timer is not running, also set the current elapsed time to match the duration
-    if (!state.timerRunning[lowerType]) {
-        state.timerElapsed[lowerType] = seconds;
-        updateTimerDisplay(timerType);
-    }
-    
-    console.log(`Set ${timerType} timer duration to ${minutes} minutes (${seconds} seconds)`);
-}
-function formatTime(timeInSeconds) {
-    const minutes = Math.floor(timeInSeconds / 60).toString().padStart(2, '0');
-    const seconds = (timeInSeconds % 60).toString().padStart(2, '0');
-    return `${minutes}:${seconds}`;
-}
-
-function updateTimerDisplay(timerType) {
-    const display = document.getElementById(`${timerType.toLowerCase()}-timer`);
-    if (display) {
-        display.textContent = formatTime(state.timerElapsed[timerType.toLowerCase()]);
-    }
-}
-
-function startTimer(timerType) {
-    const lowerType = timerType.toLowerCase();
-    
-    // Stop any running timer first to ensure clean state
-    stopTimer(timerType);
-    
-    // Set running state
-    state.timerRunning[lowerType] = true;
-    
-    // Create new interval for countdown
-    state.timerIntervals[lowerType] = setInterval(() => {
-        // Reduce timer by 1 second
-        if (state.timerElapsed[lowerType] > 0) {
-            state.timerElapsed[lowerType]--;
-            updateTimerDisplay(timerType);
-        } else {
-            // Timer reached zero
-            stopTimer(timerType);
-            // You could add an alert or sound here
-            console.log(`${timerType} timer finished!`);
+    // Enhanced timer functions
+    // Function for setting custom timer durations
+    function setTimerDuration(timerType, minutes) {
+        const lowerType = timerType.toLowerCase();
+        const seconds = parseInt(minutes) * 60;
+        
+        if (isNaN(seconds) || seconds <= 0) {
+            console.error(`Invalid duration for ${timerType} timer: ${minutes}`);
+            return;
         }
-    }, 1000);
-    
-    console.log(`Started ${timerType} timer countdown from ${state.timerElapsed[lowerType]} seconds`);
-}
-
-function stopTimer(timerType) {
-    const lowerType = timerType.toLowerCase();
-    
-    // Always clear interval, even if we think it's not running
-    if (state.timerIntervals[lowerType]) {
-        clearInterval(state.timerIntervals[lowerType]);
-        state.timerIntervals[lowerType] = null;
+        
+        // Store the new duration
+        state.timerDurations[lowerType] = seconds;
+        
+        // If the timer is not running, also set the current elapsed time to match the duration
+        if (!state.timerRunning[lowerType]) {
+            state.timerElapsed[lowerType] = seconds;
+            updateTimerDisplay(timerType);
+        }
+        
+        // If this is the session timer or any timer changes, update relationship indicators
+        updateTimerRelationships();
+        
+        // Show suggestions after updating relationships
+        showTimerSuggestions();
+        
+        console.log(`Set ${timerType} timer duration to ${minutes} minutes (${seconds} seconds)`);
     }
-    
-    state.timerRunning[lowerType] = false;
-    console.log(`Stopped ${timerType} timer`);
-}
 
-// Modify resetTimer to use the stored duration
-function resetTimer(timerType) {
-    const lowerType = timerType.toLowerCase();
-    stopTimer(timerType);
-    state.timerElapsed[lowerType] = state.timerDurations[lowerType]; // Use the stored duration
-    updateTimerDisplay(timerType);
-    console.log(`Reset ${timerType} timer to ${state.timerDurations[lowerType]} seconds`);
-}
+    function formatTime(timeInSeconds) {
+        const minutes = Math.floor(timeInSeconds / 60).toString().padStart(2, '0');
+        const seconds = (timeInSeconds % 60).toString().padStart(2, '0');
+        return `${minutes}:${seconds}`;
+    }
+
+    function updateTimerDisplay(timerType) {
+        const display = document.getElementById(`${timerType.toLowerCase()}-timer`);
+        if (display) {
+            display.textContent = formatTime(state.timerElapsed[timerType.toLowerCase()]);
+        }
+    }
+
+    function startTimer(timerType) {
+        const lowerType = timerType.toLowerCase();
+        
+        // Stop any running timer first to ensure clean state
+        stopTimer(timerType);
+        
+        // Set running state
+        state.timerRunning[lowerType] = true;
+        
+        // Create new interval for countdown
+        state.timerIntervals[lowerType] = setInterval(() => {
+            // Reduce timer by 1 second
+            if (state.timerElapsed[lowerType] > 0) {
+                state.timerElapsed[lowerType]--;
+                updateTimerDisplay(timerType);
+            } else {
+                // Timer reached zero
+                stopTimer(timerType);
+                // You could add an alert or sound here
+                console.log(`${timerType} timer finished!`);
+            }
+        }, 1000);
+        
+        console.log(`Started ${timerType} timer countdown from ${state.timerElapsed[lowerType]} seconds`);
+    }
+
+    function stopTimer(timerType) {
+        const lowerType = timerType.toLowerCase();
+        
+        // Always clear interval, even if we think it's not running
+        if (state.timerIntervals[lowerType]) {
+            clearInterval(state.timerIntervals[lowerType]);
+            state.timerIntervals[lowerType] = null;
+        }
+        
+        state.timerRunning[lowerType] = false;
+        console.log(`Stopped ${timerType} timer`);
+    }
+
+    // Modify resetTimer to use the stored duration
+    function resetTimer(timerType) {
+        const lowerType = timerType.toLowerCase();
+        stopTimer(timerType);
+        state.timerElapsed[lowerType] = state.timerDurations[lowerType]; // Use the stored duration
+        updateTimerDisplay(timerType);
+        console.log(`Reset ${timerType} timer to ${state.timerDurations[lowerType]} seconds`);
+    }
+
+    // Function to update timer relationship indicators
+    function updateTimerRelationships() {
+        const sessionMinutes = state.timerDurations.session / 60;
+        const caucusMinutes = state.timerDurations.caucus / 60;
+        const speechMinutes = state.timerDurations.speech / 60;
+        
+        // Calculate how many caucuses and speeches can fit in a session
+        const caucusesPerSession = Math.floor(sessionMinutes / caucusMinutes);
+        const speechesPerSession = Math.floor(sessionMinutes / speechMinutes);
+        
+        // Add relationship indicators to the UI
+        const sessionCard = document.querySelector('.timer-card:nth-child(1)');
+        const caucusCard = document.querySelector('.timer-card:nth-child(2)');
+        const speechCard = document.querySelector('.timer-card:nth-child(3)');
+        
+        // Remove any existing relationship indicators
+        const existingIndicators = document.querySelectorAll('.timer-relationship');
+        existingIndicators.forEach(el => el.remove());
+        
+        // Add new indicators
+        if (sessionCard) {
+            const indicator = document.createElement('div');
+            indicator.className = 'timer-relationship';
+            indicator.style.fontSize = '12px';
+            indicator.style.marginTop = '5px';
+            indicator.style.color = 'rgba(255,255,255,0.8)';
+            indicator.textContent = `Contains: ${caucusesPerSession} caucuses or ${speechesPerSession} speeches`;
+            
+            // Insert after the timer settings
+            const settingsDiv = sessionCard.querySelector('.timer-settings');
+            if (settingsDiv) {
+                settingsDiv.insertAdjacentElement('afterend', indicator);
+            }
+        }
+        
+        if (caucusCard) {
+            const indicator = document.createElement('div');
+            indicator.className = 'timer-relationship';
+            indicator.style.fontSize = '12px';
+            indicator.style.marginTop = '5px';
+            indicator.style.color = 'rgba(255,255,255,0.8)';
+            indicator.textContent = `${caucusesPerSession} caucuses per session`;
+            
+            // Insert after the timer settings
+            const settingsDiv = caucusCard.querySelector('.timer-settings');
+            if (settingsDiv) {
+                settingsDiv.insertAdjacentElement('afterend', indicator);
+            }
+        }
+        
+        if (speechCard) {
+            const indicator = document.createElement('div');
+            indicator.className = 'timer-relationship';
+            indicator.style.fontSize = '12px';
+            indicator.style.marginTop = '5px';
+            indicator.style.color = 'rgba(255,255,255,0.8)';
+            indicator.textContent = `${speechesPerSession} speeches per session`;
+            
+            // Insert after the timer settings
+            const settingsDiv = speechCard.querySelector('.timer-settings');
+            if (settingsDiv) {
+                settingsDiv.insertAdjacentElement('afterend', indicator);
+            }
+        }
+    }
+
+    // Function to validate and suggest optimal timer settings
+    function validateTimerSettings() {
+        const sessionMinutes = state.timerDurations.session / 60;
+        const caucusMinutes = state.timerDurations.caucus / 60;
+        const speechMinutes = state.timerDurations.speech / 60;
+        
+        // Check if session can be evenly divided by caucus
+        const caucusRemainder = sessionMinutes % caucusMinutes;
+        
+        // Check if session can be evenly divided by speech
+        const speechRemainder = sessionMinutes % speechMinutes;
+        
+        let suggestions = [];
+        
+        // Suggest adjusted values for better division
+        if (caucusRemainder > 0) {
+            const suggestedCaucus = sessionMinutes / Math.round(sessionMinutes / caucusMinutes);
+            suggestions.push({
+                timer: 'caucus',
+                currentValue: caucusMinutes,
+                suggestedValue: Math.round(suggestedCaucus * 10) / 10, // Round to 1 decimal place
+                reason: 'For even division of session into caucuses'
+            });
+        }
+        
+        if (speechRemainder > 0) {
+            const suggestedSpeech = sessionMinutes / Math.round(sessionMinutes / speechMinutes);
+            suggestions.push({
+                timer: 'speech',
+                currentValue: speechMinutes,
+                suggestedValue: Math.round(suggestedSpeech * 10) / 10, // Round to 1 decimal place
+                reason: 'For even division of session into speeches'
+            });
+        }
+        
+        return suggestions;
+    }
+
+    // Function to display suggestions in a user-friendly way
+    function showTimerSuggestions() {
+        const suggestions = validateTimerSettings();
+        
+        if (suggestions.length === 0) {
+            // All timers divide evenly, no suggestions needed
+            const existingSuggestions = document.getElementById('timer-suggestions');
+            if (existingSuggestions) {
+                existingSuggestions.style.display = 'none';
+            }
+            return;
+        }
+        
+        // Create or update a suggestions box
+        let suggestionsBox = document.getElementById('timer-suggestions');
+        
+        if (!suggestionsBox) {
+            suggestionsBox = document.createElement('div');
+            suggestionsBox.id = 'timer-suggestions';
+            suggestionsBox.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+            suggestionsBox.style.border = '1px solid var(--border)';
+            suggestionsBox.style.borderRadius = 'var(--corner-radius)';
+            suggestionsBox.style.padding = '10px';
+            suggestionsBox.style.marginTop = '15px';
+            suggestionsBox.style.fontSize = '14px';
+            
+            // Add it after the timer cards
+            const timerCards = document.querySelector('.timer-cards');
+            if (timerCards) {
+                timerCards.insertAdjacentElement('afterend', suggestionsBox);
+            }
+        } else {
+            suggestionsBox.style.display = 'block';
+        }
+        
+        // Clear previous content
+        suggestionsBox.innerHTML = '<h4 style="margin-top: 0;">Timer Relationship Suggestions</h4>';
+        
+        // Add suggestions
+        const list = document.createElement('ul');
+        list.style.paddingLeft = '20px';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('li');
+            item.style.marginBottom = '5px';
+            
+            const applyButton = document.createElement('button');
+            applyButton.textContent = 'Apply';
+            applyButton.className = 'button primary';
+            applyButton.style.fontSize = '12px';
+            applyButton.style.padding = '2px 8px';
+            applyButton.style.marginLeft = '10px';
+            
+            applyButton.addEventListener('click', function() {
+                // Update the timer duration input and trigger the Set button
+                const input = document.querySelector(`.timer-duration[data-timer="${suggestion.timer}"]`);
+                const setButton = document.querySelector(`.timer-set-button[data-timer="${suggestion.timer}"]`);
+                
+                if (input && setButton) {
+                    input.value = suggestion.suggestedValue;
+                    setButton.click(); // Trigger the Set button click event
+                }
+            });
+            
+            item.innerHTML = `Change <strong>${suggestion.timer}</strong> timer from ${suggestion.currentValue} to <strong>${suggestion.suggestedValue}</strong> minutes ${suggestion.reason}.`;
+            item.appendChild(applyButton);
+            
+            list.appendChild(item);
+        });
+        
+        suggestionsBox.appendChild(list);
+    }
+
     // Function to populate country list
     function populateCountryList(committee) {
         const countryList = document.getElementById('country-list');
@@ -1199,6 +1428,12 @@ function resetTimer(timerType) {
         updateTimerDisplay('speech');
         updateTimerDisplay('fun');
         
+        // Initialize timer relationship indicators
+        updateTimerRelationships();
+        
+        // Show initial suggestions if needed
+        showTimerSuggestions();
+        
         // Setup tab switching
         setupTabSwitching();
         
@@ -1211,17 +1446,18 @@ function resetTimer(timerType) {
     // Setup all event listeners
     function setupEventListeners() {
         // Add timer settings event listeners
-document.querySelectorAll('.timer-set-button').forEach(button => {
-    button.addEventListener('click', function() {
-        const timerType = this.getAttribute('data-timer');
-        const input = document.querySelector(`.timer-duration[data-timer="${timerType}"]`);
+        document.querySelectorAll('.timer-set-button').forEach(button => {
+            button.addEventListener('click', function() {
+                const timerType = this.getAttribute('data-timer');
+                const input = document.querySelector(`.timer-duration[data-timer="${timerType}"]`);
+                
+                if (input) {
+                    const minutes = parseInt(input.value);
+                    setTimerDuration(timerType, minutes);
+                }
+            });
+        });
         
-        if (input) {
-            const minutes = parseInt(input.value);
-            setTimerDuration(timerType, minutes);
-        }
-    });
-});
         // Helper to safely add event listener
         function addSafeEventListener(id, event, callback) {
             const element = document.getElementById(id);
@@ -1255,26 +1491,25 @@ document.querySelectorAll('.timer-set-button').forEach(button => {
         });
 
         // Add event listeners for timer buttons
-        // Updated timer button event listeners
-document.querySelectorAll('.timer-button').forEach(button => {
-    button.addEventListener('click', function(event) {
-        // Prevent default to be safe
-        event.preventDefault();
-        
-        const timer = this.getAttribute('data-timer');
-        const action = this.getAttribute('data-action');
-        
-        console.log(`Timer button clicked: ${timer} - ${action}`);
-        
-        if (action === 'start') {
-            startTimer(timer);
-        } else if (action === 'stop') {
-            stopTimer(timer);
-        } else if (action === 'reset') {
-            resetTimer(timer);
-        }
-    });
-});
+        document.querySelectorAll('.timer-button').forEach(button => {
+            button.addEventListener('click', function(event) {
+                // Prevent default to be safe
+                event.preventDefault();
+                
+                const timer = this.getAttribute('data-timer');
+                const action = this.getAttribute('data-action');
+                
+                console.log(`Timer button clicked: ${timer} - ${action}`);
+                
+                if (action === 'start') {
+                    startTimer(timer);
+                } else if (action === 'stop') {
+                    stopTimer(timer);
+                } else if (action === 'reset') {
+                    resetTimer(timer);
+                }
+            });
+        });
 
         // Next speaker button
         addSafeEventListener('next-speaker-button', 'click', function() {
@@ -1454,103 +1689,4 @@ document.querySelectorAll('.timer-button').forEach(button => {
         if (startFunButton) {
             startFunButton.addEventListener('click', function() {
                 startTimer('fun');
-            });
-        }
-
-        const stopFunButton = document.querySelector('[data-action="stop-fun"]');
-        if (stopFunButton) {
-            stopFunButton.addEventListener('click', function() {
-                stopTimer('fun');
-            });
-        }
-
-        const resetFunButton = document.querySelector('[data-action="reset-fun"]');
-        if (resetFunButton) {
-            resetFunButton.addEventListener('click', function() {
-                resetTimer('fun');
-            });
-        }
-
-        // Fun mode voting
-        document.querySelectorAll('.vote-button').forEach(button => {
-            button.addEventListener('click', function() {
-                const voteCount = this.parentElement.querySelector('.vote-count');
-                if (voteCount) {
-                    const currentCount = parseInt(voteCount.textContent);
-                    voteCount.textContent = currentCount + 1;
-                }
-            });
-        });
-
-        // Role Call functionality
-        addSafeEventListener('role-call-button', 'click', function() {
-            generateRoleCallTable();
-            const roleCallModal = document.getElementById('role-call-modal');
-            if (roleCallModal) {
-                roleCallModal.style.display = 'flex';
-            }
-        });
-
-        addSafeEventListener('close-role-call-button', 'click', function() {
-            const roleCallModal = document.getElementById('role-call-modal');
-            if (roleCallModal) {
-                roleCallModal.style.display = 'none';
-            }
-        });
-
-        addSafeEventListener('add-date-button', 'click', function() {
-            const dateInput = document.getElementById('role-call-date');
-            if (!dateInput) return;
-            
-            const date = dateInput.value.trim();
-            
-            if (date && !state.attendanceDates.includes(date)) {
-                state.attendanceDates.push(date);
-                generateRoleCallTable();
-            }
-            
-            dateInput.value = '';
-        });
-
-        addSafeEventListener('save-role-call-button', 'click', function() {
-            // In a real app, this would save to a database
-            alert('Role call data saved successfully!');
-        });
-
-        // Export data functionality
-        addSafeEventListener('export-button', 'click', function() {
-            const exportData = {
-                committee: state.selectedCommittee,
-                delegateData: state.delegateData,
-                attendanceData: state.attendanceData,
-                attendanceDates: state.attendanceDates,
-                currentTime: new Date().toISOString()
-            };
-            
-            const dataStr = JSON.stringify(exportData, null, 2);
-            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-            
-            const exportFileDefaultName = `MUN_${state.selectedCommittee}_data.json`;
-            
-            const linkElement = document.createElement('a');
-            linkElement.setAttribute('href', dataUri);
-            linkElement.setAttribute('download', exportFileDefaultName);
-            linkElement.click();
-        });
-
-        // Rearrange Timers functionality
-        addSafeEventListener('rearrange-timers-button', 'click', function() {
-            // Rotate timer colors
-            state.timerColors.unshift(state.timerColors.pop());
-            
-            // Apply new colors
-            document.querySelectorAll('.timer-card').forEach((card, index) => {
-                card.style.backgroundColor = state.timerColors[index];
-            });
-        });
-    }
-
-    // Call the initialization function
-    initializeApp();
-});
 </script>            
