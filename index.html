@@ -273,38 +273,40 @@
         .timer-button:hover {
             background-color: rgba(255,255,255,0.3);
         }
-.timer-settings {
-    margin-bottom: 10px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 5px;
-}
+        
+        .timer-settings {
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+        }
 
-.timer-duration {
-    width: 50px;
-    padding: 2px 5px;
-    border: 1px solid rgba(255,255,255,0.3);
-    background-color: rgba(255,255,255,0.1);
-    color: white;
-    border-radius: var(--corner-radius);
-    text-align: center;
-}
+        .timer-duration {
+            width: 50px;
+            padding: 2px 5px;
+            border: 1px solid rgba(255,255,255,0.3);
+            background-color: rgba(255,255,255,0.1);
+            color: white;
+            border-radius: var(--corner-radius);
+            text-align: center;
+        }
 
-.timer-set-button {
-    background-color: rgba(255,255,255,0.2);
-    color: white;
-    border: none;
-    padding: 2px 8px;
-    border-radius: var(--corner-radius);
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
+        .timer-set-button {
+            background-color: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 2px 8px;
+            border-radius: var(--corner-radius);
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
 
-.timer-set-button:hover {
-    background-color: rgba(255,255,255,0.3);
-}
-.notes-area {
+        .timer-set-button:hover {
+            background-color: rgba(255,255,255,0.3);
+        }
+        
+        .notes-area {
             width: 100%;
             height: 150px;
             padding: 10px;
@@ -587,7 +589,7 @@
             <button class="tab" data-tab="speaking-list">Speaking List</button>
             <button class="tab" data-tab="messaging">Messaging</button>
         </div>
-<!-- Main Dashboard Tab -->
+        <!-- Main Dashboard Tab -->
         <div id="main-tab" class="tab-content active">
             <div class="top-controls">
                 <div class="committee-selector">
@@ -719,7 +721,7 @@
                 </div>
             </div>
         </div>
-<!-- Speaking List Tab -->
+        <!-- Speaking List Tab -->
         <div id="speaking-list-tab" class="tab-content">
             <div class="current-speaker">
                 <div class="current-speaker-label">Current Speaker</div>
@@ -806,7 +808,80 @@
                     </div>
                 </div>
                 <div class="role-call-body">
-<script>
+                    <table id="role-call-table" class="role-call-table">
+                        <thead>
+                            <tr>
+                                <th>Country</th>
+                                <!-- Dates will be inserted dynamically -->
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Countries and attendance will be inserted dynamically -->
+                        </tbody>
+                    </table>
+                    <div style="text-align: right; margin-top: 15px;">
+                        <button id="save-role-call-button" class="button success">Save Role Call</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- New Message Dialog -->
+        <div id="new-message-dialog" class="dialog">
+            <div class="dialog-content">
+                <h3 class="dialog-title">New Message</h3>
+                <div>
+                    <label for="recipient-select">To:</label>
+                    <select id="recipient-select" style="width: 100%; margin-bottom: 15px;"></select>
+                </div>
+                <div>
+                    <label for="new-message-text">Message:</label>
+                    <textarea id="new-message-text" class="message-input"></textarea>
+                </div>
+                <div class="dialog-buttons">
+                    <button id="cancel-message-button" class="button secondary">Cancel</button>
+                    <button id="send-new-message-button" class="button primary">Send</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fun Mode Container (hidden initially) -->
+        <div id="fun-mode-container" style="display: none;">
+            <div class="fun-mode">
+                <div class="fun-mode-header">Fun Committee Mode</div>
+                <div class="fun-timer" id="fun-timer">00:00</div>
+                <div>
+                    <button class="button" style="background-color: #6A0DA
+<button class="button" style="background-color: #6A0DAD;" data-action="start-fun">Start</button>
+                    <button class="button" style="background-color: #6A0DAD;" data-action="stop-fun">Stop</button>
+                    <button class="button" style="background-color: #6A0DAD;" data-action="reset-fun">Reset</button>
+                </div>
+
+                <div class="game-options">
+                    <div class="game-option">
+                        <span>UN Charades - Votes: <span class="vote-count">0</span></span>
+                        <button class="button primary vote-button">Vote</button>
+                    </div>
+                    <div class="game-option">
+                        <span>Diplomatic Trivia - Votes: <span class="vote-count">0</span></span>
+                        <button class="button primary vote-button">Vote</button>
+                    </div>
+                    <div class="game-option">
+                        <span>Resolution Writing Race - Votes: <span class="vote-count">0</span></span>
+                        <button class="button primary vote-button">Vote</button>
+                    </div>
+                    <div class="game-option">
+                        <span>Crisis Simulation - Votes: <span class="vote-count">0</span></span>
+                        <button class="button primary vote-button">Vote</button>
+                    </div>
+                </div>
+
+                <button id="exit-fun-mode-button" class="button danger">Exit Fun Mode</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
 // Define the state object to track application state
 const state = {
     selectedCommittee: 'UNSC',
@@ -992,7 +1067,6 @@ function validateTimerSettings() {
     
     return suggestions;
 }
-
 // Function to display suggestions in a user-friendly way
 function showTimerSuggestions() {
     const suggestions = validateTimerSettings();
@@ -1142,6 +1216,7 @@ function setTimerDuration(timerType, minutes) {
     // Show suggestions if needed
     showTimerSuggestions();
 }
+
 // Function to populate country list
 function populateCountryList(committee) {
     const countryList = document.getElementById('country-list');
@@ -1252,7 +1327,6 @@ function updateFrequencyList() {
         frequencyList.appendChild(li);
     });
 }
-
 // Function to calculate performance metrics for each delegate
 function calculatePerformance(delegate) {
     // Get the delegate data
@@ -1462,8 +1536,292 @@ function generateRoleCallTable() {
                 if (!state.attendanceData[country]) {
                     state.attendanceData[country] = {};
                 }
-                state.attendanceData
-// Fun Mode functionality - Fixed in this version
+                state.attendanceData[country][date] = this.checked;
+            });
+            
+            td.appendChild(checkbox);
+            tr.appendChild(td);
+        });
+        
+        tbody.appendChild(tr);
+    });
+}
+
+// Setup the tab switching functionality
+function setupTabSwitching() {
+    const tabs = document.querySelectorAll('.tab');
+    const tabContents = document.querySelectorAll('.tab-content');
+    
+    tabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            const tabName = this.getAttribute('data-tab');
+            
+            // Skip if disabled
+            if (this.classList.contains('disabled')) {
+                return;
+            }
+            
+            // Update active tab
+            tabs.forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Update active content
+            tabContents.forEach(content => {
+                content.classList.remove('active');
+                if (content.id === `${tabName}-tab`) {
+                    content.classList.add('active');
+                }
+            });
+        });
+    });
+}
+// Setup event listeners for various buttons and interactive elements
+// Setup event listeners for various buttons and interactive elements
+function setupEventListeners() {
+    // Add timer settings event listeners
+    document.querySelectorAll('.timer-set-button').forEach(button => {
+        button.addEventListener('click', function() {
+            const timerType = this.getAttribute('data-timer');
+            const input = document.querySelector(`.timer-duration[data-timer="${timerType}"]`);
+            
+            if (input) {
+                const minutes = parseInt(input.value);
+                if (!isNaN(minutes) && minutes > 0) {
+                    setTimerDuration(timerType, minutes);
+                }
+            }
+        });
+    });
+    
+    // Helper to safely add event listener
+    function addSafeEventListener(id, event, callback) {
+        const element = document.getElementById(id);
+        if (element) {
+            element.addEventListener(event, callback);
+            return true;
+        } else {
+            console.warn(`Element with id ${id} not found for event listener`);
+            return false;
+        }
+    }
+    
+    // Handle committee selection change
+    addSafeEventListener('committee-select', 'change', function() {
+        state.selectedCommittee = this.value;
+        populateCountryList(state.selectedCommittee);
+        updateFrequencyList();
+    });
+
+    // Add to speaking list button
+    addSafeEventListener('add-to-list-button', 'click', function() {
+        const selectedCountry = document.querySelector('#country-list .list-item.selected');
+        if (selectedCountry) {
+            const country = selectedCountry.textContent;
+            addToSpeakingList(country);
+            updateSpeakingList();
+            updateFrequencyList();
+        } else {
+            console.log("No country selected to add to speaking list");
+            alert("Please select a country to add to the speaking list.");
+        }
+    });
+
+    // Add event listeners for timer buttons
+    document.querySelectorAll('.timer-button').forEach(button => {
+        button.addEventListener('click', function(event) {
+            // Prevent default to be safe
+            event.preventDefault();
+            
+            const timer = this.getAttribute('data-timer');
+            const action = this.getAttribute('data-action');
+            
+            console.log(`Timer button clicked: ${timer} - ${action}`);
+            
+            if (action === 'start') {
+                startTimer(timer);
+            } else if (action === 'stop') {
+                stopTimer(timer);
+            } else if (action === 'reset') {
+                resetTimer(timer);
+            }
+        });
+    });
+
+    // Next speaker button
+    addSafeEventListener('next-speaker-button', 'click', function() {
+        if (state.speakerQueue.length > 0) {
+            if (state.currentSpeaker) {
+                // Current speaker is done
+                resetTimer('speech');
+            }
+            
+            // Get next speaker
+            state.currentSpeaker = state.speakerQueue.shift();
+            const currentSpeakerDisplay = document.getElementById('current-speaker-display');
+            if (currentSpeakerDisplay) {
+                currentSpeakerDisplay.textContent = state.currentSpeaker;
+            }
+            
+            // Start speech timer
+            resetTimer('speech');
+            startTimer('speech');
+            
+            // Update the displays
+            updateSpeakingList();
+            
+            // If performance list is showing, update it too
+            if (state.showPerformanceList) {
+                updatePerformanceList();
+            }
+        } else {
+            console.log("No speakers in queue");
+            alert("No speakers in the queue.");
+        }
+    });
+
+    // Skip speaker button
+    addSafeEventListener('skip-speaker-button', 'click', function() {
+        if (state.currentSpeaker) {
+            resetTimer('speech');
+            state.currentSpeaker = null;
+            
+            const currentSpeakerDisplay = document.getElementById('current-speaker-display');
+            if (currentSpeakerDisplay) {
+                currentSpeakerDisplay.textContent = 'None';
+            }
+            
+            if (state.speakerQueue.length > 0) {
+                state.currentSpeaker = state.speakerQueue.shift();
+                if (currentSpeakerDisplay) {
+                    currentSpeakerDisplay.textContent = state.currentSpeaker;
+                }
+                resetTimer('speech');
+                startTimer('speech');
+            }
+            
+            updateSpeakingList();
+        }
+    });
+
+    // Speaking list controls
+    addSafeEventListener('move-up-button', 'click', function() {
+        const selected = document.querySelector('#speaking-list .list-item.selected');
+        if (selected) {
+            const index = parseInt(selected.dataset.index);
+            if (index > 0) {
+                // Swap with previous item
+                [state.speakerQueue[index], state.speakerQueue[index - 1]] = [state.speakerQueue[index - 1], state.speakerQueue[index]];
+                updateSpeakingList();
+                
+                // Keep the item selected
+                const items = document.querySelectorAll('#speaking-list .list-item');
+                if (items.length > index - 1) {
+                    items[index - 1].classList.add('selected');
+                }
+            }
+        }
+    });
+
+    addSafeEventListener('move-down-button', 'click', function() {
+        const selected = document.querySelector('#speaking-list .list-item.selected');
+        if (selected) {
+            const index = parseInt(selected.dataset.index);
+            if (index < state.speakerQueue.length - 1) {
+                // Swap with next item
+                [state.speakerQueue[index], state.speakerQueue[index + 1]] = [state.speakerQueue[index + 1], state.speakerQueue[index]];
+                updateSpeakingList();
+                
+                // Keep the item selected
+                const items = document.querySelectorAll('#speaking-list .list-item');
+                if (items.length > index + 1) {
+                    items[index + 1].classList.add('selected');
+                }
+            }
+        }
+    });
+
+    addSafeEventListener('remove-button', 'click', function() {
+        const selected = document.querySelector('#speaking-list .list-item.selected');
+        if (selected) {
+            const index = parseInt(selected.dataset.index);
+            state.speakerQueue.splice(index, 1);
+            updateSpeakingList();
+        }
+    });
+
+    addSafeEventListener('clear-list-button', 'click', function() {
+        if (confirm("Are you sure you want to clear the entire speaking list?")) {
+            state.speakerQueue = [];
+            updateSpeakingList();
+        }
+    });
+
+    // Notes functionality - Fixed version
+    document.querySelectorAll('.note-buttons .button').forEach(button => {
+        button.addEventListener('click', function() {
+            const noteText = this.getAttribute('data-note');
+            const notesArea = document.getElementById('notes-area');
+            
+            if (state.currentSpeaker && notesArea) {
+                const timestamp = new Date().toLocaleTimeString();
+                const note = `[${timestamp}] ${state.currentSpeaker}: ${noteText}`;
+                
+                // Add to text area
+                notesArea.value += (notesArea.value ? '\n' : '') + note;
+                
+                // Add to delegate data
+                if (!state.delegateData[state.currentSpeaker]) {
+                    state.delegateData[state.currentSpeaker] = {
+                        speaking: 0,
+                        votes: 0,
+                        notes: []
+                    };
+                }
+                
+                state.delegateData[state.currentSpeaker].notes.push({
+                    timestamp: timestamp,
+                    text: noteText
+                });
+                
+                console.log(`Added note for ${state.currentSpeaker}: ${noteText}`);
+                
+                // Update frequency list to reflect the new data
+                updateFrequencyList();
+                
+                // If performance list is showing, update it too
+                if (state.showPerformanceList) {
+                    updatePerformanceList();
+                }
+            } else {
+                console.warn('No current speaker selected for note taking');
+                alert('Please select a current speaker before taking notes.');
+            }
+        });
+    });
+
+    // Lock countries functionality
+    addSafeEventListener('lock-countries-button', 'click', function() {
+        state.isCountryListLocked = !state.isCountryListLocked;
+        
+        const countryListItems = document.querySelectorAll('#country-list .list-item');
+        if (state.isCountryListLocked) {
+            this.textContent = 'Unlock Countries';
+            countryListItems.forEach(item => {
+                item.style.pointerEvents = 'none';
+                item.style.opacity = '0.6';
+            });
+        } else {
+            this.textContent = 'Lock Countries';
+            countryListItems.forEach(item => {
+                item.style.pointerEvents = 'auto';
+                item.style.opacity = '1';
+            });
+        }
+    });
+
+    // Performance List Toggle
+    addSafeEventListener('toggle-performance-button', 'click', togglePerformanceList);
+    // Fun Mode functionality - Fixed 
     addSafeEventListener('fun-mode-button', 'click', function() {
         const appElement = document.getElementById('app');
         const funModeContainer = document.getElementById('fun-mode-container');
@@ -1486,7 +1844,7 @@ function generateRoleCallTable() {
         }
     });
 
-    // Fun mode timer controls - Fixed in this version
+    // Fun mode timer controls - Fixed
     document.querySelectorAll('[data-action="start-fun"], [data-action="stop-fun"], [data-action="reset-fun"]').forEach(button => {
         button.addEventListener('click', function() {
             const action = this.getAttribute('data-action');
@@ -1621,10 +1979,62 @@ document.addEventListener('DOMContentLoaded', function() {
         togglePerformanceButton.addEventListener('click', togglePerformanceList);
     }
     
+    // Set up the fun mode buttons explicitly
+    const funButtons = document.querySelectorAll('[data-action="start-fun"], [data-action="stop-fun"], [data-action="reset-fun"]');
+    funButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const action = this.getAttribute('data-action');
+            
+            if (action === 'start-fun') {
+                startTimer('fun');
+            } else if (action === 'stop-fun') {
+                stopTimer('fun');
+            } else if (action === 'reset-fun') {
+                resetTimer('fun');
+            }
+        });
+    });
+    
+    // Add explicit listeners for the note buttons
+    document.querySelectorAll('.note-buttons .button').forEach(button => {
+        button.addEventListener('click', function() {
+            const noteText = this.getAttribute('data-note');
+            const notesArea = document.getElementById('notes-area');
+            
+            if (state.currentSpeaker && notesArea) {
+                const timestamp = new Date().toLocaleTimeString();
+                const note = `[${timestamp}] ${state.currentSpeaker}: ${noteText}`;
+                
+                // Add to text area
+                notesArea.value += (notesArea.value ? '\n' : '') + note;
+                
+                // Add to delegate data
+                if (!state.delegateData[state.currentSpeaker]) {
+                    state.delegateData[state.currentSpeaker] = {
+                        speaking: 0,
+                        votes: 0,
+                        notes: []
+                    };
+                }
+                
+                state.delegateData[state.currentSpeaker].notes.push({
+                    timestamp: timestamp,
+                    text: noteText
+                });
+                
+                // Update displays
+                updateFrequencyList();
+                if (state.showPerformanceList) {
+                    updatePerformanceList();
+                }
+            } else {
+                alert('Please select a current speaker before taking notes.');
+            }
+        });
+    });
+    
     console.log('To debug the application state, run debugState() in console');
 });
     </script>
 </body>
 </html>
-                    
-                    
