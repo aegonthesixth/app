@@ -803,6 +803,34 @@ function generateUUID() {
 
 // Initialize the application when the DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
+    console.log("DOM loaded - initializing MUN Timer App");
+    
+    // Tab switching functionality
+    function setupTabSwitching() {
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+        
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                if (tab.classList.contains('disabled')) return;
+                
+                const tabId = tab.getAttribute('data-tab');
+                
+                // Update active tab
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                // Show corresponding content
+                tabContents.forEach(content => {
+                    content.classList.remove('active');
+                    if (content.id === `${tabId}-tab`) {
+                        content.classList.add('active');
+                    }
+                });
+            });
+        });
+    }
+    
     // Global data and state
     const state = {
         currentSpeaker: null,
@@ -854,30 +882,6 @@ document.addEventListener('DOMContentLoaded', function() {
         'WHO': ['USA', 'UK', 'France', 'Germany', 'Japan', 'China', 'India', 'Brazil', 'South Africa', 'Kenya', 'Australia', 'Canada', 'Mexico']
     };
 
-    // Tab switching
-    const tabs = document.querySelectorAll('.tab');
-    const tabContents = document.querySelectorAll('.tab-content');
-    
-    tabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-            if (tab.classList.contains('disabled')) return;
-            
-            const tabId = tab.getAttribute('data-tab');
-            
-            // Update active tab
-            tabs.forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-            
-            // Show corresponding content
-            tabContents.forEach(content => {
-                content.classList.remove('active');
-                if (content.id === `${tabId}-tab`) {
-                    content.classList.add('active');
-                }
-            });
-        });
-    });
-
     // Timer functions
     function formatTime(timeInSeconds) {
         const minutes = Math.floor(timeInSeconds / 60).toString().padStart(2, '0');
@@ -887,7 +891,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function updateTimerDisplay(timerType) {
         const display = document.getElementById(`${timerType.toLowerCase()}-timer`);
-        display.textContent = formatTime(state.timerElapsed[timerType.toLowerCase()]);
+        if (display) {
+            display.textContent = formatTime(state.timerElapsed[timerType.toLowerCase()]);
+        }
     }
 
     function startTimer(timerType) {
@@ -895,10 +901,18 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!state.timerRunning[lowerType]) {
             state.timerRunning[lowerType] = true;
             state.timerStart[lowerType] = Date.now() - (state.timerElapsed[lowerType] * 1000);
+            
+            // Clear any existing interval first to prevent duplicates
+            if (state.timerIntervals[lowerType]) {
+                clearInterval(state.timerIntervals[lowerType]);
+            }
+            
             state.timerIntervals[lowerType] = setInterval(() => {
                 state.timerElapsed[lowerType] = Math.floor((Date.now() - state.timerStart[lowerType]) / 1000);
                 updateTimerDisplay(timerType);
             }, 1000);
+            
+            console.log(`Started ${timerType} timer`);
         }
     }
 
@@ -906,7 +920,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const lowerType = timerType.toLowerCase();
         if (state.timerRunning[lowerType]) {
             clearInterval(state.timerIntervals[lowerType]);
+            state.timerIntervals[lowerType] = null;
             state.timerRunning[lowerType] = false;
+            console.log(`Stopped ${timerType} timer`);
         }
     }
 
@@ -915,12 +931,20 @@ document.addEventListener('DOMContentLoaded', function() {
         stopTimer(timerType);
         state.timerElapsed[lowerType] = 0;
         updateTimerDisplay(timerType);
+        console.log(`Reset ${timerType} timer`);
     }
 
     // Function to populate country list
     function populateCountryList(committee) {
         const countryList = document.getElementById('country-list');
+        if (!countryList) return;
+        
         countryList.innerHTML = '';
+        
+        if (!committeeCountries[committee]) {
+            console.error(`Committee ${committee} not found in committeeCountries`);
+            return;
+        }
         
         committeeCountries[committee].forEach(country => {
             const li = document.createElement('li');
@@ -934,10 +958,17 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             countryList.appendChild(li);
         });
+        
+        console.log(`Populated country list for ${committee} with ${committeeCountries[committee].length} countries`);
     }
 
     // Function to add a country to the speaking list
     function addToSpeakingList(country) {
+        if (!country) {
+            console.error("Attempted to add undefined country to speaking list");
+            return;
+        }
+        
         state.speakerQueue.push(country);
         
         // Update frequency data
@@ -949,11 +980,15 @@ document.addEventListener('DOMContentLoaded', function() {
             };
         }
         state.delegateData[country].speaking++;
+        
+        console.log(`Added ${country} to speaking list`);
     }
 
     // Function to update speaking list display
     function updateSpeakingList() {
         const speakingList = document.getElementById('speaking-list');
+        if (!speakingList) return;
+        
         speakingList.innerHTML = '';
         
         state.speakerQueue.forEach((country, index) => {
@@ -969,11 +1004,15 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             speakingList.appendChild(li);
         });
+        
+        console.log(`Updated speaking list with ${state.speakerQueue.length} countries`);
     }
 
     // Function to update frequency list
     function updateFrequencyList() {
         const frequencyList = document.getElementById('frequency-list');
+        if (!frequencyList) return;
+        
         frequencyList.innerHTML = '';
         
         // Create array from delegate data
@@ -1008,7 +1047,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function generateRoleCallTable() {
         const table = document.getElementById('role-call-table');
+        if (!table) return;
+        
         const headerRow = table.querySelector('thead tr');
+        if (!headerRow) return;
         
         // Clear existing header cells except first one
         while (headerRow.children.length > 1) {
@@ -1024,6 +1066,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Clear existing body rows
         const tbody = table.querySelector('tbody');
+        if (!tbody) return;
+        
         tbody.innerHTML = '';
         
         // Add country rows
@@ -1062,274 +1106,352 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Initialize with default committee
-    populateCountryList(state.selectedCommittee);
-
-    // Initialize timer displays
-    updateTimerDisplay('session');
-    updateTimerDisplay('caucus');
-    updateTimerDisplay('speech');
-
-    // Event listeners
-    // Handle committee selection change
-    document.getElementById('committee-select').addEventListener('change', function() {
-        state.selectedCommittee = this.value;
+    // Set up the application
+    function initializeApp() {
+        // Initialize with default committee
         populateCountryList(state.selectedCommittee);
-        updateFrequencyList();
-    });
 
-    // Add to speaking list button
-    document.getElementById('add-to-list-button').addEventListener('click', function() {
-        const selectedCountry = document.querySelector('#country-list .list-item.selected');
-        if (selectedCountry) {
-            const country = selectedCountry.textContent;
-            addToSpeakingList(country);
-            updateSpeakingList();
-            updateFrequencyList();
+        // Initialize timer displays
+        updateTimerDisplay('session');
+        updateTimerDisplay('caucus');
+        updateTimerDisplay('speech');
+        
+        // Setup tab switching
+        setupTabSwitching();
+        
+        // Setup event listeners for all buttons and interactive elements
+        setupEventListeners();
+        
+        console.log("MUN Committee Timer App initialized successfully");
+    }
+
+    // Setup all event listeners
+    function setupEventListeners() {
+        // Helper to safely add event listener
+        function addSafeEventListener(id, event, callback) {
+            const element = document.getElementById(id);
+            if (element) {
+                element.addEventListener(event, callback);
+                return true;
+            } else {
+                console.warn(`Element with id ${id} not found for event listener`);
+                return false;
+            }
         }
-    });
+        
+        // Handle committee selection change
+        addSafeEventListener('committee-select', 'change', function() {
+            state.selectedCommittee = this.value;
+            populateCountryList(state.selectedCommittee);
+            updateFrequencyList();
+        });
 
-    // Add event listeners for timer buttons
-    document.querySelectorAll('.timer-button').forEach(button => {
-        button.addEventListener('click', function() {
-            const timer = this.getAttribute('data-timer');
-            const action = this.getAttribute('data-action');
-            
-            if (action === 'start') {
-                startTimer(timer);
-            } else if (action === 'stop') {
-                stopTimer(timer);
-            } else if (action === 'reset') {
-                resetTimer(timer);
+        // Add to speaking list button
+        addSafeEventListener('add-to-list-button', 'click', function() {
+            const selectedCountry = document.querySelector('#country-list .list-item.selected');
+            if (selectedCountry) {
+                const country = selectedCountry.textContent;
+                addToSpeakingList(country);
+                updateSpeakingList();
+                updateFrequencyList();
+            } else {
+                console.log("No country selected to add to speaking list");
             }
         });
-    });
 
-    // Next speaker button
-    document.getElementById('next-speaker-button').addEventListener('click', function() {
-        if (state.speakerQueue.length > 0) {
-            if (state.currentSpeaker) {
-                // Current speaker is done
-                resetTimer('speech');
-            }
-            
-            // Get next speaker
-            state.currentSpeaker = state.speakerQueue.shift();
-            document.getElementById('current-speaker-display').textContent = state.currentSpeaker;
-            
-            // Start speech timer
-            resetTimer('speech');
-            startTimer('speech');
-            
-            // Update the display
-            updateSpeakingList();
-        }
-    });
+        // Add event listeners for timer buttons
+        document.querySelectorAll('.timer-button').forEach(button => {
+            button.addEventListener('click', function() {
+                const timer = this.getAttribute('data-timer');
+                const action = this.getAttribute('data-action');
+                
+                console.log(`Timer button clicked: ${timer} - ${action}`);
+                
+                if (action === 'start') {
+                    startTimer(timer);
+                } else if (action === 'stop') {
+                    stopTimer(timer);
+                } else if (action === 'reset') {
+                    resetTimer(timer);
+                }
+            });
+        });
 
-    // Skip speaker button
-    document.getElementById('skip-speaker-button').addEventListener('click', function() {
-        if (state.currentSpeaker) {
-            resetTimer('speech');
-            state.currentSpeaker = null;
-            document.getElementById('current-speaker-display').textContent = 'None';
-            
+        // Next speaker button
+        addSafeEventListener('next-speaker-button', 'click', function() {
             if (state.speakerQueue.length > 0) {
+                if (state.currentSpeaker) {
+                    // Current speaker is done
+                    resetTimer('speech');
+                }
+                
+                // Get next speaker
                 state.currentSpeaker = state.speakerQueue.shift();
-                document.getElementById('current-speaker-display').textContent = state.currentSpeaker;
+                const currentSpeakerDisplay = document.getElementById('current-speaker-display');
+                if (currentSpeakerDisplay) {
+                    currentSpeakerDisplay.textContent = state.currentSpeaker;
+                }
+                
+                // Start speech timer
                 resetTimer('speech');
                 startTimer('speech');
-            }
-            
-            updateSpeakingList();
-        }
-    });
-
-    // Speaking list controls
-    document.getElementById('move-up-button').addEventListener('click', function() {
-        const selected = document.querySelector('#speaking-list .list-item.selected');
-        if (selected) {
-            const index = parseInt(selected.dataset.index);
-            if (index > 0) {
-                // Swap with previous item
-                [state.speakerQueue[index], state.speakerQueue[index - 1]] = [state.speakerQueue[index - 1], state.speakerQueue[index]];
-                updateSpeakingList();
                 
-                // Keep the item selected
-                document.querySelectorAll('#speaking-list .list-item')[index - 1].classList.add('selected');
-            }
-        }
-    });
-
-    document.getElementById('move-down-button').addEventListener('click', function() {
-        const selected = document.querySelector('#speaking-list .list-item.selected');
-        if (selected) {
-            const index = parseInt(selected.dataset.index);
-            if (index < state.speakerQueue.length - 1) {
-                // Swap with next item
-                [state.speakerQueue[index], state.speakerQueue[index + 1]] = [state.speakerQueue[index + 1], state.speakerQueue[index]];
+                // Update the display
                 updateSpeakingList();
-                
-                // Keep the item selected
-                document.querySelectorAll('#speaking-list .list-item')[index + 1].classList.add('selected');
+            } else {
+                console.log("No speakers in queue");
             }
-        }
-    });
+        });
 
-    document.getElementById('remove-button').addEventListener('click', function() {
-        const selected = document.querySelector('#speaking-list .list-item.selected');
-        if (selected) {
-            const index = parseInt(selected.dataset.index);
-            state.speakerQueue.splice(index, 1);
-            updateSpeakingList();
-        }
-    });
-
-    document.getElementById('clear-list-button').addEventListener('click', function() {
-        state.speakerQueue = [];
-        updateSpeakingList();
-    });
-
-    // Notes functionality
-    document.querySelectorAll('.note-buttons .button').forEach(button => {
-        button.addEventListener('click', function() {
-            const noteText = this.getAttribute('data-note');
-            const notesArea = document.getElementById('notes-area');
-            
+        // Skip speaker button
+        addSafeEventListener('skip-speaker-button', 'click', function() {
             if (state.currentSpeaker) {
-                const timestamp = new Date().toLocaleTimeString();
-                const note = `[${timestamp}] ${state.currentSpeaker}: ${noteText}`;
+                resetTimer('speech');
+                state.currentSpeaker = null;
                 
-                // Add to text area
-                notesArea.value += (notesArea.value ? '\n' : '') + note;
-                
-                // Add to delegate data
-                if (!state.delegateData[state.currentSpeaker]) {
-                    state.delegateData[state.currentSpeaker] = {
-                        speaking: 0,
-                        votes: 0,
-                        notes: []
-                    };
+                const currentSpeakerDisplay = document.getElementById('current-speaker-display');
+                if (currentSpeakerDisplay) {
+                    currentSpeakerDisplay.textContent = 'None';
                 }
-                state.delegateData[state.currentSpeaker].notes.push({
-                    timestamp: timestamp,
-                    note: noteText
+                
+                if (state.speakerQueue.length > 0) {
+                    state.currentSpeaker = state.speakerQueue.shift();
+                    if (currentSpeakerDisplay) {
+                        currentSpeakerDisplay.textContent = state.currentSpeaker;
+                    }
+                    resetTimer('speech');
+                    startTimer('speech');
+                }
+                
+                updateSpeakingList();
+            }
+        });
+
+        // Speaking list controls
+        addSafeEventListener('move-up-button', 'click', function() {
+            const selected = document.querySelector('#speaking-list .list-item.selected');
+            if (selected) {
+                const index = parseInt(selected.dataset.index);
+                if (index > 0) {
+                    // Swap with previous item
+                    [state.speakerQueue[index], state.speakerQueue[index - 1]] = [state.speakerQueue[index - 1], state.speakerQueue[index]];
+                    updateSpeakingList();
+                    
+                    // Keep the item selected
+                    const items = document.querySelectorAll('#speaking-list .list-item');
+                    if (items.length > index - 1) {
+                        items[index - 1].classList.add('selected');
+                    }
+                }
+            }
+        });
+
+        addSafeEventListener('move-down-button', 'click', function() {
+            const selected = document.querySelector('#speaking-list .list-item.selected');
+            if (selected) {
+                const index = parseInt(selected.dataset.index);
+                if (index < state.speakerQueue.length - 1) {
+                    // Swap with next item
+                    [state.speakerQueue[index], state.speakerQueue[index + 1]] = [state.speakerQueue[index + 1], state.speakerQueue[index]];
+                    updateSpeakingList();
+                    
+                    // Keep the item selected
+                    const items = document.querySelectorAll('#speaking-list .list-item');
+                    if (items.length > index + 1) {
+                        items[index + 1].classList.add('selected');
+                    }
+                }
+            }
+        });
+
+        addSafeEventListener('remove-button', 'click', function() {
+            const selected = document.querySelector('#speaking-list .list-item.selected');
+            if (selected) {
+                const index = parseInt(selected.dataset.index);
+                state.speakerQueue.splice(index, 1);
+                updateSpeakingList();
+            }
+        });
+
+        addSafeEventListener('clear-list-button', 'click', function() {
+            state.speakerQueue = [];
+            updateSpeakingList();
+        });
+
+        // Notes functionality
+        document.querySelectorAll('.note-buttons .button').forEach(button => {
+            button.addEventListener('click', function() {
+                const noteText = this.getAttribute('data-note');
+                const notesArea = document.getElementById('notes-area');
+                
+                if (state.currentSpeaker && notesArea) {
+                    const timestamp = new Date().toLocaleTimeString();
+                    const note = `[${timestamp}] ${state.currentSpeaker}: ${noteText}`;
+                    
+                    // Add to text area
+                    notesArea.value += (notesArea.value ? '\n' : '') + note;
+                    
+                    // Add to delegate data
+                    if (!state.delegateData[state.currentSpeaker]) {
+                        state.delegateData[state.currentSpeaker] = {
+                            speaking: 0,
+                            votes: 0,
+                            notes: []
+                        };
+                    }
+                    state.delegateData[state.currentSpeaker].notes.push({
+                        timestamp: timestamp,
+                        note: noteText
+                    });
+                }
+            });
+        });
+
+        // Lock countries functionality
+        addSafeEventListener('lock-countries-button', 'click', function() {
+            state.isCountryListLocked = !state.isCountryListLocked;
+            
+            const countryListItems = document.querySelectorAll('#country-list .list-item');
+            if (state.isCountryListLocked) {
+                this.textContent = 'Unlock Countries';
+                countryListItems.forEach(item => {
+                    item.style.pointerEvents = 'none';
+                    item.style.opacity = '0.6';
+                });
+            } else {
+                this.textContent = 'Lock Countries';
+                countryListItems.forEach(item => {
+                    item.style.pointerEvents = 'auto';
+                    item.style.opacity = '1';
                 });
             }
         });
-    });
 
-    // Lock countries functionality
-    document.getElementById('lock-countries-button').addEventListener('click', function() {
-        state.isCountryListLocked = !state.isCountryListLocked;
-        
-        const countryListItems = document.querySelectorAll('#country-list .list-item');
-        if (state.isCountryListLocked) {
-            this.textContent = 'Unlock Countries';
-            countryListItems.forEach(item => {
-                item.style.pointerEvents = 'none';
-                item.style.opacity = '0.6';
-            });
-        } else {
-            this.textContent = 'Lock Countries';
-            countryListItems.forEach(item => {
-                item.style.pointerEvents = 'auto';
-                item.style.opacity = '1';
+        // Fun Mode functionality
+        addSafeEventListener('fun-mode-button', 'click', function() {
+            const appElement = document.getElementById('app');
+            const funModeContainer = document.getElementById('fun-mode-container');
+            
+            if (appElement && funModeContainer) {
+                appElement.style.display = 'none';
+                funModeContainer.style.display = 'block';
+                resetTimer('fun');
+            }
+        });
+
+        addSafeEventListener('exit-fun-mode-button', 'click', function() {
+            const appElement = document.getElementById('app');
+            const funModeContainer = document.getElementById('fun-mode-container');
+            
+            if (appElement && funModeContainer) {
+                appElement.style.display = 'block';
+                funModeContainer.style.display = 'none';
+                stopTimer('fun');
+            }
+        });
+
+        // Fun mode timer controls
+        const startFunButton = document.querySelector('[data-action="start-fun"]');
+        if (startFunButton) {
+            startFunButton.addEventListener('click', function() {
+                startTimer('fun');
             });
         }
-    });
 
-    // Fun Mode functionality
-    document.getElementById('fun-mode-button').addEventListener('click', function() {
-        document.getElementById('app').style.display = 'none';
-        document.getElementById('fun-mode-container').style.display = 'block';
-        resetTimer('fun');
-    });
+        const stopFunButton = document.querySelector('[data-action="stop-fun"]');
+        if (stopFunButton) {
+            stopFunButton.addEventListener('click', function() {
+                stopTimer('fun');
+            });
+        }
 
-    document.getElementById('exit-fun-mode-button').addEventListener('click', function() {
-        document.getElementById('app').style.display = 'block';
-        document.getElementById('fun-mode-container').style.display = 'none';
-        stopTimer('fun');
-    });
+        const resetFunButton = document.querySelector('[data-action="reset-fun"]');
+        if (resetFunButton) {
+            resetFunButton.addEventListener('click', function() {
+                resetTimer('fun');
+            });
+        }
 
-    // Fun mode timer controls
-    document.querySelector('[data-action="start-fun"]').addEventListener('click', function() {
-        startTimer('fun');
-    });
-
-    document.querySelector('[data-action="stop-fun"]').addEventListener('click', function() {
-        stopTimer('fun');
-    });
-
-    document.querySelector('[data-action="reset-fun"]').addEventListener('click', function() {
-        resetTimer('fun');
-    });
-
-    // Fun mode voting
-    document.querySelectorAll('.vote-button').forEach(button => {
-        button.addEventListener('click', function() {
-            const voteCount = this.parentElement.querySelector('.vote-count');
-            const currentCount = parseInt(voteCount.textContent);
-            voteCount.textContent = currentCount + 1;
+        // Fun mode voting
+        document.querySelectorAll('.vote-button').forEach(button => {
+            button.addEventListener('click', function() {
+                const voteCount = this.parentElement.querySelector('.vote-count');
+                if (voteCount) {
+                    const currentCount = parseInt(voteCount.textContent);
+                    voteCount.textContent = currentCount + 1;
+                }
+            });
         });
-    });
 
-    // Role Call functionality
-    document.getElementById('role-call-button').addEventListener('click', function() {
-        generateRoleCallTable();
-        document.getElementById('role-call-modal').style.display = 'flex';
-    });
-
-    document.getElementById('close-role-call-button').addEventListener('click', function() {
-        document.getElementById('role-call-modal').style.display = 'none';
-    });
-
-    document.getElementById('add-date-button').addEventListener('click', function() {
-        const dateInput = document.getElementById('role-call-date');
-        const date = dateInput.value.trim();
-        
-        if (date && !state.attendanceDates.includes(date)) {
-            state.attendanceDates.push(date);
+        // Role Call functionality
+        addSafeEventListener('role-call-button', 'click', function() {
             generateRoleCallTable();
-        }
-        
-        dateInput.value = '';
-    });
-
-    document.getElementById('save-role-call-button').addEventListener('click', function() {
-        // In a real app, this would save to a database
-        alert('Role call data saved successfully!');
-    });
-
-    // Export data functionality
-    document.getElementById('export-button').addEventListener('click', function() {
-        const exportData = {
-            committee: state.selectedCommittee,
-            delegateData: state.delegateData,
-            attendanceData: state.attendanceData,
-            attendanceDates: state.attendanceDates,
-            currentTime: new Date().toISOString()
-        };
-        
-        const dataStr = JSON.stringify(exportData, null, 2);
-        const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-        
-        const exportFileDefaultName = `MUN_${state.selectedCommittee}_data.json`;
-        
-        const linkElement = document.createElement('a');
-        linkElement.setAttribute('href', dataUri);
-        linkElement.setAttribute('download', exportFileDefaultName);
-        linkElement.click();
-    });
-
-    // Rearrange Timers functionality
-    document.getElementById('rearrange-timers-button').addEventListener('click', function() {
-        // Rotate timer colors
-        state.timerColors.unshift(state.timerColors.pop());
-        
-        // Apply new colors
-        document.querySelectorAll('.timer-card').forEach((card, index) => {
-            card.style.backgroundColor = state.timerColors[index];
+            const roleCallModal = document.getElementById('role-call-modal');
+            if (roleCallModal) {
+                roleCallModal.style.display = 'flex';
+            }
         });
-    });
+
+        addSafeEventListener('close-role-call-button', 'click', function() {
+            const roleCallModal = document.getElementById('role-call-modal');
+            if (roleCallModal) {
+                roleCallModal.style.display = 'none';
+            }
+        });
+
+        addSafeEventListener('add-date-button', 'click', function() {
+            const dateInput = document.getElementById('role-call-date');
+            if (!dateInput) return;
+            
+            const date = dateInput.value.trim();
+            
+            if (date && !state.attendanceDates.includes(date)) {
+                state.attendanceDates.push(date);
+                generateRoleCallTable();
+            }
+            
+            dateInput.value = '';
+        });
+
+        addSafeEventListener('save-role-call-button', 'click', function() {
+            // In a real app, this would save to a database
+            alert('Role call data saved successfully!');
+        });
+
+        // Export data functionality
+        addSafeEventListener('export-button', 'click', function() {
+            const exportData = {
+                committee: state.selectedCommittee,
+                delegateData: state.delegateData,
+                attendanceData: state.attendanceData,
+                attendanceDates: state.attendanceDates,
+                currentTime: new Date().toISOString()
+            };
+            
+            const dataStr = JSON.stringify(exportData, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = `MUN_${state.selectedCommittee}_data.json`;
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+        });
+
+        // Rearrange Timers functionality
+        addSafeEventListener('rearrange-timers-button', 'click', function() {
+            // Rotate timer colors
+            state.timerColors.unshift(state.timerColors.pop());
+            
+            // Apply new colors
+            document.querySelectorAll('.timer-card').forEach((card, index) => {
+                card.style.backgroundColor = state.timerColors[index];
+            });
+        });
+    }
+
+    // Call the initialization function
+    initializeApp();
 });
 </script>            
