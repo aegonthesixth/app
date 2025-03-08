@@ -270,37 +270,37 @@
         .timer-button:hover {
             background-color: rgba(255,255,255,0.3);
         }
-.timer-settings {
-    margin-bottom: 10px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 5px;
-}
+        .timer-settings {
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+        }
 
-.timer-duration {
-    width: 50px;
-    padding: 2px 5px;
-    border: 1px solid rgba(255,255,255,0.3);
-    background-color: rgba(255,255,255,0.1);
-    color: white;
-    border-radius: var(--corner-radius);
-    text-align: center;
-}
+        .timer-duration {
+            width: 50px;
+            padding: 2px 5px;
+            border: 1px solid rgba(255,255,255,0.3);
+            background-color: rgba(255,255,255,0.1);
+            color: white;
+            border-radius: var(--corner-radius);
+            text-align: center;
+        }
 
-.timer-set-button {
-    background-color: rgba(255,255,255,0.2);
-    color: white;
-    border: none;
-    padding: 2px 8px;
-    border-radius: var(--corner-radius);
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
+        .timer-set-button {
+            background-color: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 2px 8px;
+            border-radius: var(--corner-radius);
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
 
-.timer-set-button:hover {
-    background-color: rgba(255,255,255,0.3);
-}
+        .timer-set-button:hover {
+            background-color: rgba(255,255,255,0.3);
+        }
         .notes-area {
             width: 100%;
             height: 150px;
@@ -609,82 +609,40 @@
                     <div class="card">
                         <div class="card-header">Timers</div>
                         <div class="card-body">
-                          <div class="timer-cards">
-    <div class="timer-card">
-        <div class="timer-title">Session</div>
-        <div class="timer-display" id="session-timer">00:00</div>
-        <div class="timer-settings">
-            <input type="number" class="timer-duration" min="1" value="10" data-timer="session"> min
-            <button class="timer-set-button" data-timer="session">Set</button>
-        </div>
-        <div class="timer-controls">
-            <button class="timer-button" data-timer="session" data-action="start">Start</button>
-            <button class="timer-button" data-timer="session" data-action="stop">Stop</button>
-            <button class="timer-button" data-timer="session" data-action="reset">Reset</button>
-        </div>
-    </div>
-    <div class="timer-card">
-        <div class="timer-title">Caucus</div>
-        <div class="timer-display" id="caucus-timer">00:00</div>
-        <div class="timer-settings">
-            <input type="number" class="timer-duration" min="1" value="5" data-timer="caucus"> min
-            <button class="timer-set-button" data-timer="caucus">Set</button>
-        </div>
-        <div class="timer-controls">
-            <button class="timer-button" data-timer="caucus" data-action="start">Start</button>
-            <button class="timer-button" data-timer="caucus" data-action="stop">Stop</button>
-            <button class="timer-button" data-timer="caucus" data-action="reset">Reset</button>
-        </div>
-    </div>
-    <div class="timer-card">
-        <div class="timer-title">Speech</div>
-        <div class="timer-display" id="speech-timer">00:00</div>
-        <div class="timer-settings">
-            <input type="number" class="timer-duration" min="1" value="1" data-timer="speech"> min
-            <button class="timer-set-button" data-timer="speech">Set</button>
-        </div>
-        <div class="timer-controls">
-            <button class="timer-button" data-timer="speech" data-action="start">Start</button>
-            <button class="timer-button" data-timer="speech" data-action="stop">Stop</button>
-            <button class="timer-button" data-timer="speech" data-action="reset">Reset</button>
-        </div>
-    </div>
-</div>
-    <div class="timer-controls">
-        <button class="timer-button" data-timer="session" data-action="start">Start</button>
-        <button class="timer-button" data-timer="session" data-action="stop">Stop</button>
-        <button class="timer-button" data-timer="session" data-action="reset">Reset</button>
-    </div>
-</div>
-
-<!-- Caucus Timer -->
-<div class="timer-card">
-    <div class="timer-title">Caucus</div>
-    <div class="timer-display" id="caucus-timer">00:00</div>
-    <div class="timer-settings">
-        <input type="number" class="timer-duration" min="1" value="5" data-timer="caucus"> min
-        <button class="timer-set-button" data-timer="caucus">Set</button>
-    </div>
-    <div class="timer-controls">
-        <button class="timer-button" data-timer="caucus" data-action="start">Start</button>
-        <button class="timer-button" data-timer="caucus" data-action="stop">Stop</button>
-        <button class="timer-button" data-timer="caucus" data-action="reset">Reset</button>
-    </div>
-</div>
-<!-- Speech Timer -->
-<div class="timer-card">
-    <div class="timer-title">Speech</div>
-    <div class="timer-display" id="speech-timer">00:00</div>
-    <div class="timer-settings">
-        <input type="number" class="timer-duration" min="1" value="1" data-timer="speech"> min
-        <button class="timer-set-button" data-timer="speech">Set</button>
-    </div>
-    <div class="timer-controls">
-        <button class="timer-button" data-timer="speech" data-action="start">Start</button>
-        <button class="timer-button" data-timer="speech" data-action="stop">Stop</button>
-        <button class="timer-button" data-timer="speech" data-action="reset">Reset</button>
-    </div>
-</div>
+                            <div class="timer-cards">
+                                <div class="timer-card">
+                                    <div class="timer-title">Session</div>
+                                    <div class="timer-display" id="session-timer">00:00</div>
+                                    <div class="timer-settings">
+                                        <input type="number" class="timer-duration" min="1" value="10" data-timer="session"> min
+                                        <button class="timer-set-button" data-timer="session">Set</button>
+                                    </div>
+                                    <div class="timer-controls">
+                                        <button class="timer-button" data-timer="session" data-action="start">Start</button>
+                                        <button class="timer-button" data-timer="session" data-action="stop">Stop</button>
+                                        <button class="timer-button" data-timer="session" data-action="reset">Reset</button>
+                                    </div>
+                                </div>
+                                <div class="timer-card">
+                                    <div class="timer-title">Caucus</div>
+                                    <div class="timer-display" id="caucus-timer">00:00</div>
+                                    <div class="timer-settings">
+                                        <input type="number" class="timer-duration" min="1" value="5" data-timer="caucus"> min
+                                        <button class="timer-set-button" data-timer="caucus">Set</button>
+                                    </div>
+                                    <div class="timer-controls">
+                                        <button class="timer-button" data-timer="caucus" data-action="start">Start</button>
+                                        <button class="timer-button" data-timer="caucus" data-action="stop">Stop</button>
+                                        <button class="timer-button" data-timer="caucus" data-action="reset">Reset</button>
+                                    </div>
+                                </div>
+                                <div class="timer-card">
+                                    <div class="timer-title">Speech</div>
+                                    <div class="timer-display" id="speech-timer">00:00</div>
+                                    <div class="timer-settings">
+                                        <input type="number" class="timer-duration" min="1" value="1" data-timer="speech"> min
+                                        <button class="timer-set-button" data-timer="speech">Set</button>
+                                    </div>
                                     <div class="timer-controls">
                                         <button class="timer-button" data-timer="speech" data-action="start">Start</button>
                                         <button class="timer-button" data-timer="speech" data-action="stop">Stop</button>
@@ -702,10 +660,10 @@
                         <div class="card-body">
                             <textarea id="notes-area" class="notes-area" placeholder="Enter notes here..."></textarea>
                             <div class="note-buttons">
-                                <button class="button success" data-note="Good Speech">Good Speech</button>
-                                <button class="button danger" data-note="Bad Speech">Bad Speech</button>
-                                <button class="button primary" data-note="Good Diplomacy">Good Diplomacy</button>
-                                <button class="button warning" data-note="Bad Diplomacy">Bad Diplomacy</button>
+                                <button class="button success" data-note="Great Speech">GS</button>
+                                <button class="button danger" data-note="Average Speech">BS</button>
+                                <button class="button primary" data-note="Realistic Diplomacy">GD</button>
+                                <button class="button warning" data-note="Unrealistic Diplomacy">BD</button>
                             </div>
                         </div>
                     </div>
@@ -877,15 +835,6 @@
     </div>
 
     <script>
-// Helper function to generate UUIDs
-function generateUUID() {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-        const r = Math.random() * 16 | 0;
-        const v = c === 'x' ? r : (r & 0x3 | 0x8);
-        return v.toString(16);
-    });
-}
-
 // Initialize the application when the DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
     console.log("DOM loaded - initializing MUN Timer App");
@@ -912,11 +861,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         content.classList.add('active');
                     }
                 });
-    }
-
-    // Call the initialization function
-    initializeApp();
-});
             });
         });
     }
@@ -1171,522 +1115,3 @@ document.addEventListener('DOMContentLoaded', function() {
         
         return suggestions;
     }
-
-    // Function to display suggestions in a user-friendly way
-    function showTimerSuggestions() {
-        const suggestions = validateTimerSettings();
-        
-        if (suggestions.length === 0) {
-            // All timers divide evenly, no suggestions needed
-            const existingSuggestions = document.getElementById('timer-suggestions');
-            if (existingSuggestions) {
-                existingSuggestions.style.display = 'none';
-            }
-            return;
-        }
-        
-        // Create or update a suggestions box
-        let suggestionsBox = document.getElementById('timer-suggestions');
-        
-        if (!suggestionsBox) {
-            suggestionsBox = document.createElement('div');
-            suggestionsBox.id = 'timer-suggestions';
-            suggestionsBox.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
-            suggestionsBox.style.border = '1px solid var(--border)';
-            suggestionsBox.style.borderRadius = 'var(--corner-radius)';
-            suggestionsBox.style.padding = '10px';
-            suggestionsBox.style.marginTop = '15px';
-            suggestionsBox.style.fontSize = '14px';
-            
-            // Add it after the timer cards
-            const timerCards = document.querySelector('.timer-cards');
-            if (timerCards) {
-                timerCards.insertAdjacentElement('afterend', suggestionsBox);
-            }
-        } else {
-            suggestionsBox.style.display = 'block';
-        }
-        
-        // Clear previous content
-        suggestionsBox.innerHTML = '<h4 style="margin-top: 0;">Timer Relationship Suggestions</h4>';
-        
-        // Add suggestions
-        const list = document.createElement('ul');
-        list.style.paddingLeft = '20px';
-        
-        suggestions.forEach(suggestion => {
-            const item = document.createElement('li');
-            item.style.marginBottom = '5px';
-            
-            const applyButton = document.createElement('button');
-            applyButton.textContent = 'Apply';
-            applyButton.className = 'button primary';
-            applyButton.style.fontSize = '12px';
-            applyButton.style.padding = '2px 8px';
-            applyButton.style.marginLeft = '10px';
-            
-            applyButton.addEventListener('click', function() {
-                // Update the timer duration input and trigger the Set button
-                const input = document.querySelector(`.timer-duration[data-timer="${suggestion.timer}"]`);
-                const setButton = document.querySelector(`.timer-set-button[data-timer="${suggestion.timer}"]`);
-                
-                if (input && setButton) {
-                    input.value = suggestion.suggestedValue;
-                    setButton.click(); // Trigger the Set button click event
-                }
-            });
-            
-            item.innerHTML = `Change <strong>${suggestion.timer}</strong> timer from ${suggestion.currentValue} to <strong>${suggestion.suggestedValue}</strong> minutes ${suggestion.reason}.`;
-            item.appendChild(applyButton);
-            
-            list.appendChild(item);
-        });
-        
-        suggestionsBox.appendChild(list);
-    }
-
-    // Function to populate country list
-    function populateCountryList(committee) {
-        const countryList = document.getElementById('country-list');
-        if (!countryList) return;
-        
-        countryList.innerHTML = '';
-        
-        if (!committeeCountries[committee]) {
-            console.error(`Committee ${committee} not found in committeeCountries`);
-            return;
-        }
-        
-        committeeCountries[committee].forEach(country => {
-            const li = document.createElement('li');
-            li.textContent = country;
-            li.className = 'list-item';
-            li.addEventListener('click', function() {
-                document.querySelectorAll('#country-list .list-item').forEach(item => {
-                    item.classList.remove('selected');
-                });
-                this.classList.add('selected');
-            });
-            countryList.appendChild(li);
-        });
-        
-        console.log(`Populated country list for ${committee} with ${committeeCountries[committee].length} countries`);
-    }
-
-    // Function to add a country to the speaking list
-    function addToSpeakingList(country) {
-        if (!country) {
-            console.error("Attempted to add undefined country to speaking list");
-            return;
-        }
-        
-        state.speakerQueue.push(country);
-        
-        // Update frequency data
-        if (!state.delegateData[country]) {
-            state.delegateData[country] = {
-                speaking: 0,
-                votes: 0,
-                notes: []
-            };
-        }
-        state.delegateData[country].speaking++;
-        
-        console.log(`Added ${country} to speaking list`);
-    }
-
-    // Function to update speaking list display
-    function updateSpeakingList() {
-        const speakingList = document.getElementById('speaking-list');
-        if (!speakingList) return;
-        
-        speakingList.innerHTML = '';
-        
-        state.speakerQueue.forEach((country, index) => {
-            const li = document.createElement('li');
-            li.textContent = country;
-            li.className = 'list-item';
-            li.dataset.index = index;
-            li.addEventListener('click', function() {
-                document.querySelectorAll('#speaking-list .list-item').forEach(item => {
-                    item.classList.remove('selected');
-                });
-                this.classList.add('selected');
-            });
-            speakingList.appendChild(li);
-        });
-        
-        console.log(`Updated speaking list with ${state.speakerQueue.length} countries`);
-    }
-
-    // Function to update frequency list
-    function updateFrequencyList() {
-        const frequencyList = document.getElementById('frequency-list');
-        if (!frequencyList) return;
-        
-        frequencyList.innerHTML = '';
-        
-        // Create array from delegate data
-        const delegates = Object.keys(state.delegateData).map(country => {
-            return {
-                country: country,
-                count: state.delegateData[country].speaking
-            };
-        });
-        
-        // Sort by speaking count descending
-        delegates.sort((a, b) => b.count - a.count);
-        
-        delegates.forEach(delegate => {
-            const li = document.createElement('li');
-            li.className = 'list-item';
-            
-            // Determine color based on frequency
-            let colorClass = '';
-            if (delegate.count > 5) {
-                colorClass = 'background-color: var(--danger);';
-            } else if (delegate.count > 3) {
-                colorClass = 'background-color: var(--warning);';
-            } else if (delegate.count > 0) {
-                colorClass = 'background-color: var(--success);';
-            }
-            
-            li.innerHTML = `<span class="frequency-indicator" style="${colorClass}"></span>${delegate.country} - ${delegate.count}`;
-            frequencyList.appendChild(li);
-        });
-    }
-
-    function generateRoleCallTable() {
-        const table = document.getElementById('role-call-table');
-        if (!table) return;
-        
-        const headerRow = table.querySelector('thead tr');
-        if (!headerRow) return;
-        
-        // Clear existing header cells except first one
-        while (headerRow.children.length > 1) {
-            headerRow.removeChild(headerRow.lastChild);
-        }
-        
-        // Add date headers
-        state.attendanceDates.forEach(date => {
-            const th = document.createElement('th');
-            th.textContent = date;
-            headerRow.appendChild(th);
-        });
-        
-        // Clear existing body rows
-        const tbody = table.querySelector('tbody');
-        if (!tbody) return;
-        
-        tbody.innerHTML = '';
-        
-        // Add country rows
-        const countries = committeeCountries[state.selectedCommittee];
-        countries.forEach(country => {
-            const tr = document.createElement('tr');
-            
-            const td = document.createElement('td');
-            td.textContent = country;
-            tr.appendChild(td);
-            
-            // Add attendance cells
-            state.attendanceDates.forEach(date => {
-                const td = document.createElement('td');
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                
-                // Check if attendance data exists
-                if (state.attendanceData[country] && state.attendanceData[country][date]) {
-                    checkbox.checked = true;
-                }
-                
-                // Add change event
-                checkbox.addEventListener('change', function() {
-                    if (!state.attendanceData[country]) {
-                        state.attendanceData[country] = {};
-                    }
-                    state.attendanceData[country][date] = this.checked;
-                });
-                
-                td.appendChild(checkbox);
-                tr.appendChild(td);
-            });
-            
-            tbody.appendChild(tr);
-        });
-    }
-
-    // Set up the application
-    function initializeApp() {
-        // Initialize with default committee
-        populateCountryList(state.selectedCommittee);
-
-        // Initialize timer displays
-        updateTimerDisplay('session');
-        updateTimerDisplay('caucus');
-        updateTimerDisplay('speech');
-        updateTimerDisplay('fun');
-        
-        // Initialize timer relationship indicators
-        updateTimerRelationships();
-        
-        // Show initial suggestions if needed
-        showTimerSuggestions();
-        
-        // Setup tab switching
-        setupTabSwitching();
-        
-        // Setup event listeners for all buttons and interactive elements
-        setupEventListeners();
-        
-        console.log("MUN Committee Timer App initialized successfully");
-    }
-
-    // Setup all event listeners
-    function setupEventListeners() {
-        // Add timer settings event listeners
-        document.querySelectorAll('.timer-set-button').forEach(button => {
-            button.addEventListener('click', function() {
-                const timerType = this.getAttribute('data-timer');
-                const input = document.querySelector(`.timer-duration[data-timer="${timerType}"]`);
-                
-                if (input) {
-                    const minutes = parseInt(input.value);
-                    setTimerDuration(timerType, minutes);
-                }
-            });
-        });
-        
-        // Helper to safely add event listener
-        function addSafeEventListener(id, event, callback) {
-            const element = document.getElementById(id);
-            if (element) {
-                element.addEventListener(event, callback);
-                return true;
-            } else {
-                console.warn(`Element with id ${id} not found for event listener`);
-                return false;
-            }
-        }
-        
-        // Handle committee selection change
-        addSafeEventListener('committee-select', 'change', function() {
-            state.selectedCommittee = this.value;
-            populateCountryList(state.selectedCommittee);
-            updateFrequencyList();
-        });
-
-        // Add to speaking list button
-        addSafeEventListener('add-to-list-button', 'click', function() {
-            const selectedCountry = document.querySelector('#country-list .list-item.selected');
-            if (selectedCountry) {
-                const country = selectedCountry.textContent;
-                addToSpeakingList(country);
-                updateSpeakingList();
-                updateFrequencyList();
-            } else {
-                console.log("No country selected to add to speaking list");
-            }
-        });
-
-        // Add event listeners for timer buttons
-        document.querySelectorAll('.timer-button').forEach(button => {
-            button.addEventListener('click', function(event) {
-                // Prevent default to be safe
-                event.preventDefault();
-                
-                const timer = this.getAttribute('data-timer');
-                const action = this.getAttribute('data-action');
-                
-                console.log(`Timer button clicked: ${timer} - ${action}`);
-                
-                if (action === 'start') {
-                    startTimer(timer);
-                } else if (action === 'stop') {
-                    stopTimer(timer);
-                } else if (action === 'reset') {
-                    resetTimer(timer);
-                }
-            });
-        });
-
-        // Next speaker button
-        addSafeEventListener('next-speaker-button', 'click', function() {
-            if (state.speakerQueue.length > 0) {
-                if (state.currentSpeaker) {
-                    // Current speaker is done
-                    resetTimer('speech');
-                }
-                
-                // Get next speaker
-                state.currentSpeaker = state.speakerQueue.shift();
-                const currentSpeakerDisplay = document.getElementById('current-speaker-display');
-                if (currentSpeakerDisplay) {
-                    currentSpeakerDisplay.textContent = state.currentSpeaker;
-                }
-                
-                // Start speech timer
-                resetTimer('speech');
-                startTimer('speech');
-                
-                // Update the display
-                updateSpeakingList();
-            } else {
-                console.log("No speakers in queue");
-            }
-        });
-
-        // Skip speaker button
-        addSafeEventListener('skip-speaker-button', 'click', function() {
-            if (state.currentSpeaker) {
-                resetTimer('speech');
-                state.currentSpeaker = null;
-                
-                const currentSpeakerDisplay = document.getElementById('current-speaker-display');
-                if (currentSpeakerDisplay) {
-                    currentSpeakerDisplay.textContent = 'None';
-                }
-                
-                if (state.speakerQueue.length > 0) {
-                    state.currentSpeaker = state.speakerQueue.shift();
-                    if (currentSpeakerDisplay) {
-                        currentSpeakerDisplay.textContent = state.currentSpeaker;
-                    }
-                    resetTimer('speech');
-                    startTimer('speech');
-                }
-                
-                updateSpeakingList();
-            }
-        });
-
-        // Speaking list controls
-        addSafeEventListener('move-up-button', 'click', function() {
-            const selected = document.querySelector('#speaking-list .list-item.selected');
-            if (selected) {
-                const index = parseInt(selected.dataset.index);
-                if (index > 0) {
-                    // Swap with previous item
-                    [state.speakerQueue[index], state.speakerQueue[index - 1]] = [state.speakerQueue[index - 1], state.speakerQueue[index]];
-                    updateSpeakingList();
-                    
-                    // Keep the item selected
-                    const items = document.querySelectorAll('#speaking-list .list-item');
-                    if (items.length > index - 1) {
-                        items[index - 1].classList.add('selected');
-                    }
-                }
-            }
-        });
-
-        addSafeEventListener('move-down-button', 'click', function() {
-            const selected = document.querySelector('#speaking-list .list-item.selected');
-            if (selected) {
-                const index = parseInt(selected.dataset.index);
-                if (index < state.speakerQueue.length - 1) {
-                    // Swap with next item
-                    [state.speakerQueue[index], state.speakerQueue[index + 1]] = [state.speakerQueue[index + 1], state.speakerQueue[index]];
-                    updateSpeakingList();
-                    
-                    // Keep the item selected
-                    const items = document.querySelectorAll('#speaking-list .list-item');
-                    if (items.length > index + 1) {
-                        items[index + 1].classList.add('selected');
-                    }
-                }
-            }
-        });
-
-        addSafeEventListener('remove-button', 'click', function() {
-            const selected = document.querySelector('#speaking-list .list-item.selected');
-            if (selected) {
-                const index = parseInt(selected.dataset.index);
-                state.speakerQueue.splice(index, 1);
-                updateSpeakingList();
-            }
-        });
-
-        addSafeEventListener('clear-list-button', 'click', function() {
-            state.speakerQueue = [];
-            updateSpeakingList();
-        });
-
-        // Notes functionality
-        document.querySelectorAll('.note-buttons .button').forEach(button => {
-            button.addEventListener('click', function() {
-                const noteText = this.getAttribute('data-note');
-                const notesArea = document.getElementById('notes-area');
-                
-                if (state.currentSpeaker && notesArea) {
-                    const timestamp = new Date().toLocaleTimeString();
-                    const note = `[${timestamp}] ${state.currentSpeaker}: ${noteText}`;
-                    
-                    // Add to text area
-                    notesArea.value += (notesArea.value ? '\n' : '') + note;
-                    
-                    // Add to delegate data
-                    if (!state.delegateData[state.currentSpeaker]) {
-                        state.delegateData[state.currentSpeaker] = {
-                            speaking: 0,
-                            votes: 0,
-                            notes: []
-                        };
-                    }
-                    state.delegateData[state.currentSpeaker].notes.push({
-                        timestamp: timestamp,
-                        note: noteText
-                    });
-                }
-            });
-        });
-
-        // Lock countries functionality
-        addSafeEventListener('lock-countries-button', 'click', function() {
-            state.isCountryListLocked = !state.isCountryListLocked;
-            
-            const countryListItems = document.querySelectorAll('#country-list .list-item');
-            if (state.isCountryListLocked) {
-                this.textContent = 'Unlock Countries';
-                countryListItems.forEach(item => {
-                    item.style.pointerEvents = 'none';
-                    item.style.opacity = '0.6';
-                });
-            } else {
-                this.textContent = 'Lock Countries';
-                countryListItems.forEach(item => {
-                    item.style.pointerEvents = 'auto';
-                    item.style.opacity = '1';
-                });
-            }
-        });
-
-        // Fun Mode functionality
-        addSafeEventListener('fun-mode-button', 'click', function() {
-            const appElement = document.getElementById('app');
-            const funModeContainer = document.getElementById('fun-mode-container');
-            
-            if (appElement && funModeContainer) {
-                appElement.style.display = 'none';
-                funModeContainer.style.display = 'block';
-                resetTimer('fun');
-            }
-        });
-
-        addSafeEventListener('exit-fun-mode-button', 'click', function() {
-            const appElement = document.getElementById('app');
-            const funModeContainer = document.getElementById('fun-mode-container');
-            
-            if (appElement && funModeContainer) {
-                appElement.style.display = 'block';
-                funModeContainer.style.display = 'none';
-                stopTimer('fun');
-            }
-        });
-
-        // Fun mode timer controls
-        const startFunButton = document.querySelector('[data-action="start-fun"]');
-        if (startFunButton) {
-            startFunButton.addEventListener('click', function() {
-                startTimer('fun');
-</script>            
