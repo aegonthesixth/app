@@ -792,536 +792,544 @@
     </div>
 
     <script>
-// Initialize countries for committees
-const committeeCountries = {
-    'UNSC': ['USA', 'UK', 'France', 'Russia', 'China', 'India', 'Brazil', 'Japan', 'Germany', 'South Africa', 'Kenya', 'Ghana'],
-    'UNODC': ['USA', 'Canada', 'Mexico', 'Brazil', 'Colombia', 'UK', 'France', 'Germany', 'Russia', 'China', 'Japan', 'India', 'Nigeria', 'South Africa'],
-    'UNGA': ['USA', 'UK', 'France', 'Russia', 'China', 'India', 'Germany', 'Japan', 'Brazil', 'South Africa', 'Egypt', 'Saudi Arabia', 'Australia', 'Canada'],
-    'UNHRC': ['USA', 'UK', 'Germany', 'France', 'Italy', 'Argentina', 'Brazil', 'Japan', 'South Korea', 'India', 'South Africa', 'Kenya', 'Morocco'],
-    'ECOSOC': ['USA', 'China', 'Russia', 'UK', 'France', 'Germany', 'India', 'Brazil', 'Japan', 'South Africa', 'Nigeria', 'Egypt', 'Saudi Arabia'],
-    'WHO': ['USA', 'UK', 'France', 'Germany', 'Japan', 'China', 'India', 'Brazil', 'South Africa', 'Kenya', 'Australia', 'Canada', 'Mexico']
-};
-
-// Function to populate country list
-function populateCountryList(committee) {
-    const countryList = document.getElementById('country-list');
-    countryList.innerHTML = '';
-    
-    committeeCountries[committee].forEach(country => {
-        const li = document.createElement('li');
-        li.textContent = country;
-        li.className = 'list-item';
-        li.addEventListener('click', function() {
-            document.querySelectorAll('#country-list .list-item').forEach(item => {
-                item.classList.remove('selected');
-            });
-            this.classList.add('selected');
-        });
-        countryList.appendChild(li);
+// Helper function to generate UUIDs
+function generateUUID() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
     });
 }
 
-// Initialize with default committee
-populateCountryList(state.selectedCommittee);
+// Initialize the application when the DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Global data and state
+    const state = {
+        currentSpeaker: null,
+        speakerQueue: [],
+        delegateData: {},
+        attendanceData: {},
+        attendanceDates: [],
+        isCountryListLocked: false,
+        selectedCommittee: 'UNSC',
+        authenticatedUsername: null,
+        messages: [],
+        delegates: new Set(),
+        selectedDelegate: null,
+        timerIntervals: {
+            session: null,
+            caucus: null,
+            speech: null,
+            fun: null
+        },
+        timerStart: {
+            session: 0,
+            caucus: 0,
+            speech: 0,
+            fun: 0
+        },
+        timerElapsed: {
+            session: 0,
+            caucus: 0,
+            speech: 0,
+            fun: 0
+        },
+        timerRunning: {
+            session: false,
+            caucus: false,
+            speech: false,
+            fun: false
+        },
+        timerTypes: ["Session", "Caucus", "Speech"],
+        timerColors: ["var(--timer-green)", "var(--timer-blue)", "var(--timer-orange)"]
+    };
 
-// Handle committee selection change
-document.getElementById('committee-select').addEventListener('change', function() {
-    state.selectedCommittee = this.value;
-    populateCountryList(state.selectedCommittee);
-    updateFrequencyList();
-});
+    // Initialize countries for committees
+    const committeeCountries = {
+        'UNSC': ['USA', 'UK', 'France', 'Russia', 'China', 'India', 'Brazil', 'Japan', 'Germany', 'South Africa', 'Kenya', 'Ghana'],
+        'UNODC': ['USA', 'Canada', 'Mexico', 'Brazil', 'Colombia', 'UK', 'France', 'Germany', 'Russia', 'China', 'Japan', 'India', 'Nigeria', 'South Africa'],
+        'UNGA': ['USA', 'UK', 'France', 'Russia', 'China', 'India', 'Germany', 'Japan', 'Brazil', 'South Africa', 'Egypt', 'Saudi Arabia', 'Australia', 'Canada'],
+        'UNHRC': ['USA', 'UK', 'Germany', 'France', 'Italy', 'Argentina', 'Brazil', 'Japan', 'South Korea', 'India', 'South Africa', 'Kenya', 'Morocco'],
+        'ECOSOC': ['USA', 'China', 'Russia', 'UK', 'France', 'Germany', 'India', 'Brazil', 'Japan', 'South Africa', 'Nigeria', 'Egypt', 'Saudi Arabia'],
+        'WHO': ['USA', 'UK', 'France', 'Germany', 'Japan', 'China', 'India', 'Brazil', 'South Africa', 'Kenya', 'Australia', 'Canada', 'Mexico']
+    };
 
-// Add to speaking list button
-document.getElementById('add-to-list-button').addEventListener('click', function() {
-    const selectedCountry = document.querySelector('#country-list .list-item.selected');
-    if (selectedCountry) {
-        const country = selectedCountry.textContent;
-        addToSpeakingList(country);
-        updateSpeakingList();
-        updateFrequencyList();
-    }
-});
-
-// Function to add a country to the speaking list
-function addToSpeakingList(country) {
-    state.speakerQueue.push(country);
+    // Tab switching
+    const tabs = document.querySelectorAll('.tab');
+    const tabContents = document.querySelectorAll('.tab-content');
     
-    // Update frequency data
-    if (!state.delegateData[country]) {
-        state.delegateData[country] = {
-            speaking: 0,
-            votes: 0,
-            notes: []
-        };
-    }
-    state.delegateData[country].speaking++;
-}
-
-// Function to update speaking list display
-function updateSpeakingList() {
-    const speakingList = document.getElementById('speaking-list');
-    speakingList.innerHTML = '';
-    
-    state.speakerQueue.forEach((country, index) => {
-        const li = document.createElement('li');
-        li.textContent = country;
-        li.className = 'list-item';
-        li.dataset.index = index;
-        li.addEventListener('click', function() {
-            document.querySelectorAll('#speaking-list .list-item').forEach(item => {
-                item.classList.remove('selected');
-            });
-            this.classList.add('selected');
-        });
-        speakingList.appendChild(li);
-    });
-}
-
-// Function to update frequency list
-function updateFrequencyList() {
-    const frequencyList = document.getElementById('frequency-list');
-    frequencyList.innerHTML = '';
-    
-    // Create array from delegate data
-    const delegates = Object.keys(state.delegateData).map(country => {
-        return {
-            country: country,
-            count: state.delegateData[country].speaking
-        };
-    });
-    
-    // Sort by speaking count descending
-    delegates.sort((a, b) => b.count - a.count);
-    
-    delegates.forEach(delegate => {
-        const li = document.createElement('li');
-        li.className = 'list-item';
-        
-        // Determine color based on frequency
-        let colorClass = '';
-        if (delegate.count > 5) {
-            colorClass = 'background-color: var(--danger);';
-        } else if (delegate.count > 3) {
-            colorClass = 'background-color: var(--warning);';
-        } else if (delegate.count > 0) {
-            colorClass = 'background-color: var(--success);';
-        }
-        
-        li.innerHTML = `<span class="frequency-indicator" style="${colorClass}"></span>${delegate.country} - ${delegate.count}`;
-        frequencyList.appendChild(li);
-    });
-}        // Helper function to generate UUIDs
-        function generateUUID() {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-                const r = Math.random() * 16 | 0;
-                const v = c === 'x' ? r : (r & 0x3 | 0x8);
-                return v.toString(16);
-            });
-        }
-
-        // Initialize the application when the DOM is loaded
-        document.addEventListener('DOMContentLoaded', function() {
-            // Tab switching
-            const tabs = document.querySelectorAll('.tab');
-            const tabContents = document.querySelectorAll('.tab-content');
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            if (tab.classList.contains('disabled')) return;
             
-            tabs.forEach(tab => {
-                tab.addEventListener('click', () => {
-                    if (tab.classList.contains('disabled')) return;
-                    
-                    const tabId = tab.getAttribute('data-tab');
-                    
-                    // Update active tab
-                    tabs.forEach(t => t.classList.remove('active'));
-                    tab.classList.add('active');
-                    
-                    // Show corresponding content
-                    tabContents.forEach(content => {
-                        content.classList.remove('active');
-                        if (content.id === `${tabId}-tab`) {
-                            content.classList.add('active');
-                        }
-                    });
-                });
+            const tabId = tab.getAttribute('data-tab');
+            
+            // Update active tab
+            tabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            
+            // Show corresponding content
+            tabContents.forEach(content => {
+                content.classList.remove('active');
+                if (content.id === `${tabId}-tab`) {
+                    content.classList.add('active');
+                }
             });
+        });
+    });
 
-            // Global data and state
-            const state = {
-                currentSpeaker: null,
-                speakerQueue: [],
-                delegateData: {},
-                attendanceData: {},
-                attendanceDates: [],
-                isCountryListLocked: false,
-                selectedCommittee: 'UNSC',
-                authenticatedUsername: null,
-                messages: [],
-                delegates: new Set(),
-                selectedDelegate: null,
-                timerIntervals: {
-                    session: null,
-                    caucus: null,
-                    speech: null,
-                    fun: null
-                },
-                timerStart: {
-                    session: 0,
-                    caucus: 0,
-                    speech: 0,
-                    fun: 0
-                },
-                timerElapsed: {
-                    session: 0,
-                    caucus: 0,
-                    speech: 0,
-                    fun: 0
-                },
-                timerRunning: {
-                    session: false,
-                    caucus: false,
-                    speech: false,
-                    fun: false
-                },
-                timerTypes: ["Session", "Caucus", "Speech"],
-                timerColors: ["var(--timer-green)", "var(--timer-blue)", "var(--timer-orange)"],
-                // Timer functions
-function formatTime(timeInSeconds) {
-    const minutes = Math.floor(timeInSeconds / 60).toString().padStart(2, '0');
-    const seconds = (timeInSeconds % 60).toString().padStart(2, '0');
-    return `${minutes}:${seconds}`;
-}
-
-function updateTimerDisplay(timerType) {
-    const display = document.getElementById(`${timerType.toLowerCase()}-timer`);
-    display.textContent = formatTime(state.timerElapsed[timerType.toLowerCase()]);
-}
-
-function startTimer(timerType) {
-    const lowerType = timerType.toLowerCase();
-    if (!state.timerRunning[lowerType]) {
-        state.timerRunning[lowerType] = true;
-        state.timerStart[lowerType] = Date.now() - (state.timerElapsed[lowerType] * 1000);
-        state.timerIntervals[lowerType] = setInterval(() => {
-            state.timerElapsed[lowerType] = Math.floor((Date.now() - state.timerStart[lowerType]) / 1000);
-            updateTimerDisplay(timerType);
-        }, 1000);
+    // Timer functions
+    function formatTime(timeInSeconds) {
+        const minutes = Math.floor(timeInSeconds / 60).toString().padStart(2, '0');
+        const seconds = (timeInSeconds % 60).toString().padStart(2, '0');
+        return `${minutes}:${seconds}`;
     }
-}
 
-function stopTimer(timerType) {
-    const lowerType = timerType.toLowerCase();
-    if (state.timerRunning[lowerType]) {
-        clearInterval(state.timerIntervals[lowerType]);
-        state.timerRunning[lowerType] = false;
+    function updateTimerDisplay(timerType) {
+        const display = document.getElementById(`${timerType.toLowerCase()}-timer`);
+        display.textContent = formatTime(state.timerElapsed[timerType.toLowerCase()]);
     }
-}
 
-function resetTimer(timerType) {
-    const lowerType = timerType.toLowerCase();
-    stopTimer(timerType);
-    state.timerElapsed[lowerType] = 0;
-    updateTimerDisplay(timerType);
-}
+    function startTimer(timerType) {
+        const lowerType = timerType.toLowerCase();
+        if (!state.timerRunning[lowerType]) {
+            state.timerRunning[lowerType] = true;
+            state.timerStart[lowerType] = Date.now() - (state.timerElapsed[lowerType] * 1000);
+            state.timerIntervals[lowerType] = setInterval(() => {
+                state.timerElapsed[lowerType] = Math.floor((Date.now() - state.timerStart[lowerType]) / 1000);
+                updateTimerDisplay(timerType);
+            }, 1000);
+        }
+    }
 
-// Add event listeners for timer buttons
-document.querySelectorAll('.timer-button').forEach(button => {
-    button.addEventListener('click', function() {
-        const timer = this.getAttribute('data-timer');
-        const action = this.getAttribute('data-action');
+    function stopTimer(timerType) {
+        const lowerType = timerType.toLowerCase();
+        if (state.timerRunning[lowerType]) {
+            clearInterval(state.timerIntervals[lowerType]);
+            state.timerRunning[lowerType] = false;
+        }
+    }
+
+    function resetTimer(timerType) {
+        const lowerType = timerType.toLowerCase();
+        stopTimer(timerType);
+        state.timerElapsed[lowerType] = 0;
+        updateTimerDisplay(timerType);
+    }
+
+    // Function to populate country list
+    function populateCountryList(committee) {
+        const countryList = document.getElementById('country-list');
+        countryList.innerHTML = '';
         
-        if (action === 'start') {
-            startTimer(timer);
-        } else if (action === 'stop') {
-            stopTimer(timer);
-        } else if (action === 'reset') {
-            resetTimer(timer);
+        committeeCountries[committee].forEach(country => {
+            const li = document.createElement('li');
+            li.textContent = country;
+            li.className = 'list-item';
+            li.addEventListener('click', function() {
+                document.querySelectorAll('#country-list .list-item').forEach(item => {
+                    item.classList.remove('selected');
+                });
+                this.classList.add('selected');
+            });
+            countryList.appendChild(li);
+        });
+    }
+
+    // Function to add a country to the speaking list
+    function addToSpeakingList(country) {
+        state.speakerQueue.push(country);
+        
+        // Update frequency data
+        if (!state.delegateData[country]) {
+            state.delegateData[country] = {
+                speaking: 0,
+                votes: 0,
+                notes: []
+            };
+        }
+        state.delegateData[country].speaking++;
+    }
+
+    // Function to update speaking list display
+    function updateSpeakingList() {
+        const speakingList = document.getElementById('speaking-list');
+        speakingList.innerHTML = '';
+        
+        state.speakerQueue.forEach((country, index) => {
+            const li = document.createElement('li');
+            li.textContent = country;
+            li.className = 'list-item';
+            li.dataset.index = index;
+            li.addEventListener('click', function() {
+                document.querySelectorAll('#speaking-list .list-item').forEach(item => {
+                    item.classList.remove('selected');
+                });
+                this.classList.add('selected');
+            });
+            speakingList.appendChild(li);
+        });
+    }
+
+    // Function to update frequency list
+    function updateFrequencyList() {
+        const frequencyList = document.getElementById('frequency-list');
+        frequencyList.innerHTML = '';
+        
+        // Create array from delegate data
+        const delegates = Object.keys(state.delegateData).map(country => {
+            return {
+                country: country,
+                count: state.delegateData[country].speaking
+            };
+        });
+        
+        // Sort by speaking count descending
+        delegates.sort((a, b) => b.count - a.count);
+        
+        delegates.forEach(delegate => {
+            const li = document.createElement('li');
+            li.className = 'list-item';
+            
+            // Determine color based on frequency
+            let colorClass = '';
+            if (delegate.count > 5) {
+                colorClass = 'background-color: var(--danger);';
+            } else if (delegate.count > 3) {
+                colorClass = 'background-color: var(--warning);';
+            } else if (delegate.count > 0) {
+                colorClass = 'background-color: var(--success);';
+            }
+            
+            li.innerHTML = `<span class="frequency-indicator" style="${colorClass}"></span>${delegate.country} - ${delegate.count}`;
+            frequencyList.appendChild(li);
+        });
+    }
+
+    function generateRoleCallTable() {
+        const table = document.getElementById('role-call-table');
+        const headerRow = table.querySelector('thead tr');
+        
+        // Clear existing header cells except first one
+        while (headerRow.children.length > 1) {
+            headerRow.removeChild(headerRow.lastChild);
+        }
+        
+        // Add date headers
+        state.attendanceDates.forEach(date => {
+            const th = document.createElement('th');
+            th.textContent = date;
+            headerRow.appendChild(th);
+        });
+        
+        // Clear existing body rows
+        const tbody = table.querySelector('tbody');
+        tbody.innerHTML = '';
+        
+        // Add country rows
+        const countries = committeeCountries[state.selectedCommittee];
+        countries.forEach(country => {
+            const tr = document.createElement('tr');
+            
+            const td = document.createElement('td');
+            td.textContent = country;
+            tr.appendChild(td);
+            
+            // Add attendance cells
+            state.attendanceDates.forEach(date => {
+                const td = document.createElement('td');
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                
+                // Check if attendance data exists
+                if (state.attendanceData[country] && state.attendanceData[country][date]) {
+                    checkbox.checked = true;
+                }
+                
+                // Add change event
+                checkbox.addEventListener('change', function() {
+                    if (!state.attendanceData[country]) {
+                        state.attendanceData[country] = {};
+                    }
+                    state.attendanceData[country][date] = this.checked;
+                });
+                
+                td.appendChild(checkbox);
+                tr.appendChild(td);
+            });
+            
+            tbody.appendChild(tr);
+        });
+    }
+
+    // Initialize with default committee
+    populateCountryList(state.selectedCommittee);
+
+    // Initialize timer displays
+    updateTimerDisplay('session');
+    updateTimerDisplay('caucus');
+    updateTimerDisplay('speech');
+
+    // Event listeners
+    // Handle committee selection change
+    document.getElementById('committee-select').addEventListener('change', function() {
+        state.selectedCommittee = this.value;
+        populateCountryList(state.selectedCommittee);
+        updateFrequencyList();
+    });
+
+    // Add to speaking list button
+    document.getElementById('add-to-list-button').addEventListener('click', function() {
+        const selectedCountry = document.querySelector('#country-list .list-item.selected');
+        if (selectedCountry) {
+            const country = selectedCountry.textContent;
+            addToSpeakingList(country);
+            updateSpeakingList();
+            updateFrequencyList();
         }
     });
-});
 
-// Initialize timer displays
-updateTimerDisplay('session');
-updateTimerDisplay('caucus');
-updateTimerDisplay('speech');
-// Next speaker button
-document.getElementById('next-speaker-button').addEventListener('click', function() {
-    if (state.speakerQueue.length > 0) {
-        if (state.currentSpeaker) {
-            // Current speaker is done
-            resetTimer('speech');
-        }
-        
-        // Get next speaker
-        state.currentSpeaker = state.speakerQueue.shift();
-        document.getElementById('current-speaker-display').textContent = state.currentSpeaker;
-        
-        // Start speech timer
-        resetTimer('speech');
-        startTimer('speech');
-        
-        // Update the display
-        updateSpeakingList();
-    }
-});
+    // Add event listeners for timer buttons
+    document.querySelectorAll('.timer-button').forEach(button => {
+        button.addEventListener('click', function() {
+            const timer = this.getAttribute('data-timer');
+            const action = this.getAttribute('data-action');
+            
+            if (action === 'start') {
+                startTimer(timer);
+            } else if (action === 'stop') {
+                stopTimer(timer);
+            } else if (action === 'reset') {
+                resetTimer(timer);
+            }
+        });
+    });
 
-// Skip speaker button
-document.getElementById('skip-speaker-button').addEventListener('click', function() {
-    if (state.currentSpeaker) {
-        resetTimer('speech');
-        state.currentSpeaker = null;
-        document.getElementById('current-speaker-display').textContent = 'None';
-        
+    // Next speaker button
+    document.getElementById('next-speaker-button').addEventListener('click', function() {
         if (state.speakerQueue.length > 0) {
+            if (state.currentSpeaker) {
+                // Current speaker is done
+                resetTimer('speech');
+            }
+            
+            // Get next speaker
             state.currentSpeaker = state.speakerQueue.shift();
             document.getElementById('current-speaker-display').textContent = state.currentSpeaker;
+            
+            // Start speech timer
             resetTimer('speech');
             startTimer('speech');
-        }
-        
-        updateSpeakingList();
-    }
-});
-
-// Speaking list controls
-document.getElementById('move-up-button').addEventListener('click', function() {
-    const selected = document.querySelector('#speaking-list .list-item.selected');
-    if (selected) {
-        const index = parseInt(selected.dataset.index);
-        if (index > 0) {
-            // Swap with previous item
-            [state.speakerQueue[index], state.speakerQueue[index - 1]] = [state.speakerQueue[index - 1], state.speakerQueue[index]];
-            updateSpeakingList();
             
-            // Keep the item selected
-            document.querySelectorAll('#speaking-list .list-item')[index - 1].classList.add('selected');
-        }
-    }
-});
-
-document.getElementById('move-down-button').addEventListener('click', function() {
-    const selected = document.querySelector('#speaking-list .list-item.selected');
-    if (selected) {
-        const index = parseInt(selected.dataset.index);
-        if (index < state.speakerQueue.length - 1) {
-            // Swap with next item
-            [state.speakerQueue[index], state.speakerQueue[index + 1]] = [state.speakerQueue[index + 1], state.speakerQueue[index]];
+            // Update the display
             updateSpeakingList();
-            
-            // Keep the item selected
-            document.querySelectorAll('#speaking-list .list-item')[index + 1].classList.add('selected');
         }
-    }
-});
+    });
 
-document.getElementById('remove-button').addEventListener('click', function() {
-    const selected = document.querySelector('#speaking-list .list-item.selected');
-    if (selected) {
-        const index = parseInt(selected.dataset.index);
-        state.speakerQueue.splice(index, 1);
-        updateSpeakingList();
-    }
-});
-
-document.getElementById('clear-list-button').addEventListener('click', function() {
-    state.speakerQueue = [];
-    updateSpeakingList();
-});
-// Notes functionality
-document.querySelectorAll('.note-buttons .button').forEach(button => {
-    button.addEventListener('click', function() {
-        const noteText = this.getAttribute('data-note');
-        const notesArea = document.getElementById('notes-area');
-        
+    // Skip speaker button
+    document.getElementById('skip-speaker-button').addEventListener('click', function() {
         if (state.currentSpeaker) {
-            const timestamp = new Date().toLocaleTimeString();
-            const note = `[${timestamp}] ${state.currentSpeaker}: ${noteText}`;
+            resetTimer('speech');
+            state.currentSpeaker = null;
+            document.getElementById('current-speaker-display').textContent = 'None';
             
-            // Add to text area
-            notesArea.value += (notesArea.value ? '\n' : '') + note;
-            
-            // Add to delegate data
-            if (!state.delegateData[state.currentSpeaker]) {
-                state.delegateData[state.currentSpeaker] = {
-                    speaking: 0,
-                    votes: 0,
-                    notes: []
-                };
+            if (state.speakerQueue.length > 0) {
+                state.currentSpeaker = state.speakerQueue.shift();
+                document.getElementById('current-speaker-display').textContent = state.currentSpeaker;
+                resetTimer('speech');
+                startTimer('speech');
             }
-            state.delegateData[state.currentSpeaker].notes.push({
-                timestamp: timestamp,
-                note: noteText
+            
+            updateSpeakingList();
+        }
+    });
+
+    // Speaking list controls
+    document.getElementById('move-up-button').addEventListener('click', function() {
+        const selected = document.querySelector('#speaking-list .list-item.selected');
+        if (selected) {
+            const index = parseInt(selected.dataset.index);
+            if (index > 0) {
+                // Swap with previous item
+                [state.speakerQueue[index], state.speakerQueue[index - 1]] = [state.speakerQueue[index - 1], state.speakerQueue[index]];
+                updateSpeakingList();
+                
+                // Keep the item selected
+                document.querySelectorAll('#speaking-list .list-item')[index - 1].classList.add('selected');
+            }
+        }
+    });
+
+    document.getElementById('move-down-button').addEventListener('click', function() {
+        const selected = document.querySelector('#speaking-list .list-item.selected');
+        if (selected) {
+            const index = parseInt(selected.dataset.index);
+            if (index < state.speakerQueue.length - 1) {
+                // Swap with next item
+                [state.speakerQueue[index], state.speakerQueue[index + 1]] = [state.speakerQueue[index + 1], state.speakerQueue[index]];
+                updateSpeakingList();
+                
+                // Keep the item selected
+                document.querySelectorAll('#speaking-list .list-item')[index + 1].classList.add('selected');
+            }
+        }
+    });
+
+    document.getElementById('remove-button').addEventListener('click', function() {
+        const selected = document.querySelector('#speaking-list .list-item.selected');
+        if (selected) {
+            const index = parseInt(selected.dataset.index);
+            state.speakerQueue.splice(index, 1);
+            updateSpeakingList();
+        }
+    });
+
+    document.getElementById('clear-list-button').addEventListener('click', function() {
+        state.speakerQueue = [];
+        updateSpeakingList();
+    });
+
+    // Notes functionality
+    document.querySelectorAll('.note-buttons .button').forEach(button => {
+        button.addEventListener('click', function() {
+            const noteText = this.getAttribute('data-note');
+            const notesArea = document.getElementById('notes-area');
+            
+            if (state.currentSpeaker) {
+                const timestamp = new Date().toLocaleTimeString();
+                const note = `[${timestamp}] ${state.currentSpeaker}: ${noteText}`;
+                
+                // Add to text area
+                notesArea.value += (notesArea.value ? '\n' : '') + note;
+                
+                // Add to delegate data
+                if (!state.delegateData[state.currentSpeaker]) {
+                    state.delegateData[state.currentSpeaker] = {
+                        speaking: 0,
+                        votes: 0,
+                        notes: []
+                    };
+                }
+                state.delegateData[state.currentSpeaker].notes.push({
+                    timestamp: timestamp,
+                    note: noteText
+                });
+            }
+        });
+    });
+
+    // Lock countries functionality
+    document.getElementById('lock-countries-button').addEventListener('click', function() {
+        state.isCountryListLocked = !state.isCountryListLocked;
+        
+        const countryListItems = document.querySelectorAll('#country-list .list-item');
+        if (state.isCountryListLocked) {
+            this.textContent = 'Unlock Countries';
+            countryListItems.forEach(item => {
+                item.style.pointerEvents = 'none';
+                item.style.opacity = '0.6';
+            });
+        } else {
+            this.textContent = 'Lock Countries';
+            countryListItems.forEach(item => {
+                item.style.pointerEvents = 'auto';
+                item.style.opacity = '1';
             });
         }
     });
-});
-// Lock countries functionality
-document.getElementById('lock-countries-button').addEventListener('click', function() {
-    state.isCountryListLocked = !state.isCountryListLocked;
-    
-    const countryListItems = document.querySelectorAll('#country-list .list-item');
-    if (state.isCountryListLocked) {
-        this.textContent = 'Unlock Countries';
-        countryListItems.forEach(item => {
-            item.style.pointerEvents = 'none';
-            item.style.opacity = '0.6';
-        });
-    } else {
-        this.textContent = 'Lock Countries';
-        countryListItems.forEach(item => {
-            item.style.pointerEvents = 'auto';
-            item.style.opacity = '1';
-        });
-    }
-});
-// Fun Mode functionality
-document.getElementById('fun-mode-button').addEventListener('click', function() {
-    document.getElementById('app').style.display = 'none';
-    document.getElementById('fun-mode-container').style.display = 'block';
-    resetTimer('fun');
-});
 
-document.getElementById('exit-fun-mode-button').addEventListener('click', function() {
-    document.getElementById('app').style.display = 'block';
-    document.getElementById('fun-mode-container').style.display = 'none';
-    stopTimer('fun');
-});
-
-// Fun mode timer controls
-document.querySelector('[data-action="start-fun"]').addEventListener('click', function() {
-    startTimer('fun');
-});
-
-document.querySelector('[data-action="stop-fun"]').addEventListener('click', function() {
-    stopTimer('fun');
-});
-
-document.querySelector('[data-action="reset-fun"]').addEventListener('click', function() {
-    resetTimer('fun');
-});
-
-// Update fun timer display
-function updateFunTimerDisplay() {
-    document.getElementById('fun-timer').textContent = formatTime(state.timerElapsed.fun);
-}
-
-// Fun mode voting
-document.querySelectorAll('.vote-button').forEach(button => {
-    button.addEventListener('click', function() {
-        const voteCount = this.parentElement.querySelector('.vote-count');
-        const currentCount = parseInt(voteCount.textContent);
-        voteCount.textContent = currentCount + 1;
+    // Fun Mode functionality
+    document.getElementById('fun-mode-button').addEventListener('click', function() {
+        document.getElementById('app').style.display = 'none';
+        document.getElementById('fun-mode-container').style.display = 'block';
+        resetTimer('fun');
     });
-});
-// Role Call functionality
-document.getElementById('role-call-button').addEventListener('click', function() {
-    generateRoleCallTable();
-    document.getElementById('role-call-modal').style.display = 'flex';
-});
 
-document.getElementById('close-role-call-button').addEventListener('click', function() {
-    document.getElementById('role-call-modal').style.display = 'none';
-});
+    document.getElementById('exit-fun-mode-button').addEventListener('click', function() {
+        document.getElementById('app').style.display = 'block';
+        document.getElementById('fun-mode-container').style.display = 'none';
+        stopTimer('fun');
+    });
 
-document.getElementById('add-date-button').addEventListener('click', function() {
-    const dateInput = document.getElementById('role-call-date');
-    const date = dateInput.value.trim();
-    
-    if (date && !state.attendanceDates.includes(date)) {
-        state.attendanceDates.push(date);
+    // Fun mode timer controls
+    document.querySelector('[data-action="start-fun"]').addEventListener('click', function() {
+        startTimer('fun');
+    });
+
+    document.querySelector('[data-action="stop-fun"]').addEventListener('click', function() {
+        stopTimer('fun');
+    });
+
+    document.querySelector('[data-action="reset-fun"]').addEventListener('click', function() {
+        resetTimer('fun');
+    });
+
+    // Fun mode voting
+    document.querySelectorAll('.vote-button').forEach(button => {
+        button.addEventListener('click', function() {
+            const voteCount = this.parentElement.querySelector('.vote-count');
+            const currentCount = parseInt(voteCount.textContent);
+            voteCount.textContent = currentCount + 1;
+        });
+    });
+
+    // Role Call functionality
+    document.getElementById('role-call-button').addEventListener('click', function() {
         generateRoleCallTable();
-    }
-    
-    dateInput.value = '';
-});
-
-function generateRoleCallTable() {
-    const table = document.getElementById('role-call-table');
-    const headerRow = table.querySelector('thead tr');
-    
-    // Clear existing header cells except first one
-    while (headerRow.children.length > 1) {
-        headerRow.removeChild(headerRow.lastChild);
-    }
-    
-    // Add date headers
-    state.attendanceDates.forEach(date => {
-        const th = document.createElement('th');
-        th.textContent = date;
-        headerRow.appendChild(th);
+        document.getElementById('role-call-modal').style.display = 'flex';
     });
-    
-    // Clear existing body rows
-    const tbody = table.querySelector('tbody');
-    tbody.innerHTML = '';
-    
-    // Add country rows
-    const countries = committeeCountries[state.selectedCommittee];
-    countries.forEach(country => {
-        const tr = document.createElement('tr');
+
+    document.getElementById('close-role-call-button').addEventListener('click', function() {
+        document.getElementById('role-call-modal').style.display = 'none';
+    });
+
+    document.getElementById('add-date-button').addEventListener('click', function() {
+        const dateInput = document.getElementById('role-call-date');
+        const date = dateInput.value.trim();
         
-        const td = document.createElement('td');
-        td.textContent = country;
-        tr.appendChild(td);
+        if (date && !state.attendanceDates.includes(date)) {
+            state.attendanceDates.push(date);
+            generateRoleCallTable();
+        }
         
-        // Add attendance cells
-        state.attendanceDates.forEach(date => {
-            const td = document.createElement('td');
-            const checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            
-            // Check if attendance data exists
-            if (state.attendanceData[country] && state.attendanceData[country][date]) {
-                checkbox.checked = true;
-            }
-            
-            // Add change event
-            checkbox.addEventListener('change', function() {
-                if (!state.attendanceData[country]) {
-                    state.attendanceData[country] = {};
-                }
-                state.attendanceData[country][date] = this.checked;
-            });
-            
-            td.appendChild(checkbox);
-            tr.appendChild(td);
+        dateInput.value = '';
+    });
+
+    document.getElementById('save-role-call-button').addEventListener('click', function() {
+        // In a real app, this would save to a database
+        alert('Role call data saved successfully!');
+    });
+
+    // Export data functionality
+    document.getElementById('export-button').addEventListener('click', function() {
+        const exportData = {
+            committee: state.selectedCommittee,
+            delegateData: state.delegateData,
+            attendanceData: state.attendanceData,
+            attendanceDates: state.attendanceDates,
+            currentTime: new Date().toISOString()
+        };
+        
+        const dataStr = JSON.stringify(exportData, null, 2);
+        const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+        
+        const exportFileDefaultName = `MUN_${state.selectedCommittee}_data.json`;
+        
+        const linkElement = document.createElement('a');
+        linkElement.setAttribute('href', dataUri);
+        linkElement.setAttribute('download', exportFileDefaultName);
+        linkElement.click();
+    });
+
+    // Rearrange Timers functionality
+    document.getElementById('rearrange-timers-button').addEventListener('click', function() {
+        // Rotate timer colors
+        state.timerColors.unshift(state.timerColors.pop());
+        
+        // Apply new colors
+        document.querySelectorAll('.timer-card').forEach((card, index) => {
+            card.style.backgroundColor = state.timerColors[index];
         });
-        
-        tbody.appendChild(tr);
-    });
-}
-
-document.getElementById('save-role-call-button').addEventListener('click', function() {
-    // In a real app, this would save to a database
-    alert('Role call data saved successfully!');
-});
-// Export data functionality
-document.getElementById('export-button').addEventListener('click', function() {
-    const exportData = {
-        committee: state.selectedCommittee,
-        delegateData: state.delegateData,
-        attendanceData: state.attendanceData,
-        attendanceDates: state.attendanceDates,
-        currentTime: new Date().toISOString()
-    };
-    
-    const dataStr = JSON.stringify(exportData, null, 2);
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-    
-    const exportFileDefaultName = `MUN_${state.selectedCommittee}_data.json`;
-    
-    const linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', exportFileDefaultName);
-    linkElement.click();
-});
-// Rearrange Timers functionality
-document.getElementById('rearrange-timers-button').addEventListener('click', function() {
-    // Rotate timer colors
-    state.timerColors.unshift(state.timerColors.pop());
-    
-    // Apply new colors
-    document.querySelectorAll('.timer-card').forEach((card, index) => {
-        card.style.backgroundColor = state.timerColors[index];
     });
 });
 </script>            
