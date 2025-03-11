@@ -1832,17 +1832,16 @@ function setupEventListeners() {
             resetTimer('fun');
         }
     });
-
-    addSafeEventListener('exit-fun-mode-button', 'click', function() {
-        const appElement = document.getElementById('app');
-        const funModeContainer = document.getElementById('fun-mode-container');
-        
-        if (appElement && funModeContainer) {
-            appElement.style.display = 'block';
-            funModeContainer.style.display = 'none';
-            stopTimer('fun');
-        }
-    });
+// Replace the existing Fun Mode button click event listener with this:
+addSafeEventListener('fun-mode-button', 'click', function() {
+    // Instead of showing the fun mode, show an alert
+    alert("Fun Mode is not accessible at this time. Please check back later!");
+    
+    // You can also change the button style to indicate it's disabled
+    this.classList.add('disabled');
+    this.style.opacity = '0.6';
+    this.style.cursor = 'not-allowed';
+});
 
     // Fun mode timer controls - Fixed
     document.querySelectorAll('[data-action="start-fun"], [data-action="stop-fun"], [data-action="reset-fun"]').forEach(button => {
