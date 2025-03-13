@@ -1820,7 +1820,14 @@ item.style.opacity = '1';
 });
 
 // Performance List Toggle
-addSafeEventListener('toggle-performance-button', 'click', togglePerformanceList);
+addSafeEventListener('toggle-performance-button', 'click', function() {
+  if (!state.isAuthenticated && state.requiredAuthFeatures.includes('performance')) {
+    showAuthRequiredNotification('performance tracking');
+    authenticateWithPassword(); // Show login dialog immediately
+    return;
+  }
+  togglePerformanceList();
+});
 // Fun Mode functionality - Fixed 
 addSafeEventListener('fun-mode-button', 'click', function() {
 const appElement = document.getElementById('app');
