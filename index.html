@@ -1820,11 +1820,12 @@ function setupEventListeners() {
     });
 
 addSafeEventListener('toggle-performance-button', 'click', function() {
-  if (!state.isAuthenticated && state.requiredAuthFeatures.includes('performance')) {
-    showAuthRequiredNotification('performance tracking');
-    return;
-  }
-  togglePerformanceList();
+    if (!state.isAuthenticated && state.requiredAuthFeatures.includes('performance')) {
+        showAuthRequiredNotification('performance tracking');
+        authenticateWithPassword(); // Show login dialog immediately
+        return;
+    }
+    togglePerformanceList();
 });
         }
     });
@@ -2154,42 +2155,403 @@ function togglePerformanceList() {
     }
 }
 
-// Additional authentication event listeners to add in initializeApp
-function setupAuthEventListeners() {
-    // Auth button in header
-    const authButton = document.getElementById('auth-button');
-    if (authButton) {
-        authButton.addEventListener('click', authenticateWithGitHub);
+// Simple password authentication system
+// Add this to your existing JavaScript file right before your initializeApp() function
+
+// Add authentication state to your state object
+state.isAuthenticated = false;
+state.authUser = null;
+state.requiredAuthFeatures = ['messaging', 'performance'];
+
+// The password is "munchair2023" - this is what users will need to enter
+const CORRECT_PASSWORD = "munchair2023";
+
+// Simple password authentication function
+function authenticateWithPassword() {
+    // Create login dialog
+    const loginDialog = document.createElement('div');
+    loginDialog.style.position = 'fixed';
+    loginDialog.style.top = '0';
+    loginDialog.style.left = '0';
+    loginDialog.style.width = '100%';
+    loginDialog.style.height = '100%';
+    loginDialog.style.backgroundColor = 'rgba(0,0,0,0.5)';
+    loginDialog.style.display = 'flex';
+    loginDialog.style.justifyContent = 'center';
+    loginDialog.style.alignItems = 'center';
+    loginDialog.style.zIndex = '9999';
+    
+    // Dialog content
+    loginDialog.innerHTML = `
+        <div style="background-color: white; padding: 20px; border-radius: 8px; width: 300px; box-shadow: 0 2px 10px rgba(0,0,0,0.2);">
+            <h3 style="margin-top: 0; color: #333;">MUN Chair Login</h3>
+            
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Username</label>
+                <input id="auth-username-input" type="text" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" placeholder="Enter your name">
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Password</label>
+                <input id="auth-password-input" type="password" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;" placeholder="Enter password">
+                <div id="password-error" style="color: red; font-size: 12px; margin-top: 5px; display: none;">Incorrect password</div>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between;">
+                <button id="auth-cancel-button" style="padding: 8px 15px; border: none; background-color: #f2f2f2; border-radius: 4px; cursor: pointer;">Cancel</button>
+                <button id="auth-login-button" style="padding: 8px 15px; border: none; background-color: #6750A4; color: white; border-radius: 4px; cursor: pointer;">Login</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(loginDialog);
+    
+    // Focus username input
+    setTimeout(() => {
+        document.getElementById('auth-username-input').focus();
+    }, 100);
+    
+    // Add enter key press handler
+    document.getElementById('auth-password-input').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            document.getElementById('auth-login-button').click();
+        }
+    });
+    
+    // Handle login button
+    document.getElementById('auth-login-button').addEventListener('click', function() {
+        const username = document.getElementById('auth-username-input').value;
+        const password = document.getElementById('auth-password-input').value;
+        
+        if (password === CORRECT_PASSWORD) {
+            // Password is correct
+            document.body.removeChild(loginDialog);
+            
+            // Save authentication state
+            state.isAuthenticated = true;
+            state.authUser = {
+                username: username || 'MUN Chair',
+            };
+            
+            // Update UI
+            updateAuthStatus();
+            enableAuthFeatures();
+            
+            // Show success notification
+            showNotification('Successfully authenticated', 'success');
+        } else {
+            // Password is incorrect
+            document.getElementById('password-error').style.display = 'block';
+            document.getElementById('auth-password-input').value = '';
+            document.getElementById('auth-password-input').focus();
+        }
+    });
+    
+    // Handle cancel button
+    document.getElementById('auth-cancel-button').addEventListener('click', function() {
+        document.body.removeChild(loginDialog);
+    });
+}
+
+// Function to show notifications
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.style.position = 'fixed';
+    notification.style.bottom = '20px';
+    notification.style.right = '20px';
+    notification.style.padding = '10px 20px';
+    notification.style.borderRadius = 'var(--corner-radius)';
+    notification.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
+    notification.style.zIndex = '1000';
+    notification.style.maxWidth = '300px';
+    notification.style.transition = 'opacity 0.5s';
+    
+    // Set color based on notification type
+    if (type === 'success') {
+        notification.style.backgroundColor = 'var(--success)';
+        notification.style.color = 'white';
+    } else if (type === 'warning') {
+        notification.style.backgroundColor = 'var(--warning)';
+        notification.style.color = 'white';
+    } else if (type === 'error') {
+        notification.style.backgroundColor = 'var(--danger)';
+        notification.style.color = 'white';
+    } else {
+        notification.style.backgroundColor = 'var(--primary)';
+        notification.style.color = 'white';
     }
     
-    // Auth button in messaging tab
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        setTimeout(() => {
+            document.body.removeChild(notification);
+        }, 500);
+    }, 3000);
+}
+
+// Function to update authentication status in the UI
+function updateAuthStatus() {
+    const authUsername = document.getElementById('auth-username');
+    const authButton = document.getElementById('auth-button');
+    
+    if (!authUsername || !authButton) return;
+    
+    if (state.isAuthenticated) {
+        // User is authenticated
+        authUsername.textContent = state.authUser.username;
+        authButton.textContent = 'Logout';
+        authButton.classList.remove('secondary');
+        authButton.classList.add('success');
+        
+        // Update button click handler
+        authButton.removeEventListener('click', authenticateWithPassword);
+        authButton.addEventListener('click', logout);
+    } else {
+        // User is not authenticated
+        authUsername.textContent = 'Not logged in';
+        authButton.textContent = 'Login';
+        authButton.classList.remove('success');
+        authButton.classList.add('secondary');
+        
+        // Update button click handler
+        authButton.removeEventListener('click', logout);
+        authButton.addEventListener('click', authenticateWithPassword);
+    }
+}
+
+// Logout function
+function logout() {
+    // Clear auth state
+    state.isAuthenticated = false;
+    state.authUser = null;
+    
+    // Update UI
+    updateAuthStatus();
+    
+    // Disable auth-restricted features
+    disableAuthFeatures();
+    
+    showNotification('Successfully logged out', 'info');
+}
+
+// Enable features that require authentication
+function enableAuthFeatures() {
+    // Enable messaging tab
+    if (state.requiredAuthFeatures.includes('messaging')) {
+        const messagingTab = document.querySelector('.tab[data-tab="messaging"]');
+        if (messagingTab) {
+            messagingTab.classList.remove('disabled');
+        }
+        
+        // Show messaging interface if on that tab
+        const messagingInterface = document.getElementById('messaging-interface');
+        const authRequiredPanel = document.getElementById('auth-required-panel');
+        
+        if (messagingInterface && authRequiredPanel) {
+            messagingInterface.style.display = 'block';
+            authRequiredPanel.style.display = 'none';
+        }
+    }
+    
+    // Enable performance tracking
+    if (state.requiredAuthFeatures.includes('performance')) {
+        // Find the performance card
+        const cards = document.querySelectorAll('.card');
+        let performanceCard = null;
+        
+        for (const card of cards) {
+            const header = card.querySelector('.card-header');
+            if (header && header.textContent.includes('Speaker Performance')) {
+                performanceCard = card;
+                break;
+            }
+        }
+        
+        if (performanceCard) {
+            performanceCard.style.opacity = '1';
+            performanceCard.style.pointerEvents = 'auto';
+            
+            // Remove lock icon if present
+            const lockIcon = performanceCard.querySelector('.lock-icon');
+            if (lockIcon) {
+                lockIcon.remove();
+            }
+        }
+        
+        // Enable toggle button
+        const toggleButton = document.getElementById('toggle-performance-button');
+        if (toggleButton) {
+            toggleButton.disabled = false;
+            toggleButton.style.opacity = '1';
+            toggleButton.style.cursor = 'pointer';
+        }
+    }
+}
+
+// Disable features that require authentication
+function disableAuthFeatures() {
+    // Disable messaging tab
+    if (state.requiredAuthFeatures.includes('messaging')) {
+        const messagingTab = document.querySelector('.tab[data-tab="messaging"]');
+        if (messagingTab) {
+            messagingTab.classList.add('disabled');
+            
+            // If currently on messaging tab, switch to main
+            if (messagingTab.classList.contains('active')) {
+                document.querySelector('.tab[data-tab="main"]').click();
+            }
+        }
+        
+        // Hide messaging interface and show auth required panel
+        const messagingInterface = document.getElementById('messaging-interface');
+        const authRequiredPanel = document.getElementById('auth-required-panel');
+        
+        if (messagingInterface && authRequiredPanel) {
+            messagingInterface.style.display = 'none';
+            authRequiredPanel.style.display = 'block';
+        }
+    }
+    
+    // Disable performance tracking
+    if (state.requiredAuthFeatures.includes('performance')) {
+        // Find the performance card
+        const cards = document.querySelectorAll('.card');
+        let performanceCard = null;
+        let performanceHeader = null;
+        
+        for (const card of cards) {
+            const header = card.querySelector('.card-header');
+            if (header && header.textContent.includes('Speaker Performance')) {
+                performanceCard = card;
+                performanceHeader = header;
+                break;
+            }
+        }
+        
+        if (performanceCard) {
+            performanceCard.style.opacity = '0.6';
+            performanceCard.style.pointerEvents = 'none';
+            
+            // Add lock icon if not already present
+            if (performanceHeader && !performanceHeader.querySelector('.lock-icon')) {
+                const lockIcon = document.createElement('span');
+                lockIcon.className = 'lock-icon';
+                lockIcon.innerHTML = ' 🔒';
+                lockIcon.title = 'Requires authentication';
+                lockIcon.style.fontSize = '14px';
+                performanceHeader.appendChild(lockIcon);
+            }
+        }
+        
+        // Disable toggle button
+        const toggleButton = document.getElementById('toggle-performance-button');
+        if (toggleButton) {
+            toggleButton.disabled = true;
+            toggleButton.style.opacity = '0.6';
+            toggleButton.style.cursor = 'not-allowed';
+        }
+        
+        // Hide performance list if visible
+        if (state.showPerformanceList) {
+            const performanceList = document.getElementById('performance-list-container');
+            if (performanceList) {
+                performanceList.style.display = 'none';
+                state.showPerformanceList = false;
+                
+                if (toggleButton) {
+                    toggleButton.textContent = 'Show';
+                }
+            }
+        }
+    }
+}
+
+// Show auth required notification
+function showAuthRequiredNotification(feature) {
+    showNotification(`Login required to use the ${feature} feature`, 'warning');
+}
+
+// Modified togglePerformanceList function that checks auth
+function togglePerformanceList() {
+    if (!state.isAuthenticated && state.requiredAuthFeatures.includes('performance')) {
+        showAuthRequiredNotification('performance tracking');
+        return;
+    }
+    
+    state.showPerformanceList = !state.showPerformanceList;
+    
+    const container = document.getElementById('performance-list-container');
+    const toggleButton = document.getElementById('toggle-performance-button');
+    
+    if (container && toggleButton) {
+        if (state.showPerformanceList) {
+            container.style.display = 'block';
+            toggleButton.textContent = 'Hide';
+            updatePerformanceList();
+        } else {
+            container.style.display = 'none';
+            toggleButton.textContent = 'Show';
+        }
+    }
+}
+
+// Initialize authentication system
+function setupAuthSystem() {
+    // Update messaging auth button to use our authentication
     const authMessagingButton = document.getElementById('auth-messaging-button');
     if (authMessagingButton) {
-        authMessagingButton.addEventListener('click', authenticateWithGitHub);
+        authMessagingButton.textContent = 'Login to Access';
+        authMessagingButton.removeEventListener('click', authenticateWithGitHub); // Remove any existing handler
+        authMessagingButton.addEventListener('click', authenticateWithPassword);
     }
     
     // Initial setup of auth-restricted features
     disableAuthFeatures();
+    
+    // Set up auth button in header
+    const authButton = document.getElementById('auth-button');
+    if (authButton) {
+        authButton.textContent = 'Login';
+        authButton.removeEventListener('click', authenticateWithGitHub); // Remove any existing handler
+        authButton.addEventListener('click', authenticateWithPassword);
+    }
+    
+    // Update auth status display
+    updateAuthStatus();
+    
+    // Make messaging tab appear disabled initially
+    const messagingTab = document.querySelector('.tab[data-tab="messaging"]');
+    if (messagingTab) {
+        messagingTab.classList.add('disabled');
+        
+        // Add click handler to show auth notification if disabled
+        messagingTab.addEventListener('click', function(e) {
+            if (this.classList.contains('disabled')) {
+                e.preventDefault();
+                e.stopPropagation();
+                showAuthRequiredNotification('messaging');
+                authenticateWithPassword(); // Show login dialog immediately
+            }
+        });
+    }
 }
 
-// Add this to your initializeApp function
-// initializeApp() {
-//    ...existing code...
-//    
-//    // Setup authentication system
-//    setupAuthEventListeners();
-//    updateAuthStatus();
-// }
+// Add these lines to your initializeApp function:
+// setupAuthSystem();
 
-// Update your existing toggle performance button event listener
-// Replace the existing listener with this in setupEventListeners():
+// Replace your existing toggle performance button event listener with this:
 // addSafeEventListener('toggle-performance-button', 'click', function() {
 //    if (!state.isAuthenticated && state.requiredAuthFeatures.includes('performance')) {
 //        showAuthRequiredNotification('performance tracking');
+//        authenticateWithPassword(); // Show login dialog immediately
 //        return;
 //    }
 //    togglePerformanceList();
-// });// Set up the application
+// });ion
 function initializeApp() {
     // Initialize with default committee
     populateCountryList(state.selectedCommittee);
@@ -2286,8 +2648,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     console.log('To debug the application state, run debugState() in console');
 // Setup authentication system
-setupAuthEventListeners();
-updateAuthStatus();    
+setupAuthSystem(); 
 });
     </script>
 </body>
