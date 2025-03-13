@@ -1819,17 +1819,13 @@ function setupEventListeners() {
         }
     });
 
-    // Performance List Toggle
-    addSafeEventListener('toggle-performance-button', 'click', togglePerformanceList);
-    // Fun Mode functionality - Fixed 
-    addSafeEventListener('fun-mode-button', 'click', function() {
-        const appElement = document.getElementById('app');
-        const funModeContainer = document.getElementById('fun-mode-container');
-        
-        if (appElement && funModeContainer) {
-            appElement.style.display = 'none';
-            funModeContainer.style.display = 'block';
-            resetTimer('fun');
+addSafeEventListener('toggle-performance-button', 'click', function() {
+  if (!state.isAuthenticated && state.requiredAuthFeatures.includes('performance')) {
+    showAuthRequiredNotification('performance tracking');
+    return;
+  }
+  togglePerformanceList();
+});
         }
     });
 // Replace the existing Fun Mode button click event listener with this:
@@ -1937,7 +1933,263 @@ addSafeEventListener('fun-mode-button', 'click', function() {
     });
 }
 
-// Set up the application
+// GitHub Authentication System
+// Add this code to your existing JavaScript, right before your initializeApp() function
+
+// Auth-related state properties
+state.isAuthenticated = false;
+state.authUser = null;
+state.accessToken = null;
+state.requiredAuthFeatures = ['messaging', 'performance'];
+
+// Mock GitHub authentication function
+function authenticateWithGitHub() {
+    // In a real implementation, this would redirect to GitHub OAuth
+    // For this mock version, we'll simulate a successful authentication
+    
+    // Simulate network delay
+    document.getElementById('auth-button').textContent = 'Authenticating...';
+    
+    setTimeout(() => {
+        // Mock successful authentication
+        state.isAuthenticated = true;
+        state.authUser = {
+            username: 'MUNDelegate_' + Math.floor(Math.random() * 1000),
+            avatarUrl: 'https://github.com/identicons/app/oauth_app/1',
+            id: Math.floor(Math.random() * 100000)
+        };
+        state.accessToken = 'mock_github_token_' + Math.random().toString(36).substring(2);
+        
+        // Update UI
+        updateAuthStatus();
+        
+        // Enable any auth-restricted features
+        enableAuthFeatures();
+        
+        console.log('Authenticated successfully with GitHub');
+    }, 1500);
+}
+
+// Function to update authentication status in the UI
+function updateAuthStatus() {
+    const authUsername = document.getElementById('auth-username');
+    const authButton = document.getElementById('auth-button');
+    
+    if (state.isAuthenticated) {
+        // User is authenticated
+        authUsername.textContent = state.authUser.username;
+        authButton.textContent = 'Logout';
+        authButton.classList.remove('secondary');
+        authButton.classList.add('success');
+        
+        // Update button click handler
+        authButton.removeEventListener('click', authenticateWithGitHub);
+        authButton.addEventListener('click', logout);
+    } else {
+        // User is not authenticated
+        authUsername.textContent = 'Not logged in';
+        authButton.textContent = 'Login with GitHub';
+        authButton.classList.remove('success');
+        authButton.classList.add('secondary');
+        
+        // Update button click handler
+        authButton.removeEventListener('click', logout);
+        authButton.addEventListener('click', authenticateWithGitHub);
+    }
+}
+
+// Logout function
+function logout() {
+    // Clear auth state
+    state.isAuthenticated = false;
+    state.authUser = null;
+    state.accessToken = null;
+    
+    // Update UI
+    updateAuthStatus();
+    
+    // Disable auth-restricted features
+    disableAuthFeatures();
+    
+    console.log('Logged out successfully');
+}
+
+// Enable features that require authentication
+function enableAuthFeatures() {
+    // Enable messaging tab
+    if (state.requiredAuthFeatures.includes('messaging')) {
+        const messagingTab = document.querySelector('.tab[data-tab="messaging"]');
+        if (messagingTab) {
+            messagingTab.classList.remove('disabled');
+        }
+        
+        // Show messaging interface if on that tab
+        const messagingInterface = document.getElementById('messaging-interface');
+        const authRequiredPanel = document.getElementById('auth-required-panel');
+        
+        if (messagingInterface && authRequiredPanel) {
+            messagingInterface.style.display = 'block';
+            authRequiredPanel.style.display = 'none';
+        }
+    }
+    
+    // Enable performance tracking
+    if (state.requiredAuthFeatures.includes('performance')) {
+        const performanceCard = document.querySelector('.card-header:has(#toggle-performance-button)').parentElement;
+        if (performanceCard) {
+            performanceCard.style.opacity = '1';
+            performanceCard.style.pointerEvents = 'auto';
+        }
+        
+        // Enable toggle button
+        const toggleButton = document.getElementById('toggle-performance-button');
+        if (toggleButton) {
+            toggleButton.disabled = false;
+            toggleButton.style.opacity = '1';
+            toggleButton.style.cursor = 'pointer';
+        }
+    }
+}
+
+// Disable features that require authentication
+function disableAuthFeatures() {
+    // Disable messaging tab
+    if (state.requiredAuthFeatures.includes('messaging')) {
+        const messagingTab = document.querySelector('.tab[data-tab="messaging"]');
+        if (messagingTab) {
+            messagingTab.classList.add('disabled');
+            
+            // If currently on messaging tab, switch to main
+            if (messagingTab.classList.contains('active')) {
+                document.querySelector('.tab[data-tab="main"]').click();
+            }
+        }
+        
+        // Hide messaging interface and show auth required panel
+        const messagingInterface = document.getElementById('messaging-interface');
+        const authRequiredPanel = document.getElementById('auth-required-panel');
+        
+        if (messagingInterface && authRequiredPanel) {
+            messagingInterface.style.display = 'none';
+            authRequiredPanel.style.display = 'block';
+        }
+    }
+    
+    // Disable performance tracking
+    if (state.requiredAuthFeatures.includes('performance')) {
+        const performanceCard = document.querySelector('.card-header:contains("Speaker Performance")').parentElement;
+        if (performanceCard) {
+            performanceCard.style.opacity = '0.6';
+            performanceCard.style.pointerEvents = 'none';
+        }
+        
+        // Disable toggle button
+        const toggleButton = document.getElementById('toggle-performance-button');
+        if (toggleButton) {
+            toggleButton.disabled = true;
+            toggleButton.style.opacity = '0.6';
+            toggleButton.style.cursor = 'not-allowed';
+        }
+        
+        // Hide performance list if visible
+        const performanceList = document.getElementById('performance-list-container');
+        if (performanceList && state.showPerformanceList) {
+            togglePerformanceList(); // This will hide it
+        }
+    }
+}
+
+// Show a notification if user tries to access restricted features
+function showAuthRequiredNotification(feature) {
+    const notification = document.createElement('div');
+    notification.style.position = 'fixed';
+    notification.style.bottom = '20px';
+    notification.style.right = '20px';
+    notification.style.backgroundColor = 'var(--warning)';
+    notification.style.color = 'white';
+    notification.style.padding = '10px 20px';
+    notification.style.borderRadius = 'var(--corner-radius)';
+    notification.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
+    notification.style.zIndex = '1000';
+    notification.style.maxWidth = '300px';
+    notification.style.transition = 'opacity 0.5s';
+    
+    notification.innerHTML = `
+        <div style="font-weight: bold; margin-bottom: 5px;">Authentication Required</div>
+        <div>You need to log in with GitHub to use the ${feature} feature.</div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Remove after 4 seconds
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        setTimeout(() => {
+            document.body.removeChild(notification);
+        }, 500);
+    }, 4000);
+}
+
+// Modify the toggle performance list function to check authentication
+function togglePerformanceList() {
+    if (!state.isAuthenticated && state.requiredAuthFeatures.includes('performance')) {
+        showAuthRequiredNotification('performance tracking');
+        return;
+    }
+    
+    state.showPerformanceList = !state.showPerformanceList;
+    
+    const container = document.getElementById('performance-list-container');
+    const toggleButton = document.getElementById('toggle-performance-button');
+    
+    if (container && toggleButton) {
+        if (state.showPerformanceList) {
+            container.style.display = 'block';
+            toggleButton.textContent = 'Hide';
+            updatePerformanceList();
+        } else {
+            container.style.display = 'none';
+            toggleButton.textContent = 'Show';
+        }
+    }
+}
+
+// Additional authentication event listeners to add in initializeApp
+function setupAuthEventListeners() {
+    // Auth button in header
+    const authButton = document.getElementById('auth-button');
+    if (authButton) {
+        authButton.addEventListener('click', authenticateWithGitHub);
+    }
+    
+    // Auth button in messaging tab
+    const authMessagingButton = document.getElementById('auth-messaging-button');
+    if (authMessagingButton) {
+        authMessagingButton.addEventListener('click', authenticateWithGitHub);
+    }
+    
+    // Initial setup of auth-restricted features
+    disableAuthFeatures();
+}
+
+// Add this to your initializeApp function
+// initializeApp() {
+//    ...existing code...
+//    
+//    // Setup authentication system
+//    setupAuthEventListeners();
+//    updateAuthStatus();
+// }
+
+// Update your existing toggle performance button event listener
+// Replace the existing listener with this in setupEventListeners():
+// addSafeEventListener('toggle-performance-button', 'click', function() {
+//    if (!state.isAuthenticated && state.requiredAuthFeatures.includes('performance')) {
+//        showAuthRequiredNotification('performance tracking');
+//        return;
+//    }
+//    togglePerformanceList();
+// });// Set up the application
 function initializeApp() {
     // Initialize with default committee
     populateCountryList(state.selectedCommittee);
@@ -2033,6 +2285,9 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     console.log('To debug the application state, run debugState() in console');
+// Setup authentication system
+setupAuthEventListeners();
+updateAuthStatus();    
 });
     </script>
 </body>
