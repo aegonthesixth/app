@@ -1577,23 +1577,20 @@ function setupTabSwitching() {
 }
 // Setup event listeners for various buttons and interactive elements
 // Setup event listeners for various buttons and interactive elements
+// Locate this function in your code:
 function setupEventListeners() {
-    // Add timer settings event listeners
-    document.querySelectorAll('.timer-set-button').forEach(button => {
-        button.addEventListener('click', function() {
-            const timerType = this.getAttribute('data-timer');
-            const input = document.querySelector(`.timer-duration[data-timer="${timerType}"]`);
-            
-            if (input) {
-                const minutes = parseInt(input.value);
-                if (!isNaN(minutes) && minutes > 0) {
-                    setTimerDuration(timerType, minutes);
-                }
-            }
-        });
+    // ... existing code ...
+    
+    // Fix the toggle performance button event listener:
+    addSafeEventListener('toggle-performance-button', 'click', function() {
+        if (!state.isAuthenticated && state.requiredAuthFeatures.includes('performance')) {
+            showAuthRequiredNotification('performance tracking');
+            authenticateWithPassword(); // Show login dialog immediately
+            return;
+        }
+        togglePerformanceList();
     });
     
-    // Helper to safely add event listener
     function addSafeEventListener(id, event, callback) {
         const element = document.getElementById(id);
         if (element) {
