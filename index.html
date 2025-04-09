@@ -131,117 +131,110 @@ min-height: 100vh;
 </div>
 <!-- Main Dashboard Tab -->
 <div id="main-tab" class="tab-content active">
-<div class="top-controls">
-<div class="committee-selector">
-<label for="committee-select">Committee:</label>
-<select id="committee-select">
-<option value="UNSC">UNSC</option>
-<option value="UNODC">UNODC</option>
-<option value="UNGA">UNGA</option>
-<option value="UNHRC">UNHRC</option>
-<option value="ECOSOC">ECOSOC</option>
-<option value="WHO">WHO</option>
-</select>
-</div>
-<div class="control-buttons">
-<button id="export-button" class="button warning">Export Data</button>
-<button id="role-call-button" class="button">Role Call</button>
-<button id="lock-countries-button" class="button secondary">Lock Countries</button>
-</div>
-</div>
-
-<!-- In the main-tab div, replace the existing columns div with this structure -->
-<!-- Replace your current columns layout in the main-tab with this structure -->
-<div class="top-controls">
-  <div class="committee-selector">
-    <label for="committee-select">Committee:</label>
-    <select id="committee-select">
-      <option value="UNSC">UNSC</option>
-      <option value="UNODC">UNODC</option>
-      <option value="UNGA">UNGA</option>
-      <option value="UNHRC">UNHRC</option>
-      <option value="ECOSOC">ECOSOC</option>
-      <option value="WHO">WHO</option>
-    </select>
-  </div>
-  <div class="control-buttons">
-    <button id="export-button" class="button warning">Export Data</button>
-    <button id="role-call-button" class="button">Role Call</button>
-    <button id="lock-countries-button" class="button secondary">Lock Countries</button>
-  </div>
-</div>
-
-<!-- Countries and Timers first -->
-<div class="columns-section">
-  <div class="columns-row">
-    <div class="left-column">
-      <div class="card">
-        <div class="card-header">Countries</div>
-        <div class="card-body">
-          <div class="list-container">
-            <ul id="country-list" class="list"></ul>
-          </div>
-          <button id="add-to-list-button" class="button primary" style="width: 100%; margin-top: 10px;">Add to Speaking List</button>
-        </div>
-      </div>
+  <div class="top-controls">
+    <div class="committee-selector">
+      <label for="committee-select">Committee:</label>
+      <select id="committee-select">
+        <option value="UNSC">UNSC</option>
+        <option value="UNODC">UNODC</option>
+        <option value="UNGA">UNGA</option>
+        <option value="UNHRC">UNHRC</option>
+        <option value="ECOSOC">ECOSOC</option>
+        <option value="WHO">WHO</option>
+      </select>
     </div>
-    
-    <div class="right-column">
-      <div class="card">
-        <div class="card-header">Timers</div>
-        <div class="card-body">
-          <!-- Timer cards section (unchanged) -->
-          <div class="timer-cards">
-            <!-- Timer content -->
-          </div>
-          <button id="rearrange-timers-button" class="button secondary" style="width: 100%;">Rearrange Timers</button>
-        </div>
-      </div>
-      <button id="fun-mode-button" class="button accent" style="width: 100%; margin-top: 10px;">Fun Committee Mode</button>
+    <div class="control-buttons">
+      <button id="export-button" class="button warning">Export Data</button>
+      <button id="role-call-button" class="button">Role Call</button>
+      <button id="lock-countries-button" class="button secondary">Lock Countries</button>
     </div>
   </div>
-</div>
 
-<!-- Notes, Frequency and Performance on the bottom -->
-<div class="columns-section" style="margin-top: 20px;">
-  <div class="columns-row">
-    <div class="column">
-      <div class="card">
-        <div class="card-header">Notes</div>
-        <div class="card-body">
-          <textarea id="notes-area" class="notes-area" placeholder="Enter notes here..."></textarea>
-          <div class="note-buttons">
-            <button class="button success" data-note="Good Speech">Good Speech</button>
-            <button class="button danger" data-note="Bad Speech">Bad Speech</button>
-            <button class="button primary" data-note="Good Diplomacy">Good Diplomacy</button>
-            <button class="button warning" data-note="Bad Diplomacy">Bad Diplomacy</button>
+  <div class="columns">
+    <!-- First row - Countries and Timers -->
+    <div class="columns-row">
+      <div class="column">
+        <!-- Country List Card -->
+        <div class="card">
+          <div class="card-header">Countries</div>
+          <div class="card-body">
+            <div class="list-container">
+              <ul id="country-list" class="list"></ul>
+            </div>
+            <button id="add-to-list-button" class="button primary" style="width: 100%; margin-top: 10px;">Add to Speaking List</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="column">
+        <!-- Timers Section -->
+        <div class="card">
+          <div class="card-header">Timers</div>
+          <div class="card-body">
+            <div class="timer-cards">
+              <!-- Timer cards content stays the same -->
+            </div>
+            <button id="rearrange-timers-button" class="button secondary" style="width: 100%;">Rearrange Timers</button>
+          </div>
+        </div>
+
+        <!-- Fun Mode Button -->
+        <button id="fun-mode-button" class="button accent" style="width: 100%; margin-top: 10px;">Fun Committee Mode</button>
+      </div>
+    </div>
+
+    <!-- Second row - Notes and Performance Data (moved below timer section) -->
+    <div class="columns-row">
+      <div class="column">
+        <!-- Notes Section -->
+        <div class="card">
+          <div class="card-header">Notes</div>
+          <div class="card-body">
+            <textarea id="notes-area" class="notes-area" placeholder="Enter notes here..."></textarea>
+            <div class="note-buttons">
+              <button class="button success" data-note="Good Speech">Good Speech</button>
+              <button class="button danger" data-note="Bad Speech">Bad Speech</button>
+              <button class="button primary" data-note="Good Diplomacy">Good Diplomacy</button>
+              <button class="button warning" data-note="Bad Diplomacy">Bad Diplomacy</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="column">
+        <!-- Frequency List Card -->
+        <div class="card">
+          <div class="card-header">Speaker Frequency</div>
+          <div class="card-body">
+            <div class="list-container">
+              <ul id="frequency-list" class="list"></ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="column">
+        <!-- Performance List Card -->
+        <div class="card">
+          <div class="card-header">
+            <span>Speaker Performance</span>
+            <button id="toggle-performance-button" class="button secondary" style="padding: 2px 8px; font-size: 0.8rem;">Show</button>
+          </div>
+          <div class="card-body">
+            <div id="performance-list-container" class="list-container" style="display: none;">
+              <ul id="performance-list" class="list"></ul>
+            </div>
+            <div class="performance-legend">
+              <div><span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: #4CAF50; margin-right: 5px;"></span> High Performance (>75%)</div>
+              <div><span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: #FFA726; margin-right: 5px;"></span> Medium Performance (50-75%)</div>
+              <div><span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background-color: #F44336; margin-right: 5px;"></span> Low Performance (<50%)</div>
+            </div>
           </div>
         </div>
       </div>
     </div>
-    
-    <div class="column">
-      <div class="card">
-        <div class="card-header">Speaker Frequency</div>
-        <div class="card-body">
-          <div class="list-container">
-            <ul id="frequency-list" class="list"></ul>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <div class="column">
-      <div class="card">
-        <div class="card-header">
-          <span>Speaker Performance</span>
-          <button id="toggle-performance-button" class="button secondary" style="padding: 2px 8px; font-size: 0.8rem;">Show</button>
-        </div>
-        <div class="card-body">
-          <div id="performance-list-container" class="list-container" style="display: none;">
-            <ul id="performance-list" class="list"></ul>
-          </div>
-          <div class="performance-legend">
+  </div>
+</div>
             <!-- Legend items -->
           </div>
         </div>
@@ -684,15 +677,27 @@ filter: brightness(1.1);
 .button.accent { background-color: var(--accent); }
 
 /* Modified columns layout - to move notes and frequency to bottom *//* Modified columns layout - to move notes and frequency to bottom */
-.columns-section {
+-section {
   width: 100%;
   clear: both;
+}
+
+/* Modified columns layout - to move notes and frequency to bottom */
+.columns {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-top: 15px;
 }
 
 .columns-row {
   display: flex;
   gap: 20px;
-  margin-bottom: 15px;
+}
+
+.column {
+  flex: 1;
+}
 }
 
 .left-column, .right-column, .column {
