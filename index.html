@@ -51,6 +51,59 @@ max-width: 1600px;
 margin: 0 auto;
 min-height: 100vh;
 }
+/* Greek Academy styling */
+.header-content {
+  display: flex;
+  align-items: center;
+  z-index: 2;
+}
+
+.greek-academy {
+  margin-right: 15px;
+  display: flex;
+  align-items: flex-end;
+  height: 40px;
+}
+
+.column {
+  width: 8px;
+  background-color: rgba(255, 255, 255, 0.9);
+  margin: 0 2px;
+  border-radius: 2px 2px 0 0;
+  position: relative;
+}
+
+.column:nth-child(1) { height: 35px; }
+.column:nth-child(2) { height: 40px; }
+.column:nth-child(3) { height: 35px; }
+
+.column::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 2px 2px 0 0;
+}
+
+.column::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: -2px;
+  right: -2px;
+  height: 3px;
+  background-color: rgba(255, 255, 255, 0.9);
+}
+
+.academy-base {
+  height: 4px;
+  background-color: rgba(255, 255, 255, 0.9);
+  width: 42px;
+  border-radius: 2px;
+}
 </style>
 </head>
 <body>
